@@ -12,6 +12,8 @@ out/
 logs/
 *.log
 coverage/
+playwright-report/
+test-results/
 .idea/
 .vscode/
 .DS_Store
