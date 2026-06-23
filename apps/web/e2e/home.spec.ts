@@ -47,5 +47,5 @@ test('home page renders articles from API', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Latest Articles' })).toBeVisible();
   await expect(page.getByText('Playwright Test Article')).toBeVisible();
-  await expect(page.getByText('Startups')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Startups' })).toBeVisible();
 });

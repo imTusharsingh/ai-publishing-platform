@@ -63,6 +63,9 @@ const SAMPLE_ARTICLES = [
       'New benchmark results show open-weight models matching proprietary systems on reasoning and coding tasks.',
     content:
       'Open-source language models continue to improve at a rapid pace, narrowing the performance gap with closed frontier systems.',
+    seoTitle: 'Open-Source LLMs vs Frontier Models | AI Publishing',
+    seoDescription:
+      'Benchmark results show open-weight LLMs matching proprietary systems on reasoning and coding tasks.',
   },
   {
     categorySlug: 'startups',
@@ -72,6 +75,9 @@ const SAMPLE_ARTICLES = [
       'Early-stage venture activity picked up in the second quarter, led by developer tools and AI infrastructure.',
     content:
       'Venture capitalists are returning to seed-stage deals after a cautious 2025, with AI infrastructure startups attracting the most interest.',
+    seoTitle: 'Seed Funding Rebounds in Q2 | Startup News',
+    seoDescription:
+      'Early-stage venture activity picked up in Q2, led by AI infrastructure and developer tools startups.',
   },
   {
     categorySlug: 'fintech',
@@ -81,6 +87,9 @@ const SAMPLE_ARTICLES = [
       'Digital banks are partnering with SaaS platforms to offer lending and payments inside business workflows.',
     content:
       'European neobanks are accelerating embedded finance partnerships as merchants seek integrated payment and lending experiences.',
+    seoTitle: 'Neobanks Expand Embedded Finance in Europe',
+    seoDescription:
+      'Digital banks partner with SaaS platforms to offer lending and payments inside business workflows.',
   },
   {
     categorySlug: 'saas',
@@ -90,6 +99,9 @@ const SAMPLE_ARTICLES = [
       'Industry-specific software companies are shipping copilots trained on domain workflows and customer data.',
     content:
       'Vertical SaaS vendors are embedding AI copilots directly into existing workflows to reduce onboarding friction and increase retention.',
+    seoTitle: 'Vertical SaaS Vendors Ship AI Copilots',
+    seoDescription:
+      'Industry-specific software companies embed AI copilots trained on domain workflows and customer data.',
   },
   {
     categorySlug: 'venture-capital',
@@ -99,6 +111,9 @@ const SAMPLE_ARTICLES = [
       'Later-stage investors are prioritizing efficient growth and clear paths to profitability in new deals.',
     content:
       'Growth-stage venture funds are rewriting their investment theses around capital efficiency and durable unit economics.',
+    seoTitle: 'Growth Funds Prioritize Profitability Metrics',
+    seoDescription:
+      'Later-stage investors prioritize efficient growth and clear paths to profitability in new deals.',
   },
   {
     categorySlug: 'healthcare',
@@ -108,6 +123,9 @@ const SAMPLE_ARTICLES = [
       'Clinics are adopting AI-assisted intake systems to prioritize cases and reduce wait times.',
     content:
       'Healthcare providers are piloting AI triage tools that help staff route patients faster while maintaining clinician oversight.',
+    seoTitle: 'AI Triage Tools in Outpatient Clinics',
+    seoDescription:
+      'Clinics adopt AI-assisted intake systems to prioritize cases and reduce patient wait times.',
   },
 ];
 
@@ -189,6 +207,8 @@ export async function seed() {
         status: ArticleStatus.PUBLISHED,
         publishedAt: new Date('2026-06-20T10:00:00.000Z'),
         categoryId: category.id,
+        seoTitle: article.seoTitle,
+        seoDescription: article.seoDescription,
       },
       create: {
         categoryId: category.id,
@@ -200,6 +220,8 @@ export async function seed() {
         contentPlain: article.content,
         status: ArticleStatus.PUBLISHED,
         publishedAt: new Date('2026-06-20T10:00:00.000Z'),
+        seoTitle: article.seoTitle,
+        seoDescription: article.seoDescription,
       },
     });
   }

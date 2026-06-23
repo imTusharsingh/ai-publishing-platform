@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { CategoryListResponse } from '@repo/shared';
 import { Pill } from '@/components/ui/pill';
@@ -11,11 +12,18 @@ const PRIMARY_VISIBLE = 5;
 interface CategoryNavProps {
   categories: CategoryListResponse['data'];
   selectedSlug?: string;
-  onSelect: (slug?: string) => void;
+  onSelect?: (slug?: string) => void;
   isLoading?: boolean;
+  mode?: 'filter' | 'link';
 }
 
-export function CategoryNav({ categories, selectedSlug, onSelect, isLoading }: CategoryNavProps) {
+export function CategoryNav({
+  categories,
+  selectedSlug,
+  onSelect,
+  isLoading,
+  mode = 'filter',
+}: CategoryNavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -48,9 +56,11 @@ export function CategoryNav({ categories, selectedSlug, onSelect, isLoading }: C
   const hasOverflow = overflowCategories.length > 0;
 
   const handleSelect = (slug?: string) => {
-    onSelect(slug);
+    onSelect?.(slug);
     setMenuOpen(false);
   };
+
+  const categoryHref = (slug: string) => `/category/${slug}`;
 
   return (
     <div className="space-y-4">
@@ -59,14 +69,20 @@ export function CategoryNav({ categories, selectedSlug, onSelect, isLoading }: C
       </h2>
 
       <div className="flex flex-wrap gap-2">
-        <Pill label="All" active={!selectedSlug} onClick={() => handleSelect(undefined)} />
+        <Pill
+          label="All"
+          active={!selectedSlug}
+          href={mode === 'link' ? '/' : undefined}
+          onClick={mode === 'filter' ? () => handleSelect(undefined) : undefined}
+        />
 
         {primaryCategories.map((category) => (
           <Pill
             key={category.id}
             label={category.name}
             active={selectedSlug === category.slug}
-            onClick={() => handleSelect(category.slug)}
+            href={mode === 'link' ? categoryHref(category.slug) : undefined}
+            onClick={mode === 'filter' ? () => handleSelect(category.slug) : undefined}
           />
         ))}
 
@@ -97,20 +113,37 @@ export function CategoryNav({ categories, selectedSlug, onSelect, isLoading }: C
               >
                 {overflowCategories.map((category) => (
                   <li key={category.id}>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={selectedSlug === category.slug}
-                      onClick={() => handleSelect(category.slug)}
-                      className={cn(
-                        'block w-full px-4 py-2.5 text-left text-sm transition-colors',
-                        selectedSlug === category.slug
-                          ? 'bg-surface-muted font-medium text-content'
-                          : 'text-content-muted hover:bg-surface-muted hover:text-content',
-                      )}
-                    >
-                      {category.name}
-                    </button>
+                    {mode === 'link' ? (
+                      <Link
+                        href={categoryHref(category.slug)}
+                        role="option"
+                        aria-current={selectedSlug === category.slug ? 'page' : undefined}
+                        onClick={() => setMenuOpen(false)}
+                        className={cn(
+                          'block w-full px-4 py-2.5 text-left text-sm transition-colors',
+                          selectedSlug === category.slug
+                            ? 'bg-surface-muted font-medium text-content'
+                            : 'text-content-muted hover:bg-surface-muted hover:text-content',
+                        )}
+                      >
+                        {category.name}
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={selectedSlug === category.slug}
+                        onClick={() => handleSelect(category.slug)}
+                        className={cn(
+                          'block w-full px-4 py-2.5 text-left text-sm transition-colors',
+                          selectedSlug === category.slug
+                            ? 'bg-surface-muted font-medium text-content'
+                            : 'text-content-muted hover:bg-surface-muted hover:text-content',
+                        )}
+                      >
+                        {category.name}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

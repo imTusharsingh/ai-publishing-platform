@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { ListArticlesQueryDto } from './dto/list-articles-query.dto';
 
@@ -9,5 +9,10 @@ export class ArticlesController {
   @Get()
   findAll(@Query() query: ListArticlesQueryDto) {
     return this.articlesService.findAll(query);
+  }
+
+  @Get(':slug')
+  findOne(@Param('slug') slug: string) {
+    return this.articlesService.findBySlug(slug);
   }
 }

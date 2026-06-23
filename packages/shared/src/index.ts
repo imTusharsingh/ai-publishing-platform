@@ -5,8 +5,11 @@ export function formatApiVersion(version: string): string {
 }
 
 export type {
+  ArticleDetail,
   ArticleListResponse,
+  ArticleSeo,
   ArticleSummary,
+  CategoryDetail,
   CategoryListResponse,
   CategorySummary,
   PaginatedMeta,

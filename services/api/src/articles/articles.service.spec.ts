@@ -7,7 +7,7 @@ describe('ArticlesService', () => {
   let service: ArticlesService;
   let prisma: {
     category: { findUnique: jest.Mock };
-    article: { findMany: jest.Mock; count: jest.Mock };
+    article: { findMany: jest.Mock; count: jest.Mock; findFirst: jest.Mock };
   };
 
   const article = {
@@ -24,7 +24,7 @@ describe('ArticlesService', () => {
   beforeEach(() => {
     prisma = {
       category: { findUnique: jest.fn() },
-      article: { findMany: jest.fn(), count: jest.fn() },
+      article: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
     };
     service = new ArticlesService(prisma as unknown as PrismaService);
   });
@@ -65,5 +65,31 @@ describe('ArticlesService', () => {
     await expect(
       service.findAll({ category: 'missing', page: 1, limit: 12, sort: 'publishedAt' }),
     ).rejects.toThrow(NotFoundException);
+  });
+
+  it('returns article detail by slug', async () => {
+    prisma.article.findFirst.mockResolvedValue({
+      ...article,
+      content: 'Full article body',
+      viewCount: BigInt(42),
+      seoTitle: 'SEO Title',
+      seoDescription: 'SEO Description',
+      canonicalUrl: null,
+      ogImageUrl: null,
+      structuredData: null,
+    });
+
+    const result = await service.findBySlug('sample-article');
+
+    expect(result.slug).toBe('sample-article');
+    expect(result.content).toBe('Full article body');
+    expect(result.viewCount).toBe('42');
+    expect(result.seo.title).toBe('SEO Title');
+  });
+
+  it('throws when article slug is unknown', async () => {
+    prisma.article.findFirst.mockResolvedValue(null);
+
+    await expect(service.findBySlug('missing')).rejects.toThrow(NotFoundException);
   });
 });

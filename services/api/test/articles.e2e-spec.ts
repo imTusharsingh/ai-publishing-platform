@@ -68,4 +68,25 @@ describe('ArticlesController (e2e)', () => {
     expect(response.body.meta.limit).toBe(2);
     expect(response.body.meta.page).toBe(1);
   });
+
+  it('GET /v1/articles/:slug returns article detail with SEO fields', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/v1/articles/seed-funding-rebounds-ai-infrastructure-q2')
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      slug: 'seed-funding-rebounds-ai-infrastructure-q2',
+      title: expect.any(String),
+      content: expect.any(String),
+      category: { slug: 'startups' },
+      seo: {
+        title: expect.any(String),
+        description: expect.any(String),
+      },
+    });
+  });
+
+  it('GET /v1/articles/:slug returns 404 for unknown slug', async () => {
+    await request(app.getHttpServer()).get('/v1/articles/does-not-exist').expect(404);
+  });
 });

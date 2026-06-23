@@ -18,6 +18,30 @@ export interface ArticleSummaryResponse {
   };
 }
 
+export interface ArticleDetailResponse {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string | null;
+  content: string | null;
+  authorName: string;
+  featuredImageUrl: string | null;
+  publishedAt: string;
+  viewCount: string;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  seo: {
+    title: string | null;
+    description: string | null;
+    canonicalUrl: string | null;
+    ogImageUrl: string | null;
+    structuredData: Record<string, unknown> | null;
+  };
+}
+
 export interface ArticleListResponse {
   data: ArticleSummaryResponse[];
   meta: {
@@ -82,6 +106,65 @@ export class ArticlesService {
         limit,
         total,
         totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    };
+  }
+
+  async findBySlug(slug: string): Promise<ArticleDetailResponse> {
+    const article = await this.prisma.article.findFirst({
+      where: {
+        slug,
+        status: ArticleStatus.PUBLISHED,
+        publishedAt: { not: null },
+      },
+      include: {
+        category: {
+          select: { id: true, name: true, slug: true },
+        },
+      },
+    });
+
+    if (!article) {
+      throw new NotFoundException(`Article with slug "${slug}" not found`);
+    }
+
+    return this.toDetail(article);
+  }
+
+  private toDetail(article: {
+    id: string;
+    title: string;
+    slug: string;
+    summary: string | null;
+    content: string | null;
+    publishedAt: Date | null;
+    authorName: string;
+    featuredImageUrl: string | null;
+    viewCount: bigint;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    canonicalUrl: string | null;
+    ogImageUrl: string | null;
+    structuredData: unknown;
+    category: { id: string; name: string; slug: string };
+  }): ArticleDetailResponse {
+    return {
+      id: article.id,
+      title: article.title,
+      slug: article.slug,
+      summary: article.summary,
+      content: article.content,
+      publishedAt: article.publishedAt?.toISOString() ?? new Date().toISOString(),
+      authorName: article.authorName,
+      featuredImageUrl: article.featuredImageUrl,
+      viewCount: article.viewCount.toString(),
+      category: article.category,
+      seo: {
+        title: article.seoTitle,
+        description: article.seoDescription,
+        canonicalUrl: article.canonicalUrl,
+        ogImageUrl: article.ogImageUrl,
+        structuredData: (article.structuredData as Record<string, unknown> | null) ?? null,
       },
     };
   }
