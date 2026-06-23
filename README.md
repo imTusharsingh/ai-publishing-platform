@@ -97,12 +97,22 @@ Default seed credentials (override via `.env`):
 | `npm run db:seed`        | Seed admin + 7 categories  |
 | `npm run db:studio`      | Open Prisma Studio         |
 
-## API Endpoints (Sprint 0)
+## API Endpoints
 
 - `GET /v1/health` — Health check
+- `POST /v1/auth/login` — Login (email/password)
+- `POST /v1/auth/refresh` — Refresh access token
+- `POST /v1/auth/logout` — Revoke refresh token
+- `GET /v1/auth/me` — Current user (Bearer token)
+- `GET /v1/categories` — List categories (`?activeOnly=true`)
+- `GET /v1/categories/:slug` — Category detail with article count
+- `POST /v1/categories` — Create category (admin)
+- `PUT /v1/categories/:id` — Update category (admin)
+- `DELETE /v1/categories/:id` — Soft/hard delete category (admin)
 
 ## Sprint Progress
 
 - [x] Sprint 0: DevEx & CI baseline
 - [x] Sprint 1: Database foundation
-- [ ] Sprint 2: Authentication API
+- [x] Sprint 2: Authentication API
+- [x] Sprint 3: Categories CRUD API
