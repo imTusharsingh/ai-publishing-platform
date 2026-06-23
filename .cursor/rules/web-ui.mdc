@@ -1,0 +1,71 @@
+---
+description: Web app UI standards for apps/web — tokens, components, and layout patterns
+globs: apps/web/**/*
+alwaysApply: false
+---
+
+# Web UI Standards (`apps/web`)
+
+## Design tokens
+
+Use semantic Tailwind tokens from `tailwind.config.ts`. Do not introduce one-off hex colors.
+
+| Token                                        | Use for                         |
+| -------------------------------------------- | ------------------------------- |
+| `surface`, `surface-muted`                   | Page/card backgrounds           |
+| `content`, `content-muted`, `content-subtle` | Text hierarchy                  |
+| `line`                                       | Dividers, card borders          |
+| `accent`, `accent-foreground`                | Primary actions, active filters |
+| `danger-*`                                   | Error states                    |
+
+Layout utilities:
+
+- `page-container` — max width + horizontal padding (use on every page section)
+- `max-w-page` — 72rem content width
+
+## Component rules
+
+1. **Reuse `components/ui/*`** before creating new primitives (`Button`, `Panel`, `Pill`, `SectionHeader`, `EmptyState`, `Alert`, `Skeleton`, `Pagination`, `PageShell`).
+2. **Page layout** — wrap pages in `PageShell` (header + footer). Content goes in `page-container`.
+3. **Sections** — use `SectionHeader` for page titles; wrap filters/toolbars in `Panel`.
+4. **Spacing** — page sections use `space-y-8`; grids use `gap-6`.
+5. **Radius** — cards/panels: `rounded-2xl`; buttons: `rounded-lg`; pills: `rounded-full`.
+6. **Shadows** — cards: `shadow-card`; panels/dropdowns: `shadow-panel`. Avoid custom shadow values.
+
+## Category filters
+
+- Show **All + top 5 categories** as `Pill` components.
+- Put overflow categories in a **More** dropdown (never render 10+ pills inline).
+- Single-select only — no separate “clear filter” control.
+
+## Data fetching
+
+- Use TanStack Query in client page components.
+- API calls live in `lib/api.ts`; formatting helpers in `lib/format.ts`.
+- Shared response types come from `@repo/shared`.
+
+## Adding a new page
+
+```tsx
+// app/example/page.tsx
+import { PageShell } from '@/components/ui/page-shell';
+import { SectionHeader } from '@/components/ui/section-header';
+
+export default function ExamplePage() {
+  return (
+    <PageShell>
+      <div className="page-container space-y-8">
+        <SectionHeader title="Title" description="Description" />
+        {/* content */}
+      </div>
+    </PageShell>
+  );
+}
+```
+
+## Do not
+
+- Use raw `gray-*` / `slate-*` for new UI — use semantic tokens.
+- Duplicate button/pill/card styles inline — extend `components/ui/*`.
+- Add sidebar category lists — use horizontal pills + More dropdown.
+- Put business logic in `components/ui/*` — keep UI primitives presentational.

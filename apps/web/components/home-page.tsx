@@ -5,7 +5,13 @@ import { useState } from 'react';
 import { getArticles, getCategories } from '@/lib/api';
 import { ArticleCard } from '@/components/article-card';
 import { CategoryNav } from '@/components/category-nav';
-import { SiteHeader } from '@/components/site-header';
+import { Alert } from '@/components/ui/alert';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PageShell } from '@/components/ui/page-shell';
+import { Pagination } from '@/components/ui/pagination';
+import { Panel } from '@/components/ui/panel';
+import { SectionHeader } from '@/components/ui/section-header';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
@@ -21,78 +27,72 @@ export function HomePage() {
     queryFn: () => getArticles({ page, limit: 6, category: selectedCategory }),
   });
 
+  const selectedCategoryName = categoriesQuery.data?.data.find(
+    (category) => category.slug === selectedCategory,
+  )?.name;
+
   const handleCategorySelect = (slug?: string) => {
     setSelectedCategory(slug);
     setPage(1);
   };
 
   return (
-    <main className="min-h-screen">
-      <SiteHeader />
-      <section className="mx-auto max-w-6xl px-4 py-10">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Latest Articles</h1>
-          <p className="mt-3 text-lg text-gray-600">
-            AI-generated news and insights — updated daily.
-          </p>
-        </div>
+    <PageShell>
+      <div className="page-container space-y-8">
+        <SectionHeader
+          title={selectedCategoryName ? `${selectedCategoryName} Articles` : 'Latest Articles'}
+          description={
+            selectedCategoryName
+              ? `Stories and analysis from the ${selectedCategoryName.toLowerCase()} beat.`
+              : 'AI-generated news and insights — updated daily.'
+          }
+        />
 
-        <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
+        <Panel>
           <CategoryNav
             categories={categoriesQuery.data?.data ?? []}
             selectedSlug={selectedCategory}
             onSelect={handleCategorySelect}
+            isLoading={categoriesQuery.isLoading}
           />
+        </Panel>
 
-          <div>
-            {articlesQuery.isLoading && (
-              <p className="text-sm text-gray-500">Loading articles...</p>
-            )}
-
-            {articlesQuery.isError && (
-              <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                Unable to load articles. Make sure the API is running on port 3008.
-              </p>
-            )}
-
-            {articlesQuery.data && articlesQuery.data.data.length === 0 && (
-              <p className="text-sm text-gray-500">No published articles yet.</p>
-            )}
-
-            {articlesQuery.data && articlesQuery.data.data.length > 0 && (
-              <>
-                <div className="grid gap-6 sm:grid-cols-2">
-                  {articlesQuery.data.data.map((article) => (
-                    <ArticleCard key={article.id} article={article} />
-                  ))}
-                </div>
-
-                <div className="mt-8 flex items-center justify-between">
-                  <button
-                    type="button"
-                    disabled={page <= 1}
-                    onClick={() => setPage((current) => Math.max(1, current - 1))}
-                    className="rounded-md border border-gray-300 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-sm text-gray-500">
-                    Page {articlesQuery.data.meta.page} of {articlesQuery.data.meta.totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={page >= articlesQuery.data.meta.totalPages}
-                    onClick={() => setPage((current) => current + 1)}
-                    className="rounded-md border border-gray-300 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
-              </>
-            )}
+        {articlesQuery.isLoading && (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} className="h-72" />
+            ))}
           </div>
-        </div>
-      </section>
-    </main>
+        )}
+
+        {articlesQuery.isError && (
+          <Alert>Unable to load articles. Make sure the API is running on port 3008.</Alert>
+        )}
+
+        {articlesQuery.data && articlesQuery.data.data.length === 0 && (
+          <EmptyState
+            title="No articles in this category yet"
+            description="Try another category or check back soon for new stories."
+          />
+        )}
+
+        {articlesQuery.data && articlesQuery.data.data.length > 0 && (
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {articlesQuery.data.data.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+
+            <Pagination
+              page={articlesQuery.data.meta.page}
+              totalPages={articlesQuery.data.meta.totalPages}
+              onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+              onNext={() => setPage((current) => current + 1)}
+            />
+          </>
+        )}
+      </div>
+    </PageShell>
   );
 }

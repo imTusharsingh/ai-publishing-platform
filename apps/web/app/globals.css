@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-white text-gray-900 antialiased;
+@layer base {
+  body {
+    @apply bg-surface-muted text-content antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply text-content;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-page px-4 sm:px-6;
+  }
 }
