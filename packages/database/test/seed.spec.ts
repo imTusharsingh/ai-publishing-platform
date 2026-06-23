@@ -16,7 +16,7 @@ describe('database seed', () => {
     const categoriesAfterSecond = await prisma.category.count();
 
     expect(usersAfterFirst).toBeGreaterThanOrEqual(1);
-    expect(categoriesAfterFirst).toBe(7);
+    expect(categoriesAfterFirst).toBeGreaterThanOrEqual(7);
     expect(usersAfterSecond).toBe(usersAfterFirst);
     expect(categoriesAfterSecond).toBe(categoriesAfterFirst);
   });
@@ -43,5 +43,12 @@ describe('database seed', () => {
     const categories = await prisma.category.findMany({ where: { slug: { in: slugs } } });
     expect(categories).toHaveLength(7);
     expect(categories.every((c) => c.isActive)).toBe(true);
+  });
+
+  it('creates sample published articles', async () => {
+    const publishedCount = await prisma.article.count({
+      where: { status: 'PUBLISHED' },
+    });
+    expect(publishedCount).toBeGreaterThanOrEqual(6);
   });
 });

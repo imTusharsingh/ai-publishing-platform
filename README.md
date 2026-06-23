@@ -106,6 +106,7 @@ Default seed credentials (override via `.env`):
 - `GET /v1/auth/me` — Current user (Bearer token)
 - `GET /v1/categories` — List categories (`?activeOnly=true`)
 - `GET /v1/categories/:slug` — Category detail with article count
+- `GET /v1/articles` — List published articles (`?category=slug&page=1&limit=12`)
 - `POST /v1/categories` — Create category (admin)
 - `PUT /v1/categories/:id` — Update category (admin)
 - `DELETE /v1/categories/:id` — Soft/hard delete category (admin)
@@ -116,3 +117,4 @@ Default seed credentials (override via `.env`):
 - [x] Sprint 1: Database foundation
 - [x] Sprint 2: Authentication API
 - [x] Sprint 3: Categories CRUD API
+- [x] Sprint 4: Public home + article listing (web)

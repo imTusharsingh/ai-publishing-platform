@@ -61,7 +61,7 @@ describe('CategoriesController (e2e)', () => {
     const response = await request(app.getHttpServer()).get('/v1/categories/startups').expect(200);
 
     expect(response.body.slug).toBe('startups');
-    expect(response.body.articleCount).toBe(0);
+    expect(response.body.articleCount).toBeGreaterThanOrEqual(1);
   });
 
   it('POST /v1/categories creates a category for admins', async () => {
