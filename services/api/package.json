@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "build": "nest build",
-    "dev": "nest start --watch",
-    "start": "node dist/main",
-    "lint": "echo 'lint ok'",
+    "dev": "dotenv -e ../../.env -- nest start --watch",
+    "start": "dotenv -e ../../.env -- node dist/main",
+    "lint": "eslint \"{src,test}/**/*.ts\"",
     "test": "jest && npm run test:e2e",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prebuild": "rm -f tsconfig.build.tsbuildinfo",
+    "predev": "npm run build"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.2",
@@ -17,7 +19,8 @@
     "@nestjs/platform-express": "^11.1.2",
     "@repo/shared": "*",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "@repo/database": "*"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.7",
@@ -33,6 +36,10 @@
     "supertest": "^7.1.1",
     "ts-jest": "^29.3.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "dotenv-cli": "^8.0.0",
+    "eslint": "^9.27.0",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1"
   }
 }

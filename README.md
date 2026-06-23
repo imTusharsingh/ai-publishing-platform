@@ -72,6 +72,31 @@ npm run dev --workspace=@repo/admin
 | `npm run docker:up`   | Start PostgreSQL + Redis      |
 | `npm run docker:down` | Stop Docker services          |
 
+## Database Setup (Sprint 1+)
+
+```bash
+# Ensure PostgreSQL is running
+npm run docker:up
+
+# Run migrations
+npm run db:migrate
+
+# Seed admin user + categories
+npm run db:seed
+```
+
+Default seed credentials (override via `.env`):
+
+- Email: `admin@example.com`
+- Password: `Admin123!`
+
+| Script                   | Description                |
+| ------------------------ | -------------------------- |
+| `npm run db:migrate`     | Apply migrations           |
+| `npm run db:migrate:dev` | Create new migration (dev) |
+| `npm run db:seed`        | Seed admin + 7 categories  |
+| `npm run db:studio`      | Open Prisma Studio         |
+
 ## API Endpoints (Sprint 0)
 
 - `GET /v1/health` — Health check
@@ -79,5 +104,5 @@ npm run dev --workspace=@repo/admin
 ## Sprint Progress
 
 - [x] Sprint 0: DevEx & CI baseline
-- [ ] Sprint 1: Database foundation
+- [x] Sprint 1: Database foundation
 - [ ] Sprint 2: Authentication API

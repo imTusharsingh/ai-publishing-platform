@@ -1,0 +1,334 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector"), uuidOssp(map: "uuid-ossp")]
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum PublishFrequency {
+  DAILY
+  TWICE_DAILY
+  WEEKLY
+}
+
+enum TrendSource {
+  GOOGLE_TRENDS
+  REDDIT
+  TWITTER
+  NEWS_API
+  BLOG_RSS
+}
+
+enum TopicStatus {
+  DISCOVERED
+  SUGGESTED
+  APPROVED
+  REJECTED
+  USED
+  EXPIRED
+}
+
+enum ArticleIdeaStatus {
+  DRAFT
+  DUPLICATE_REJECTED
+  APPROVED
+  GENERATING
+  FAILED
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PublishingJobStatus {
+  QUEUED
+  PROCESSING
+  PUBLISHED
+  FAILED
+}
+
+enum AiJobType {
+  TREND_DISCOVERY
+  PLANNING
+  WRITING
+  SEO
+  QUALITY
+  DUPLICATE
+  EMBEDDING
+}
+
+enum AiJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  role         UserRole  @default(VIEWER)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  refreshTokens  RefreshToken[]
+  reviewedTopics TrendingTopic[]
+  auditLogs      AuditLog[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model Category {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String           @unique @db.VarChar(100)
+  slug             String           @unique @db.VarChar(120)
+  description      String?          @db.Text
+  keywords         String[]
+  priorityScore    Int              @default(50) @map("priority_score") @db.SmallInt
+  publishFrequency PublishFrequency @default(DAILY) @map("publish_frequency")
+  articlesPerCycle Int              @default(1) @map("articles_per_cycle") @db.SmallInt
+  isActive         Boolean          @default(true) @map("is_active")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  trendingTopics TrendingTopic[]
+  articleIdeas   ArticleIdea[]
+  articles       Article[]
+
+  @@index([isActive, priorityScore(sort: Desc)])
+  @@map("categories")
+}
+
+model TrendingTopic {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  source            TrendSource
+  title             String      @db.VarChar(500)
+  normalizedTitle   String      @map("normalized_title") @db.VarChar(500)
+  description       String?     @db.Text
+  popularityScore   Decimal     @default(0) @map("popularity_score") @db.Decimal(5, 2)
+  sourceUrl         String?     @map("source_url") @db.Text
+  sourceMetadata    Json?       @map("source_metadata") @db.JsonB
+  matchedCategoryId String?     @map("matched_category_id") @db.Uuid
+  status            TopicStatus @default(DISCOVERED)
+  discoveredAt      DateTime    @default(now()) @map("discovered_at") @db.Timestamptz
+  reviewedById      String?     @map("reviewed_by") @db.Uuid
+  reviewedAt        DateTime?   @map("reviewed_at") @db.Timestamptz
+
+  matchedCategory Category?     @relation(fields: [matchedCategoryId], references: [id], onDelete: SetNull)
+  reviewedBy      User?         @relation(fields: [reviewedById], references: [id], onDelete: SetNull)
+  articleIdeas    ArticleIdea[]
+
+  @@index([status, popularityScore(sort: Desc)])
+  @@index([matchedCategoryId])
+  @@map("trending_topics")
+}
+
+model CanonicalTopic {
+  id             String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topicKey       String                      @unique @map("topic_key") @db.VarChar(200)
+  intent         String                      @db.VarChar(100)
+  keywords       String[]
+  embedding      Unsupported("vector(1536)")?
+  firstCoveredAt DateTime                    @map("first_covered_at") @db.Timestamptz
+  lastCoveredAt  DateTime                    @map("last_covered_at") @db.Timestamptz
+  coverageCount  Int                         @default(1) @map("coverage_count")
+  cooldownUntil  DateTime                    @map("cooldown_until") @db.Timestamptz
+  articleId      String                      @map("article_id") @db.Uuid
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([intent])
+  @@index([cooldownUntil])
+  @@map("canonical_topics")
+}
+
+model ArticleIdea {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId           String            @map("category_id") @db.Uuid
+  trendingTopicId      String?           @map("trending_topic_id") @db.Uuid
+  title                String            @db.VarChar(500)
+  slugCandidate        String            @unique @map("slug_candidate") @db.VarChar(520)
+  summary              String?           @db.Text
+  outline              Json?             @db.JsonB
+  intent               String?           @db.VarChar(100)
+  status               ArticleIdeaStatus @default(DRAFT)
+  duplicateCheckResult Json?             @map("duplicate_check_result") @db.JsonB
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  trendingTopic TrendingTopic? @relation(fields: [trendingTopicId], references: [id], onDelete: SetNull)
+  article       Article?
+
+  @@index([status])
+  @@index([categoryId])
+  @@map("article_ideas")
+}
+
+model Article {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId       String        @map("category_id") @db.Uuid
+  articleIdeaId    String        @unique @map("article_idea_id") @db.Uuid
+  title            String        @unique @db.VarChar(500)
+  slug             String        @unique @db.VarChar(520)
+  summary          String?       @db.Text
+  content          String?       @db.Text
+  contentPlain     String?       @map("content_plain") @db.Text
+  featuredImageUrl String?       @map("featured_image_url") @db.Text
+  authorName       String        @default("AI Writer") @map("author_name") @db.VarChar(100)
+  status           ArticleStatus @default(DRAFT)
+  publishedAt      DateTime?     @map("published_at") @db.Timestamptz
+  viewCount        BigInt        @default(0) @map("view_count")
+  seoTitle         String?       @map("seo_title") @db.VarChar(70)
+  seoDescription   String?       @map("seo_description") @db.VarChar(160)
+  canonicalUrl     String?       @map("canonical_url") @db.Text
+  ogImageUrl       String?       @map("og_image_url") @db.Text
+  structuredData   Json?         @map("structured_data") @db.JsonB
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  category         Category             @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  articleIdea      ArticleIdea          @relation(fields: [articleIdeaId], references: [id], onDelete: Cascade)
+  embedding        ArticleEmbedding?
+  canonicalTopics  CanonicalTopic[]
+  publishingJobs   PublishingJob[]
+  relatedFrom      ArticleRelated[]     @relation("ArticleRelatedFrom")
+  relatedTo        ArticleRelated[]     @relation("ArticleRelatedTo")
+  duplicateMatches DuplicateRejection[] @relation("DuplicateMatchedArticle")
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([categoryId, status, publishedAt(sort: Desc)])
+  @@map("articles")
+}
+
+model ArticleEmbedding {
+  id               String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  articleId        String                       @unique @map("article_id") @db.Uuid
+  titleEmbedding   Unsupported("vector(1536)")? @map("title_embedding")
+  summaryEmbedding Unsupported("vector(1536)")? @map("summary_embedding")
+  contentEmbedding Unsupported("vector(1536)")? @map("content_embedding")
+  model            String                       @default("text-embedding-3-small") @db.VarChar(50)
+  createdAt        DateTime                     @default(now()) @map("created_at") @db.Timestamptz
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@map("article_embeddings")
+}
+
+model ArticleRelated {
+  articleId        String  @map("article_id") @db.Uuid
+  relatedArticleId String  @map("related_article_id") @db.Uuid
+  similarityScore  Decimal @map("similarity_score") @db.Decimal(5, 4)
+
+  article        Article @relation("ArticleRelatedFrom", fields: [articleId], references: [id], onDelete: Cascade)
+  relatedArticle Article @relation("ArticleRelatedTo", fields: [relatedArticleId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, relatedArticleId])
+  @@map("article_related")
+}
+
+model PublishingJob {
+  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  articleId    String              @map("article_id") @db.Uuid
+  status       PublishingJobStatus @default(QUEUED)
+  scheduledAt  DateTime            @map("scheduled_at") @db.Timestamptz
+  publishedAt  DateTime?           @map("published_at") @db.Timestamptz
+  errorMessage String?             @map("error_message") @db.Text
+  retryCount   Int                 @default(0) @map("retry_count") @db.SmallInt
+  bullmqJobId  String?             @map("bullmq_job_id") @db.VarChar(100)
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledAt])
+  @@map("publishing_jobs")
+}
+
+model AiJob {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jobType          AiJobType   @map("job_type")
+  entityType       String      @map("entity_type") @db.VarChar(50)
+  entityId         String      @map("entity_id") @db.Uuid
+  status           AiJobStatus @default(PENDING)
+  provider         String      @default("openai") @db.VarChar(50)
+  model            String?     @db.VarChar(100)
+  promptTokens     Int?        @map("prompt_tokens")
+  completionTokens Int?        @map("completion_tokens")
+  costUsd          Decimal?    @map("cost_usd") @db.Decimal(10, 6)
+  inputSnapshot    Json?       @map("input_snapshot") @db.JsonB
+  outputSnapshot   Json?       @map("output_snapshot") @db.JsonB
+  errorMessage     String?     @map("error_message") @db.Text
+  startedAt        DateTime?   @map("started_at") @db.Timestamptz
+  completedAt      DateTime?   @map("completed_at") @db.Timestamptz
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([jobType, status])
+  @@index([entityType, entityId])
+  @@map("ai_jobs")
+}
+
+model DuplicateRejection {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rejectedTitle    String   @map("rejected_title") @db.VarChar(500)
+  rejectedAt       DateTime @default(now()) @map("rejected_at") @db.Timestamptz
+  layer            Int      @db.SmallInt
+  matchedArticleId String?  @map("matched_article_id") @db.Uuid
+  similarityScore  Decimal? @map("similarity_score") @db.Decimal(5, 4)
+  reason           String?  @db.Text
+  metadata         Json?    @db.JsonB
+
+  matchedArticle Article? @relation("DuplicateMatchedArticle", fields: [matchedArticleId], references: [id], onDelete: SetNull)
+
+  @@index([rejectedAt(sort: Desc)])
+  @@index([layer])
+  @@map("duplicate_rejections")
+}
+
+model AuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String   @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String?  @map("entity_id") @db.Uuid
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  payload    Json?    @db.JsonB
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
