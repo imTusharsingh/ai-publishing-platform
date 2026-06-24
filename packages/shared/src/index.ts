@@ -16,6 +16,14 @@ export type {
   UpdateCategoryRequest,
 } from './admin.types';
 export type {
+  MockTrendInput,
+  TopicListResponse,
+  TopicStatus,
+  TopicSummary,
+  TrendSource,
+} from './trends.types';
+export { MOCK_TREND_BATCH, normalizeTopicTitle } from './trends.types';
+export type {
   ArticleDetail,
   ArticleListResponse,
   ArticleSeo,

@@ -44,6 +44,9 @@ export function AdminHeader() {
             <Link href="/jobs" className="text-gray-600 hover:text-gray-900">
               Jobs
             </Link>
+            <Link href="/topics" className="text-gray-600 hover:text-gray-900">
+              Topics
+            </Link>
           </nav>
         </div>
         <button
