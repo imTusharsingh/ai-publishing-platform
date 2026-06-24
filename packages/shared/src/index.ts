@@ -12,6 +12,13 @@ export type {
   UserRole,
 } from './auth.types';
 export type {
+  CategoryAdmin,
+  CategoryAdminListResponse,
+  CreateCategoryRequest,
+  PublishFrequency,
+  UpdateCategoryRequest,
+} from './admin.types';
+export type {
   ArticleDetail,
   ArticleListResponse,
   ArticleSeo,
