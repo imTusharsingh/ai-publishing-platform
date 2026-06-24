@@ -1,10 +1,5 @@
 import { Worker } from 'bullmq';
-import {
-  JOB_NAMES,
-  QUEUE_NAMES,
-  createRedisConnection,
-  type PingJobData,
-} from '@repo/queue';
+import { JOB_NAMES, QUEUE_NAMES, createRedisConnection, type PingJobData } from '@repo/queue';
 import { processPingJob } from './processors/ping.processor';
 
 async function bootstrap() {

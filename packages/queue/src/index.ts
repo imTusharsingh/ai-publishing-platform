@@ -22,11 +22,5 @@ export async function closeQueues(): Promise<void> {
 }
 
 export { QUEUE_NAMES, JOB_NAMES } from './types';
-export type {
-  JobName,
-  JobStatusResponse,
-  PingJobData,
-  PingJobResult,
-  QueueName,
-} from './types';
+export type { JobName, JobStatusResponse, PingJobData, PingJobResult, QueueName } from './types';
 export { createRedisConnection } from './redis';

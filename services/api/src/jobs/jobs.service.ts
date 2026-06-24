@@ -28,7 +28,11 @@ export class JobsService implements OnModuleDestroy {
   }
 
   async findRecent(limit = 20): Promise<JobStatusResponse[]> {
-    const jobs = await this.queue.getJobs(['completed', 'failed', 'active', 'waiting', 'delayed'], 0, limit - 1);
+    const jobs = await this.queue.getJobs(
+      ['completed', 'failed', 'active', 'waiting', 'delayed'],
+      0,
+      limit - 1,
+    );
     return Promise.all(jobs.map((job) => this.toStatus(job)));
   }
 
