@@ -49,3 +49,17 @@ export interface AuditLogListResponse {
   data: AuditLogEntry[];
   meta: { total: number; page: number; limit: number };
 }
+
+export interface JobStatusEntry {
+  id: string;
+  name: string;
+  queue: string;
+  state: string;
+  progress: number;
+  attemptsMade: number;
+  failedReason: string | null;
+  finishedOn: number | null;
+  processedOn: number | null;
+  returnvalue: unknown;
+  data: unknown;
+}

@@ -11,6 +11,7 @@ export type {
   CategoryAdmin,
   CategoryAdminListResponse,
   CreateCategoryRequest,
+  JobStatusEntry,
   PublishFrequency,
   UpdateCategoryRequest,
 } from './admin.types';
