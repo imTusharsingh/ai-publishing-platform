@@ -140,3 +140,4 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 5: Article detail + category pages + SEO metadata
 - [x] Sprint 6: Admin login UI + protected routes
 - [x] Sprint 7: Admin category management UI
+- [x] Sprint 8: Audit logging + admin audit viewer

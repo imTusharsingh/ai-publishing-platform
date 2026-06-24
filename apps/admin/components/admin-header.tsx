@@ -38,6 +38,9 @@ export function AdminHeader() {
             <Link href="/categories" className="text-gray-600 hover:text-gray-900">
               Categories
             </Link>
+            <Link href="/audit" className="text-gray-600 hover:text-gray-900">
+              Audit
+            </Link>
           </nav>
         </div>
         <button
