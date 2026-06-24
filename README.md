@@ -137,3 +137,5 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 2: Authentication API
 - [x] Sprint 3: Categories CRUD API
 - [x] Sprint 4: Public home + article listing (web)
+- [x] Sprint 5: Article detail + category pages + SEO metadata
+- [x] Sprint 6: Admin login UI + protected routes
