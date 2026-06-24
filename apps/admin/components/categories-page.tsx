@@ -24,8 +24,21 @@ const emptyForm: CreateCategoryRequest = {
 export function CategoriesPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CreateCategoryRequest>(emptyForm);
+  const [keywordsInput, setKeywordsInput] = useState('');
   const [editing, setEditing] = useState<CategoryAdmin | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const parseKeywords = (value: string) =>
+    value
+      .split(',')
+      .map((k) => k.trim())
+      .filter(Boolean);
+
+  const resetForm = () => {
+    setForm(emptyForm);
+    setKeywordsInput('');
+    setError(null);
+  };
 
   const categoriesQuery = useQuery({
     queryKey: ['admin-categories'],
@@ -37,8 +50,7 @@ export function CategoriesPage() {
   const createMutation = useMutation({
     mutationFn: createCategory,
     onSuccess: () => {
-      setForm(emptyForm);
-      setError(null);
+      resetForm();
       invalidate();
     },
     onError: (err) => setError(err instanceof ApiError ? err.message : 'Create failed'),
@@ -49,8 +61,7 @@ export function CategoriesPage() {
       updateCategory(id, payload),
     onSuccess: () => {
       setEditing(null);
-      setForm(emptyForm);
-      setError(null);
+      resetForm();
       invalidate();
     },
     onError: (err) => setError(err instanceof ApiError ? err.message : 'Update failed'),
@@ -66,7 +77,7 @@ export function CategoriesPage() {
     event.preventDefault();
     const payload = {
       ...form,
-      keywords: form.keywords?.filter(Boolean),
+      keywords: parseKeywords(keywordsInput),
       description: form.description || undefined,
     };
 
@@ -89,6 +100,7 @@ export function CategoriesPage() {
       articlesPerCycle: category.articlesPerCycle,
       isActive: category.isActive,
     });
+    setKeywordsInput(category.keywords.join(', '));
     setError(null);
   };
 
@@ -123,16 +135,8 @@ export function CategoriesPage() {
             />
             <input
               placeholder="Keywords (comma-separated)"
-              value={(form.keywords ?? []).join(', ')}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  keywords: e.target.value
-                    .split(',')
-                    .map((k) => k.trim())
-                    .filter(Boolean),
-                })
-              }
+              value={keywordsInput}
+              onChange={(e) => setKeywordsInput(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             />
             <input
@@ -168,8 +172,7 @@ export function CategoriesPage() {
                 type="button"
                 onClick={() => {
                   setEditing(null);
-                  setForm(emptyForm);
-                  setError(null);
+                  resetForm();
                 }}
                 className="rounded-lg border border-gray-300 px-4 py-2 text-sm"
               >
