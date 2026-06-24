@@ -4,13 +4,7 @@ export function formatApiVersion(version: string): string {
   return `v${version}`;
 }
 
-export type {
-  AuthMeResponse,
-  AuthTokens,
-  AuthUser,
-  LoginRequest,
-  UserRole,
-} from './auth.types';
+export type { AuthMeResponse, AuthTokens, AuthUser, LoginRequest, UserRole } from './auth.types';
 export type {
   CategoryAdmin,
   CategoryAdminListResponse,
