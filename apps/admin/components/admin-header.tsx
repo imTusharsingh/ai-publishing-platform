@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { logout as apiLogout } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth-store';
@@ -25,9 +26,19 @@ export function AdminHeader() {
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">AI Publishing Platform — Admin</h1>
-          {user && <p className="text-sm text-gray-500">{user.email}</p>}
+        <div className="flex items-center gap-6">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">AI Publishing Platform — Admin</h1>
+            {user && <p className="text-sm text-gray-500">{user.email}</p>}
+          </div>
+          <nav className="flex gap-4 text-sm">
+            <Link href="/" className="text-gray-600 hover:text-gray-900">
+              Dashboard
+            </Link>
+            <Link href="/categories" className="text-gray-600 hover:text-gray-900">
+              Categories
+            </Link>
+          </nav>
         </div>
         <button
           type="button"
