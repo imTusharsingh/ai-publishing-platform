@@ -111,6 +111,25 @@ Default seed credentials (override via `.env`):
 - `PUT /v1/categories/:id` — Update category (admin)
 - `DELETE /v1/categories/:id` — Soft/hard delete category (admin)
 
+## Branching & CI
+
+| Branch        | Purpose             | Merge policy                | CI      |
+| ------------- | ------------------- | --------------------------- | ------- |
+| `production`  | Live default branch | Only repo admin can push    | On push |
+| `staging`     | Pre-production      | Only repo admin can push    | On push |
+| `development` | Integration         | PR with at least 1 approval | On push |
+| `sprint-*`    | Feature work        | Open PR into `development`  | No CI   |
+
+Flow: `sprint-*` → PR → `development` → `staging` → `production`
+
+After cloning, apply GitHub branch protection (one-time, requires admin):
+
+```bash
+gh auth login
+chmod +x .github/scripts/setup-github-governance.sh
+./.github/scripts/setup-github-governance.sh
+```
+
 ## Sprint Progress
 
 - [x] Sprint 0: DevEx & CI baseline
