@@ -1,9 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Observable, tap } from 'rxjs';
 import { AuthUser } from '../auth/auth.types';
