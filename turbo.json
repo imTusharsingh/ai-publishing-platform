@@ -21,7 +21,8 @@
         "SEED_ADMIN_PASSWORD",
         "JWT_SECRET",
         "JWT_ACCESS_EXPIRES_IN",
-        "JWT_REFRESH_EXPIRES_IN"
+        "JWT_REFRESH_EXPIRES_IN",
+        "REDIS_URL"
       ]
     },
     "typecheck": {
