@@ -3,7 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormEvent, useState } from 'react';
 import type { CategoryAdmin, CreateCategoryRequest } from '@repo/shared';
-import { createCategory, deleteCategory, listCategories, updateCategory } from '@/lib/categories-api';
+import {
+  createCategory,
+  deleteCategory,
+  listCategories,
+  updateCategory,
+} from '@/lib/categories-api';
 import { ApiError } from '@/lib/api';
 
 const emptyForm: CreateCategoryRequest = {
@@ -93,7 +98,10 @@ export function CategoriesPage() {
       <p className="mt-2 text-gray-600">Manage publishing categories for the platform.</p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-        <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+        >
           <h3 className="text-lg font-semibold text-gray-900">
             {editing ? 'Edit category' : 'Create category'}
           </h3>

@@ -21,9 +21,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
 
   if (!response.ok) {
     const message =
-      typeof body?.message === 'string'
-        ? body.message
-        : `API request failed: ${response.status}`;
+      typeof body?.message === 'string' ? body.message : `API request failed: ${response.status}`;
     throw new ApiError(message, response.status);
   }
 

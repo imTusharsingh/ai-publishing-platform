@@ -31,8 +31,6 @@ describe('admin api client', () => {
       json: async () => ({ message: 'Invalid credentials' }),
     });
 
-    await expect(login({ email: 'bad@example.com', password: 'wrong' })).rejects.toThrow(
-      ApiError,
-    );
+    await expect(login({ email: 'bad@example.com', password: 'wrong' })).rejects.toThrow(ApiError);
   });
 });
