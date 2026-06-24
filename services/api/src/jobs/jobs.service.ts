@@ -7,19 +7,27 @@ import {
   type JobStatusResponse,
   type PingJobData,
 } from '@repo/queue';
-import type { Job } from 'bullmq';
+import type { Job, Queue } from 'bullmq';
 
 @Injectable()
 export class JobsService implements OnModuleDestroy {
-  private readonly queue = getDefaultQueue();
+  private queue: Queue | null = null;
+
+  private resolveQueue(): Queue {
+    if (!this.queue) {
+      this.queue = getDefaultQueue();
+    }
+
+    return this.queue;
+  }
 
   async enqueuePing(message: string): Promise<JobStatusResponse> {
-    const job = await this.queue.add(JOB_NAMES.PING, { message } satisfies PingJobData);
+    const job = await this.resolveQueue().add(JOB_NAMES.PING, { message } satisfies PingJobData);
     return this.toStatus(job);
   }
 
   async findById(id: string): Promise<JobStatusResponse> {
-    const job = await this.queue.getJob(id);
+    const job = await this.resolveQueue().getJob(id);
     if (!job) {
       throw new NotFoundException(`Job with id "${id}" not found`);
     }
@@ -28,7 +36,7 @@ export class JobsService implements OnModuleDestroy {
   }
 
   async findRecent(limit = 20): Promise<JobStatusResponse[]> {
-    const jobs = await this.queue.getJobs(
+    const jobs = await this.resolveQueue().getJobs(
       ['completed', 'failed', 'active', 'waiting', 'delayed'],
       0,
       limit - 1,
@@ -41,7 +49,7 @@ export class JobsService implements OnModuleDestroy {
   }
 
   getQueue() {
-    return this.queue;
+    return this.resolveQueue();
   }
 
   private async toStatus(job: Job): Promise<JobStatusResponse> {
