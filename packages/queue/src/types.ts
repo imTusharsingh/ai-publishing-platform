@@ -1,0 +1,34 @@
+export const QUEUE_NAMES = {
+  DEFAULT: 'ai-publishing-default',
+} as const;
+
+export const JOB_NAMES = {
+  PING: 'ping',
+} as const;
+
+export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
+export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
+
+export interface PingJobData {
+  message: string;
+}
+
+export interface PingJobResult {
+  pong: true;
+  receivedAt: string;
+  message: string;
+}
+
+export interface JobStatusResponse {
+  id: string;
+  name: string;
+  queue: string;
+  state: string;
+  progress: number;
+  attemptsMade: number;
+  failedReason: string | null;
+  finishedOn: number | null;
+  processedOn: number | null;
+  returnvalue: unknown;
+  data: unknown;
+}

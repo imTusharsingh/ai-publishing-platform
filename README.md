@@ -141,3 +141,4 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 6: Admin login UI + protected routes
 - [x] Sprint 7: Admin category management UI
 - [x] Sprint 8: Audit logging + admin audit viewer
+- [x] Sprint 9: BullMQ infrastructure + job monitoring
