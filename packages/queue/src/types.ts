@@ -4,6 +4,7 @@ export const QUEUE_NAMES = {
 
 export const JOB_NAMES = {
   PING: 'ping',
+  TREND_DISCOVERY: 'trend-discovery',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -17,6 +18,15 @@ export interface PingJobResult {
   pong: true;
   receivedAt: string;
   message: string;
+}
+
+export interface TrendDiscoveryJobData {
+  runId: string;
+}
+
+export interface TrendDiscoveryJobResult {
+  created: number;
+  runId: string;
 }
 
 export interface JobStatusResponse {

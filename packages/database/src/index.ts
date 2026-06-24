@@ -9,4 +9,5 @@ export type {
   AuditLog,
 } from '@prisma/client';
 export { prisma, PrismaService } from './prisma.service';
+export { discoverMockTrends } from './discover-mock-trends';
 export { seed } from './seed';
