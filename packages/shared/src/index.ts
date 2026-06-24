@@ -6,6 +6,8 @@ export function formatApiVersion(version: string): string {
 
 export type { AuthMeResponse, AuthTokens, AuthUser, LoginRequest, UserRole } from './auth.types';
 export type {
+  AuditLogEntry,
+  AuditLogListResponse,
   CategoryAdmin,
   CategoryAdminListResponse,
   CreateCategoryRequest,
