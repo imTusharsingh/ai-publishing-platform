@@ -16,6 +16,14 @@ export type {
   UpdateCategoryRequest,
 } from './admin.types';
 export type {
+  ArticleAdminDetail,
+  ArticleAdminListResponse,
+  ArticleAdminStatus,
+  ArticleAdminSummary,
+  GenerateArticleResponse,
+  UpdateArticleStatusRequest,
+} from './articles-admin.types';
+export type {
   ArticleIdeaListResponse,
   ArticleIdeaOutlineSection,
   ArticleIdeaStatus,

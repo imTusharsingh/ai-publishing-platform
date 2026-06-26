@@ -119,6 +119,10 @@ Default seed credentials (override via `.env`):
 - `POST /v1/article-ideas` — Create article idea (admin)
 - `POST /v1/article-ideas/from-topic/:topicId` — Generate idea from topic (admin)
 - `PATCH /v1/article-ideas/:id/status` — Update idea status (admin)
+- `POST /v1/article-ideas/:id/generate` — Enqueue article writing job (admin)
+- `GET /v1/admin/articles` — List all articles (`?status=DRAFT`, admin)
+- `GET /v1/admin/articles/:id` — Article detail preview (admin)
+- `PATCH /v1/admin/articles/:id/status` — Publish or archive article (admin)
 
 ## Branching & CI
 
@@ -153,3 +157,4 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 9: BullMQ infrastructure + job monitoring
 - [x] Sprint 10: Trend discovery worker + topics API
 - [x] Sprint 11: Article ideas API + mock generation + admin UI
+- [x] Sprint 12: Mock article writing pipeline + admin articles UI

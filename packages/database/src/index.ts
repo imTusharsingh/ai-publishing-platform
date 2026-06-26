@@ -10,4 +10,6 @@ export type {
 } from '@prisma/client';
 export { prisma, PrismaService } from './prisma.service';
 export { discoverMockTrends } from './discover-mock-trends';
+export { generateMockArticle, buildMockArticleContent } from './generate-mock-article';
+export type { GenerateMockArticleResult, ArticleOutlineSection } from './generate-mock-article';
 export { seed } from './seed';

@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ArticleIdeaStatus, Prisma, TopicStatus } from '@prisma/client';
+import { JOB_NAMES, getDefaultQueue, type ArticleWritingJobData } from '@repo/queue';
 import { PrismaService } from '../prisma/prisma.service';
 import { generateUniqueSlug, slugify } from '../categories/slug.util';
 import { CreateArticleIdeaDto } from './dto/create-article-idea.dto';
@@ -13,6 +14,7 @@ import {
   ArticleIdeaListResponse,
   ArticleIdeaOutlineSection,
   ArticleIdeaResponse,
+  GenerateArticleResult,
 } from './article-ideas.types';
 import { buildMockOutline, buildMockSummary, refineMockTitle } from './mock-idea.util';
 
@@ -35,6 +37,7 @@ export class ArticleIdeasService {
         include: {
           category: { select: { name: true } },
           trendingTopic: { select: { title: true } },
+          article: { select: { id: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -55,6 +58,7 @@ export class ArticleIdeasService {
       include: {
         category: { select: { name: true } },
         trendingTopic: { select: { title: true } },
+        article: { select: { id: true } },
       },
     });
 
@@ -158,10 +162,50 @@ export class ArticleIdeasService {
       include: {
         category: { select: { name: true } },
         trendingTopic: { select: { title: true } },
+        article: { select: { id: true } },
       },
     });
 
     return this.toResponse(idea);
+  }
+
+  async enqueueGenerate(id: string): Promise<GenerateArticleResult> {
+    const idea = await this.prisma.articleIdea.findUnique({
+      where: { id },
+      include: { article: { select: { id: true } } },
+    });
+
+    if (!idea) {
+      throw new NotFoundException(`Article idea with id "${id}" not found`);
+    }
+
+    if (idea.article) {
+      throw new ConflictException('Article already exists for this idea');
+    }
+
+    if (idea.status !== ArticleIdeaStatus.APPROVED && idea.status !== ArticleIdeaStatus.FAILED) {
+      throw new BadRequestException(
+        `Only approved or failed ideas can be generated (current: ${idea.status})`,
+      );
+    }
+
+    await this.prisma.articleIdea.update({
+      where: { id },
+      data: { status: ArticleIdeaStatus.GENERATING },
+    });
+
+    const queue = getDefaultQueue();
+    const job = await queue.add(JOB_NAMES.ARTICLE_WRITING, {
+      ideaId: id,
+    } satisfies ArticleWritingJobData);
+
+    const state = await job.getState();
+
+    return {
+      jobId: job.id ?? '',
+      ideaId: id,
+      state,
+    };
   }
 
   private async ensureCategoryExists(categoryId: string): Promise<void> {
@@ -202,6 +246,7 @@ export class ArticleIdeasService {
     createdAt: Date;
     category: { name: string };
     trendingTopic: { title: string } | null;
+    article?: { id: string } | null;
   }): ArticleIdeaResponse {
     return {
       id: idea.id,
@@ -216,6 +261,8 @@ export class ArticleIdeasService {
       intent: idea.intent,
       status: idea.status,
       createdAt: idea.createdAt,
+      articleId: idea.article?.id ?? null,
+      hasArticle: Boolean(idea.article),
     };
   }
 
