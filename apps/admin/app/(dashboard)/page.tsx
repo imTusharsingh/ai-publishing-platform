@@ -11,12 +11,24 @@ export default function DashboardPage() {
           <h3 className="font-medium text-gray-900">Categories</h3>
           <p className="mt-1 text-sm text-gray-500">Manage categories</p>
         </a>
-        {['Topics', 'Articles', 'AI Jobs'].map((item) => (
-          <div key={item} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="font-medium text-gray-900">{item}</h3>
-            <p className="mt-1 text-sm text-gray-500">Coming soon</p>
-          </div>
-        ))}
+        <a
+          href="/topics"
+          className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:border-gray-300"
+        >
+          <h3 className="font-medium text-gray-900">Topics</h3>
+          <p className="mt-1 text-sm text-gray-500">Trend discovery</p>
+        </a>
+        <a
+          href="/ideas"
+          className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:border-gray-300"
+        >
+          <h3 className="font-medium text-gray-900">Article ideas</h3>
+          <p className="mt-1 text-sm text-gray-500">Draft and approve ideas</p>
+        </a>
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="font-medium text-gray-900">Articles</h3>
+          <p className="mt-1 text-sm text-gray-500">Coming soon</p>
+        </div>
       </div>
     </section>
   );
