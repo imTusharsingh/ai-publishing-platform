@@ -63,6 +63,37 @@ export class AuditInterceptor implements NestInterceptor {
     const path = request.route?.path ?? request.originalUrl ?? '';
     const method = request.method.toUpperCase();
 
+    if (path.includes('/article-ideas')) {
+      const entityId =
+        request.params.id ??
+        request.params.topicId ??
+        (typeof responseBody === 'object' &&
+        responseBody !== null &&
+        'id' in responseBody &&
+        typeof (responseBody as { id: unknown }).id === 'string'
+          ? (responseBody as { id: string }).id
+          : undefined);
+
+      let action = 'article_idea.update';
+      if (method === 'POST' && path.includes('/from-topic/')) {
+        action = 'article_idea.generate_from_topic';
+      } else if (method === 'POST') {
+        action = 'article_idea.create';
+      } else if (path.includes('/status')) {
+        action = 'article_idea.status_update';
+      }
+
+      return {
+        action,
+        entityType: 'article_idea',
+        entityId,
+        payload:
+          typeof responseBody === 'object' && responseBody !== null
+            ? (responseBody as Record<string, unknown>)
+            : undefined,
+      };
+    }
+
     if (path.includes('/categories')) {
       const entityId =
         request.params.id ??

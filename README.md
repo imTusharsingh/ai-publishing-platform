@@ -110,6 +110,15 @@ Default seed credentials (override via `.env`):
 - `POST /v1/categories` — Create category (admin)
 - `PUT /v1/categories/:id` — Update category (admin)
 - `DELETE /v1/categories/:id` — Soft/hard delete category (admin)
+- `GET /v1/audit-logs` — List audit logs (admin)
+- `GET /v1/jobs` — List background jobs (admin)
+- `POST /v1/jobs/ping` — Enqueue ping job (admin)
+- `GET /v1/topics` — List trending topics (admin)
+- `POST /v1/topics/discover` — Enqueue trend discovery (admin)
+- `GET /v1/article-ideas` — List article ideas (`?status=DRAFT&categoryId=uuid`, admin)
+- `POST /v1/article-ideas` — Create article idea (admin)
+- `POST /v1/article-ideas/from-topic/:topicId` — Generate idea from topic (admin)
+- `PATCH /v1/article-ideas/:id/status` — Update idea status (admin)
 
 ## Branching & CI
 
@@ -143,3 +152,4 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 8: Audit logging + admin audit viewer
 - [x] Sprint 9: BullMQ infrastructure + job monitoring
 - [x] Sprint 10: Trend discovery worker + topics API
+- [x] Sprint 11: Article ideas API + mock generation + admin UI

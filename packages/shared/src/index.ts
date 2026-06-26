@@ -16,6 +16,14 @@ export type {
   UpdateCategoryRequest,
 } from './admin.types';
 export type {
+  ArticleIdeaListResponse,
+  ArticleIdeaOutlineSection,
+  ArticleIdeaStatus,
+  ArticleIdeaSummary,
+  CreateArticleIdeaRequest,
+  UpdateArticleIdeaStatusRequest,
+} from './article-ideas.types';
+export type {
   MockTrendInput,
   TopicListResponse,
   TopicStatus,
