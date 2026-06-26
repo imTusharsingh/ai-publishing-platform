@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ArticleIdeasModule } from './article-ideas/article-ideas.module';
 import { TopicsModule } from './topics/topics.module';
 import { JobsModule } from './jobs/jobs.module';
 import { AuditModule } from './audit/audit.module';
@@ -21,6 +22,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AuditModule,
     JobsModule,
     TopicsModule,
+    ArticleIdeasModule,
     CategoriesModule,
     ArticlesModule,
   ],
