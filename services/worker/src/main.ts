@@ -3,14 +3,16 @@ import {
   JOB_NAMES,
   QUEUE_NAMES,
   createRedisConnection,
+  type ArticleWritingJobData,
   type PingJobData,
   type TrendDiscoveryJobData,
 } from '@repo/queue';
+import { processArticleWritingJob } from './processors/article-writing.processor';
 import { processPingJob } from './processors/ping.processor';
 import { processTrendDiscoveryJob } from './processors/trend-discovery.processor';
 
 async function bootstrap() {
-  const worker = new Worker<PingJobData | TrendDiscoveryJobData>(
+  const worker = new Worker<PingJobData | TrendDiscoveryJobData | ArticleWritingJobData>(
     QUEUE_NAMES.DEFAULT,
     async (job) => {
       if (job.name === JOB_NAMES.PING) {
@@ -19,6 +21,10 @@ async function bootstrap() {
 
       if (job.name === JOB_NAMES.TREND_DISCOVERY) {
         return processTrendDiscoveryJob(job as Job<TrendDiscoveryJobData>);
+      }
+
+      if (job.name === JOB_NAMES.ARTICLE_WRITING) {
+        return processArticleWritingJob(job as Job<ArticleWritingJobData>);
       }
 
       throw new Error(`Unknown job name: ${job.name}`);

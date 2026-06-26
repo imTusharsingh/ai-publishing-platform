@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { refreshSession } from '@/lib/api';
+import { isAccessTokenExpired } from '@/lib/token';
 import { useAuthStore } from '@/stores/auth-store';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -10,20 +12,34 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const persisted = useAuthStore.persist.hasHydrated();
-    if (persisted) {
-      setReady(true);
-      if (!useAuthStore.getState().accessToken) {
+    async function ensureSession() {
+      const state = useAuthStore.getState();
+
+      if (!state.accessToken) {
         router.replace('/login');
+        return;
       }
+
+      if (state.refreshToken && isAccessTokenExpired(state.accessToken)) {
+        try {
+          await refreshSession();
+        } catch {
+          state.clearSession();
+          router.replace('/login');
+          return;
+        }
+      }
+
+      setReady(true);
+    }
+
+    if (useAuthStore.persist.hasHydrated()) {
+      void ensureSession();
       return;
     }
 
     const unsub = useAuthStore.persist.onFinishHydration(() => {
-      setReady(true);
-      if (!useAuthStore.getState().accessToken) {
-        router.replace('/login');
-      }
+      void ensureSession();
     });
 
     return unsub;

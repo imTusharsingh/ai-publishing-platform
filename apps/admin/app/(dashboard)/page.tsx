@@ -25,10 +25,20 @@ export default function DashboardPage() {
           <h3 className="font-medium text-gray-900">Article ideas</h3>
           <p className="mt-1 text-sm text-gray-500">Draft and approve ideas</p>
         </a>
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <a
+          href="/articles"
+          className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:border-gray-300"
+        >
           <h3 className="font-medium text-gray-900">Articles</h3>
-          <p className="mt-1 text-sm text-gray-500">Coming soon</p>
-        </div>
+          <p className="mt-1 text-sm text-gray-500">Review and publish drafts</p>
+        </a>
+        <a
+          href="/jobs"
+          className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:border-gray-300"
+        >
+          <h3 className="font-medium text-gray-900">Jobs</h3>
+          <p className="mt-1 text-sm text-gray-500">Background job monitor</p>
+        </a>
       </div>
     </section>
   );

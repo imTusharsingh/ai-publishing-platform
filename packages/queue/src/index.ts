@@ -23,6 +23,8 @@ export async function closeQueues(): Promise<void> {
 
 export { QUEUE_NAMES, JOB_NAMES } from './types';
 export type {
+  ArticleWritingJobData,
+  ArticleWritingJobResult,
   JobName,
   JobStatusResponse,
   PingJobData,

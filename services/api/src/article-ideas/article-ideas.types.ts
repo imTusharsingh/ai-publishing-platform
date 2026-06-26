@@ -18,6 +18,14 @@ export interface ArticleIdeaResponse {
   intent: string | null;
   status: ArticleIdeaStatus;
   createdAt: Date;
+  articleId: string | null;
+  hasArticle: boolean;
+}
+
+export interface GenerateArticleResult {
+  jobId: string;
+  ideaId: string;
+  state: string;
 }
 
 export interface ArticleIdeaListResponse {
