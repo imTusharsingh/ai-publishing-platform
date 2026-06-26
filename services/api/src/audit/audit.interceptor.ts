@@ -77,6 +77,8 @@ export class AuditInterceptor implements NestInterceptor {
       let action = 'article_idea.update';
       if (method === 'POST' && path.includes('/from-topic/')) {
         action = 'article_idea.generate_from_topic';
+      } else if (method === 'POST' && path.includes('/generate')) {
+        action = 'article_idea.enqueue_generation';
       } else if (method === 'POST') {
         action = 'article_idea.create';
       } else if (path.includes('/status')) {
@@ -86,6 +88,20 @@ export class AuditInterceptor implements NestInterceptor {
       return {
         action,
         entityType: 'article_idea',
+        entityId,
+        payload:
+          typeof responseBody === 'object' && responseBody !== null
+            ? (responseBody as Record<string, unknown>)
+            : undefined,
+      };
+    }
+
+    if (path.includes('/admin/articles')) {
+      const entityId = request.params.id;
+
+      return {
+        action: 'article.status_update',
+        entityType: 'article',
         entityId,
         payload:
           typeof responseBody === 'object' && responseBody !== null

@@ -1,8 +1,15 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ArticleIdeaStatus, TopicStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ArticleIdeasService } from './article-ideas.service';
+
+jest.mock('@repo/queue', () => ({
+  JOB_NAMES: { ARTICLE_WRITING: 'article-writing' },
+  getDefaultQueue: jest.fn(),
+}));
+
+const { getDefaultQueue } = jest.requireMock('@repo/queue');
 
 describe('ArticleIdeasService', () => {
   let service: ArticleIdeasService;
@@ -49,6 +56,7 @@ describe('ArticleIdeasService', () => {
         createdAt: new Date('2026-06-20T10:00:00.000Z'),
         category: { name: 'Tech' },
         trendingTopic: null,
+        article: null,
       },
     ]);
     prisma.articleIdea.count.mockResolvedValue(1);
@@ -123,5 +131,34 @@ describe('ArticleIdeasService', () => {
     prisma.articleIdea.findUnique.mockResolvedValue(null);
 
     await expect(service.findById('missing')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('enqueues article writing for approved idea', async () => {
+    prisma.articleIdea.findUnique.mockResolvedValue({
+      id: 'idea-1',
+      status: ArticleIdeaStatus.APPROVED,
+      article: null,
+    });
+    prisma.articleIdea.update.mockResolvedValue({});
+    const job = { id: 'job-1', getState: jest.fn().mockResolvedValue('waiting') };
+    getDefaultQueue.mockReturnValue({ add: jest.fn().mockResolvedValue(job) });
+
+    const result = await service.enqueueGenerate('idea-1');
+
+    expect(result).toEqual({ jobId: 'job-1', ideaId: 'idea-1', state: 'waiting' });
+    expect(prisma.articleIdea.update).toHaveBeenCalledWith({
+      where: { id: 'idea-1' },
+      data: { status: ArticleIdeaStatus.GENERATING },
+    });
+  });
+
+  it('rejects generation when article already exists', async () => {
+    prisma.articleIdea.findUnique.mockResolvedValue({
+      id: 'idea-1',
+      status: ArticleIdeaStatus.APPROVED,
+      article: { id: 'article-1' },
+    });
+
+    await expect(service.enqueueGenerate('idea-1')).rejects.toBeInstanceOf(ConflictException);
   });
 });

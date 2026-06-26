@@ -11,6 +11,7 @@ import {
 } from '@/lib/article-ideas-api';
 import { listCategories } from '@/lib/categories-api';
 import { listTopics } from '@/lib/topics-api';
+import { generateArticleFromIdea } from '@/lib/articles-api';
 import { ApiError } from '@/lib/api';
 
 const STATUS_OPTIONS: ArticleIdeaStatus[] = [
@@ -36,6 +37,8 @@ export function ArticleIdeasPage() {
         limit: 50,
         status: statusFilter || undefined,
       }),
+    refetchInterval: (query) =>
+      query.state.data?.data.some((idea) => idea.status === 'GENERATING') ? 3000 : false,
   });
 
   const categoriesQuery = useQuery({
@@ -51,6 +54,7 @@ export function ArticleIdeasPage() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['admin-article-ideas'] });
     queryClient.invalidateQueries({ queryKey: ['admin-topics'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
   };
 
   const createMutation = useMutation({
@@ -75,6 +79,12 @@ export function ArticleIdeasPage() {
       updateArticleIdeaStatus(id, { status }),
     onSuccess: invalidate,
     onError: (err) => setError(err instanceof ApiError ? err.message : 'Status update failed'),
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: generateArticleFromIdea,
+    onSuccess: invalidate,
+    onError: (err) => setError(err instanceof ApiError ? err.message : 'Generation failed'),
   });
 
   const handleCreate = (event: FormEvent) => {
@@ -252,6 +262,28 @@ export function ArticleIdeasPage() {
                           Reject
                         </button>
                       </>
+                    )}
+                    {(idea.status === 'APPROVED' || idea.status === 'FAILED') &&
+                      !idea.hasArticle && (
+                        <button
+                          type="button"
+                          onClick={() => generateMutation.mutate(idea.id)}
+                          disabled={generateMutation.isPending}
+                          className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-800 disabled:opacity-60"
+                        >
+                          Generate article
+                        </button>
+                      )}
+                    {idea.status === 'GENERATING' && (
+                      <span className="text-sm text-gray-500">Generating…</span>
+                    )}
+                    {idea.hasArticle && (
+                      <a
+                        href="/articles"
+                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
+                      >
+                        View articles
+                      </a>
                     )}
                   </div>
                 </div>

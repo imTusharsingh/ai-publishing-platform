@@ -50,6 +50,13 @@ export class ArticleIdeasController {
     return this.articleIdeasService.createFromTopic(topicId);
   }
 
+  @Post(':id/generate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.EDITOR)
+  generate(@Param('id', ParseUUIDPipe) id: string) {
+    return this.articleIdeasService.enqueueGenerate(id);
+  }
+
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.EDITOR)
