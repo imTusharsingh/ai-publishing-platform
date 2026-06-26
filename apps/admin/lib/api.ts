@@ -1,4 +1,6 @@
 import type { AuthMeResponse, AuthTokens, LoginRequest } from '@repo/shared';
+import { useAuthStore } from '@/stores/auth-store';
+import { isAccessTokenExpired } from '@/lib/token';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3008';
 
@@ -11,6 +13,8 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 }
+
+let refreshPromise: Promise<AuthTokens> | null = null;
 
 async function parseResponse<T>(response: Response): Promise<T> {
   if (response.status === 204) {
@@ -26,6 +30,26 @@ async function parseResponse<T>(response: Response): Promise<T> {
   }
 
   return body as T;
+}
+
+export async function refreshSession(): Promise<AuthTokens> {
+  const { refreshToken } = useAuthStore.getState();
+  if (!refreshToken) {
+    throw new ApiError('Session expired. Please sign in again.', 401);
+  }
+
+  if (!refreshPromise) {
+    refreshPromise = refresh(refreshToken)
+      .then((tokens) => {
+        useAuthStore.getState().setSession(tokens);
+        return tokens;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
 }
 
 export function login(payload: LoginRequest): Promise<AuthTokens> {
@@ -63,14 +87,32 @@ export async function authFetch<T>(
   accessToken: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${accessToken}`,
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-    },
-  });
+  const request = (token: string) =>
+    fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      },
+    });
+
+  let token = accessToken;
+  if (isAccessTokenExpired(token)) {
+    token = (await refreshSession()).accessToken;
+  }
+
+  let response = await request(token);
+
+  if (response.status === 401) {
+    try {
+      token = (await refreshSession()).accessToken;
+      response = await request(token);
+    } catch (error) {
+      useAuthStore.getState().clearSession();
+      throw error;
+    }
+  }
 
   return parseResponse<T>(response);
 }

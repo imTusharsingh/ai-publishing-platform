@@ -23,6 +23,8 @@ export interface ArticleIdeaSummary {
   intent: string | null;
   status: ArticleIdeaStatus;
   createdAt: string;
+  articleId: string | null;
+  hasArticle: boolean;
 }
 
 export interface ArticleIdeaListResponse {
@@ -41,3 +43,5 @@ export interface CreateArticleIdeaRequest {
 export interface UpdateArticleIdeaStatusRequest {
   status: ArticleIdeaStatus;
 }
+
+export type { GenerateArticleResponse } from './articles-admin.types';
