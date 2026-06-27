@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
+    "@repo/ai": "*",
     "@repo/shared": "*",
     "bcryptjs": "^3.0.2"
   },

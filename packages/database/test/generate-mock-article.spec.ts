@@ -57,6 +57,7 @@ describe('generateMockArticle', () => {
       ideaId: 'idea-1',
       slug: 'generated-article',
       aiJobId: 'ai-job-1',
+      provider: 'mock',
     });
     expect(prisma.article.create).toHaveBeenCalledWith(
       expect.objectContaining({

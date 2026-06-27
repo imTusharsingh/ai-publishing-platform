@@ -90,6 +90,19 @@ Default seed credentials (override via `.env`):
 - Email: `admin@example.com`
 - Password: `Admin123!`
 
+### OpenAI article writing (Sprint 13+)
+
+By default, article generation uses the **mock writer** (no API key required). To enable real OpenAI writing:
+
+```bash
+# In .env
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini   # optional
+AI_WRITER_PROVIDER=openai  # optional; auto-detected when key is set
+```
+
+Restart the worker after changing env vars. Token usage and estimated cost are stored on each `AiJob` row.
+
 | Script                   | Description                |
 | ------------------------ | -------------------------- |
 | `npm run db:migrate`     | Apply migrations           |
@@ -158,3 +171,4 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 10: Trend discovery worker + topics API
 - [x] Sprint 11: Article ideas API + mock generation + admin UI
 - [x] Sprint 12: Mock article writing pipeline + admin articles UI
+- [x] Sprint 13: OpenAI article writer with mock fallback + token/cost tracking
