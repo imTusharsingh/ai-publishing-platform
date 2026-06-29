@@ -1,3 +1,5 @@
+import { NotFoundException } from '@nestjs/common';
+import { TopicStatus } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TopicsService } from './topics.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -26,6 +28,9 @@ describe('TopicsService', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
+    category: {
+      findUnique: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -51,5 +56,43 @@ describe('TopicsService', () => {
 
     expect(result.created).toBe(3);
     expect(discoverTrends).toHaveBeenCalledWith(prisma, 'test-run');
+  });
+
+  it('updates topic status and records reviewer', async () => {
+    prisma.trendingTopic.findUnique.mockResolvedValue({ id: 'topic-1' });
+    prisma.trendingTopic.update.mockResolvedValue({
+      id: 'topic-1',
+      source: 'REDDIT',
+      title: 'Topic',
+      normalizedTitle: 'topic',
+      description: null,
+      popularityScore: 10,
+      sourceUrl: null,
+      sourceMetadata: { provider: 'live' },
+      matchedCategoryId: 'cat-1',
+      status: TopicStatus.APPROVED,
+      discoveredAt: new Date(),
+      matchedCategory: { name: 'Tech' },
+    });
+
+    const result = await service.updateStatus('topic-1', TopicStatus.APPROVED, 'user-1');
+
+    expect(result.status).toBe(TopicStatus.APPROVED);
+    expect(prisma.trendingTopic.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: TopicStatus.APPROVED,
+          reviewedAt: expect.any(Date),
+        }),
+      }),
+    );
+  });
+
+  it('throws when updating missing topic', async () => {
+    prisma.trendingTopic.findUnique.mockResolvedValue(null);
+
+    await expect(service.update('missing', { title: 'New title' })).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });

@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TopicStatus } from '@prisma/client';
+import { Prisma, TopicStatus } from '@prisma/client';
+import { normalizeTopicTitle } from '@repo/shared';
 import { discoverTrends as runTrendDiscovery } from '@repo/database';
 import { JOB_NAMES, getDefaultQueue, type TrendDiscoveryJobData } from '@repo/queue';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListTopicsQueryDto } from './dto/list-topics-query.dto';
+import { UpdateTopicDto } from './dto/update-topic.dto';
 import { DiscoverTopicsResult, TopicListResponse, TopicResponse } from './topics.types';
 
 @Injectable()
@@ -20,7 +22,7 @@ export class TopicsService {
       this.prisma.trendingTopic.findMany({
         where,
         include: { matchedCategory: { select: { name: true } } },
-        orderBy: [{ popularityScore: 'desc' }, { discoveredAt: 'desc' }],
+        orderBy: [{ discoveredAt: 'desc' }, { popularityScore: 'desc' }],
         skip,
         take: limit,
       }),
@@ -46,10 +48,59 @@ export class TopicsService {
     return this.toResponse(topic);
   }
 
-  async updateStatus(id: string, status: TopicStatus): Promise<TopicResponse> {
+  async updateStatus(id: string, status: TopicStatus, reviewerId?: string): Promise<TopicResponse> {
+    const existing = await this.prisma.trendingTopic.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Topic with id "${id}" not found`);
+    }
+
+    const data: Prisma.TrendingTopicUpdateInput = { status };
+    if (
+      reviewerId &&
+      (status === TopicStatus.APPROVED ||
+        status === TopicStatus.REJECTED ||
+        status === TopicStatus.SUGGESTED)
+    ) {
+      data.reviewedBy = { connect: { id: reviewerId } };
+      data.reviewedAt = new Date();
+    }
+
     const topic = await this.prisma.trendingTopic.update({
       where: { id },
-      data: { status },
+      data,
+      include: { matchedCategory: { select: { name: true } } },
+    });
+
+    return this.toResponse(topic);
+  }
+
+  async update(id: string, dto: UpdateTopicDto): Promise<TopicResponse> {
+    const existing = await this.prisma.trendingTopic.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Topic with id "${id}" not found`);
+    }
+
+    if (dto.matchedCategoryId) {
+      const category = await this.prisma.category.findUnique({
+        where: { id: dto.matchedCategoryId },
+      });
+      if (!category) {
+        throw new NotFoundException(`Category with id "${dto.matchedCategoryId}" not found`);
+      }
+    }
+
+    const title = dto.title?.trim();
+    const topic = await this.prisma.trendingTopic.update({
+      where: { id },
+      data: {
+        ...(title ? { title, normalizedTitle: normalizeTopicTitle(title) } : {}),
+        ...(dto.description !== undefined ? { description: dto.description.trim() || null } : {}),
+        ...(dto.matchedCategoryId !== undefined
+          ? dto.matchedCategoryId
+            ? { matchedCategory: { connect: { id: dto.matchedCategoryId } } }
+            : { matchedCategory: { disconnect: true } }
+          : {}),
+      },
       include: { matchedCategory: { select: { name: true } } },
     });
 
@@ -83,11 +134,17 @@ export class TopicsService {
     description: string | null;
     popularityScore: { toNumber?: () => number } | number;
     sourceUrl: string | null;
+    sourceMetadata: Prisma.JsonValue;
     matchedCategoryId: string | null;
     status: TopicResponse['status'];
     discoveredAt: Date;
     matchedCategory: { name: string } | null;
   }): TopicResponse {
+    const metadata =
+      topic.sourceMetadata && typeof topic.sourceMetadata === 'object'
+        ? (topic.sourceMetadata as Record<string, unknown>)
+        : null;
+
     return {
       id: topic.id,
       source: topic.source,
@@ -99,6 +156,7 @@ export class TopicsService {
           ? topic.popularityScore
           : (topic.popularityScore.toNumber?.() ?? Number(topic.popularityScore)),
       sourceUrl: topic.sourceUrl,
+      discoveryProvider: typeof metadata?.provider === 'string' ? metadata.provider : null,
       matchedCategoryId: topic.matchedCategoryId,
       matchedCategoryName: topic.matchedCategory?.name ?? null,
       status: topic.status,
