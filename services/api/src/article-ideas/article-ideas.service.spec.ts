@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ArticleIdeaStatus, TopicStatus } from '@prisma/client';
+import { ArticleIdeaStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ArticleIdeasService } from './article-ideas.service';
 
@@ -9,7 +9,16 @@ jest.mock('@repo/queue', () => ({
   getDefaultQueue: jest.fn(),
 }));
 
+jest.mock('@repo/database', () => {
+  const actual = jest.requireActual('@repo/database');
+  return {
+    ...actual,
+    generateArticleIdeaFromTopic: jest.fn(),
+  };
+});
+
 const { getDefaultQueue } = jest.requireMock('@repo/queue');
+const { generateArticleIdeaFromTopic } = jest.requireMock('@repo/database');
 
 describe('ArticleIdeasService', () => {
   let service: ArticleIdeasService;
@@ -71,17 +80,13 @@ describe('ArticleIdeasService', () => {
     });
   });
 
-  it('creates idea from topic with mock outline', async () => {
-    prisma.trendingTopic.findUnique.mockResolvedValue({
-      id: 'topic-1',
-      title: 'AI chips surge',
-      description: 'Semiconductor demand rises',
-      matchedCategoryId: 'cat-1',
-      status: TopicStatus.DISCOVERED,
-      matchedCategory: { id: 'cat-1', name: 'Tech' },
+  it('creates idea from topic via planning pipeline', async () => {
+    generateArticleIdeaFromTopic.mockResolvedValue({
+      ideaId: 'idea-2',
+      aiJobId: 'ai-job-1',
+      provider: 'mock',
     });
-    prisma.articleIdea.findUnique.mockResolvedValue(null);
-    prisma.articleIdea.create.mockResolvedValue({
+    prisma.articleIdea.findUnique.mockResolvedValue({
       id: 'idea-2',
       categoryId: 'cat-1',
       trendingTopicId: 'topic-1',
@@ -101,30 +106,28 @@ describe('ArticleIdeasService', () => {
       createdAt: new Date('2026-06-20T10:00:00.000Z'),
       category: { name: 'Tech' },
       trendingTopic: { title: 'AI chips surge' },
+      article: null,
     });
-    prisma.trendingTopic.update.mockResolvedValue({});
 
     const result = await service.createFromTopic('topic-1');
 
+    expect(generateArticleIdeaFromTopic).toHaveBeenCalledWith(prisma, 'topic-1');
     expect(result.trendingTopicTitle).toBe('AI chips surge');
     expect(result.outline).toHaveLength(3);
-    expect(prisma.trendingTopic.update).toHaveBeenCalledWith({
-      where: { id: 'topic-1' },
-      data: { status: TopicStatus.USED },
-    });
   });
 
   it('rejects topic without matched category', async () => {
-    prisma.trendingTopic.findUnique.mockResolvedValue({
-      id: 'topic-1',
-      title: 'Unmatched topic',
-      description: null,
-      matchedCategoryId: null,
-      status: TopicStatus.DISCOVERED,
-      matchedCategory: null,
-    });
+    generateArticleIdeaFromTopic.mockRejectedValue(
+      new Error('Topic has no matched category for idea generation'),
+    );
 
     await expect(service.createFromTopic('topic-1')).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('throws when topic not found', async () => {
+    generateArticleIdeaFromTopic.mockRejectedValue(new Error('Topic with id "topic-1" not found'));
+
+    await expect(service.createFromTopic('topic-1')).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('throws when idea not found', async () => {
