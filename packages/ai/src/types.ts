@@ -41,3 +41,34 @@ export interface IdeaPlanningResult {
 
 export type ArticleWriterProvider = 'mock' | 'openai';
 export type AiProvider = ArticleWriterProvider;
+
+export type TrendSourceType = 'GOOGLE_TRENDS' | 'REDDIT' | 'TWITTER' | 'NEWS_API' | 'BLOG_RSS';
+
+export type TrendDiscoveryProvider = 'mock' | 'live' | 'auto';
+
+export interface TrendDiscoveryCategoryInput {
+  id: string;
+  name: string;
+  keywords: string[];
+  priorityScore: number;
+}
+
+export interface DiscoveredTrendCandidate {
+  source: TrendSourceType;
+  title: string;
+  description: string;
+  popularityScore: number;
+  sourceUrl: string;
+  matchedCategoryId: string | null;
+}
+
+export interface TrendDiscoveryInput {
+  runId: string;
+  categories: TrendDiscoveryCategoryInput[];
+}
+
+export interface TrendDiscoveryResult {
+  trends: DiscoveredTrendCandidate[];
+  provider: 'mock' | 'live';
+  sources: string[];
+}
