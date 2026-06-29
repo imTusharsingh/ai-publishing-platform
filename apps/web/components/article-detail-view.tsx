@@ -3,8 +3,12 @@ import type { ArticleDetail } from '@repo/shared';
 import { PageShell } from '@/components/ui/page-shell';
 import { Panel } from '@/components/ui/panel';
 import { formatDate } from '@/lib/format';
+import { isHtmlContent, prepareArticleHtml } from '@/lib/article-content';
 
 export function ArticleDetailView({ article }: { article: ArticleDetail }) {
+  const htmlBody =
+    article.content && isHtmlContent(article.content) ? prepareArticleHtml(article.content) : null;
+
   return (
     <PageShell>
       <article className="page-container mx-auto max-w-3xl space-y-8">
@@ -38,11 +42,15 @@ export function ArticleDetailView({ article }: { article: ArticleDetail }) {
           </div>
         )}
 
-        <Panel className="prose prose-slate max-w-none">
+        <Panel>
           {article.content ? (
-            <div className="whitespace-pre-wrap text-base leading-7 text-content">
-              {article.content}
-            </div>
+            htmlBody ? (
+              <div className="article-content" dangerouslySetInnerHTML={{ __html: htmlBody }} />
+            ) : (
+              <div className="whitespace-pre-wrap text-base leading-7 text-content">
+                {article.content}
+              </div>
+            )
           ) : (
             <p className="text-content-muted">No content available.</p>
           )}

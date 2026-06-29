@@ -40,4 +40,16 @@ describe('ArticleDetailView', () => {
     expect(screen.getAllByText('Startups').length).toBeGreaterThan(0);
     expect(screen.getByText('AI Writer')).toBeInTheDocument();
   });
+
+  it('renders html article content without showing raw tags', () => {
+    const htmlArticle: ArticleDetail = {
+      ...article,
+      content: '<h1>Test Article Title</h1><p>Rendered paragraph.</p><h2>Section</h2>',
+    };
+
+    const { container } = render(<ArticleDetailView article={htmlArticle} />);
+
+    expect(container.querySelector('.article-content p')).toHaveTextContent('Rendered paragraph.');
+    expect(container.textContent).not.toContain('<p>');
+  });
 });
