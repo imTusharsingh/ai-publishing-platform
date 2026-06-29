@@ -13,7 +13,10 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/auth.types';
 import { ListTopicsQueryDto } from './dto/list-topics-query.dto';
+import { UpdateTopicDto } from './dto/update-topic.dto';
 import { UpdateTopicStatusDto } from './dto/update-topic-status.dto';
 import { TopicsService } from './topics.service';
 
@@ -41,7 +44,18 @@ export class TopicsController {
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.EDITOR)
-  updateStatus(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTopicStatusDto) {
-    return this.topicsService.updateStatus(id, dto.status);
+  updateStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTopicStatusDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.topicsService.updateStatus(id, dto.status, user.id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.EDITOR)
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTopicDto) {
+    return this.topicsService.update(id, dto);
   }
 }
