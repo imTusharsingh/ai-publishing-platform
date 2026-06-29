@@ -53,7 +53,7 @@ describe('TopicsController (e2e)', () => {
     expect(response.body.data[0]).toMatchObject({
       title: expect.any(String),
       source: expect.any(String),
-      status: 'DISCOVERED',
+      status: expect.any(String),
     });
   });
 
@@ -65,5 +65,37 @@ describe('TopicsController (e2e)', () => {
 
     expect(response.body.jobId).toEqual(expect.any(String));
     expect(response.body.state).toMatch(/waiting|active|completed/);
+  });
+
+  it('PATCH /v1/topics/:id/status approves a topic', async () => {
+    const topics = await request(app.getHttpServer()).get('/v1/topics?limit=1').expect(200);
+    const topicId = topics.body.data[0].id;
+
+    const response = await request(app.getHttpServer())
+      .patch(`/v1/topics/${topicId}/status`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ status: 'APPROVED' })
+      .expect(200);
+
+    expect(response.body.status).toBe('APPROVED');
+  });
+
+  it('PATCH /v1/topics/:id edits title and description', async () => {
+    const topics = await request(app.getHttpServer())
+      .get('/v1/topics?status=APPROVED&limit=1')
+      .expect(200);
+    const topicId = topics.body.data[0].id;
+
+    const response = await request(app.getHttpServer())
+      .patch(`/v1/topics/${topicId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        title: 'Edited topic title for e2e test',
+        description: 'Updated editorial description',
+      })
+      .expect(200);
+
+    expect(response.body.title).toBe('Edited topic title for e2e test');
+    expect(response.body.description).toBe('Updated editorial description');
   });
 });

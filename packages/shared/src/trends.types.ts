@@ -10,6 +10,7 @@ export interface TopicSummary {
   description: string | null;
   popularityScore: number;
   sourceUrl: string | null;
+  discoveryProvider?: string | null;
   matchedCategoryId: string | null;
   matchedCategoryName: string | null;
   status: TopicStatus;
