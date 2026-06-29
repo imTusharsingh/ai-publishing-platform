@@ -11,11 +11,11 @@ jest.mock('@repo/database', () => {
   const actual = jest.requireActual('@repo/database');
   return {
     ...actual,
-    discoverMockTrends: jest.fn(),
+    discoverTrends: jest.fn(),
   };
 });
 
-const { discoverMockTrends } = jest.requireMock('@repo/database');
+const { discoverTrends } = jest.requireMock('@repo/database');
 
 describe('TopicsService', () => {
   let service: TopicsService;
@@ -38,12 +38,18 @@ describe('TopicsService', () => {
     service = module.get(TopicsService);
   });
 
-  it('discovers mock trends via shared helper', async () => {
-    discoverMockTrends.mockResolvedValue(3);
+  it('runs trend discovery via shared helper', async () => {
+    discoverTrends.mockResolvedValue({
+      created: 3,
+      runId: 'test-run',
+      provider: 'live',
+      aiJobId: 'ai-job-1',
+      sources: ['hackernews', 'reddit'],
+    });
 
-    const created = await service.discoverMockTrends('test-run');
+    const result = await service.runDiscovery('test-run');
 
-    expect(created).toBe(3);
-    expect(discoverMockTrends).toHaveBeenCalledWith(prisma, 'test-run');
+    expect(result.created).toBe(3);
+    expect(discoverTrends).toHaveBeenCalledWith(prisma, 'test-run');
   });
 });
