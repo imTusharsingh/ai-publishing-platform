@@ -1,6 +1,6 @@
-import type { ArticleWriterProvider } from './types';
+import type { AiProvider } from './types';
 
-export function resolveArticleWriterProvider(): ArticleWriterProvider {
+export function resolveAiProvider(): AiProvider {
   const explicit = process.env.AI_WRITER_PROVIDER?.trim().toLowerCase();
 
   if (explicit === 'mock') {
@@ -20,6 +20,11 @@ export function resolveArticleWriterProvider(): ArticleWriterProvider {
   }
 
   return 'mock';
+}
+
+/** @deprecated Use resolveAiProvider */
+export function resolveArticleWriterProvider(): AiProvider {
+  return resolveAiProvider();
 }
 
 export function getOpenAiModel(): string {

@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ArticleIdeaStatus, Prisma, TopicStatus } from '@prisma/client';
+import { ArticleIdeaStatus, Prisma } from '@prisma/client';
 import { JOB_NAMES, getDefaultQueue, type ArticleWritingJobData } from '@repo/queue';
 import { PrismaService } from '../prisma/prisma.service';
 import { generateUniqueSlug, slugify } from '../categories/slug.util';
@@ -16,7 +16,7 @@ import {
   ArticleIdeaResponse,
   GenerateArticleResult,
 } from './article-ideas.types';
-import { buildMockOutline, buildMockSummary, refineMockTitle } from './mock-idea.util';
+import { generateArticleIdeaFromTopic } from '@repo/database';
 
 @Injectable()
 export class ArticleIdeasService {
@@ -98,49 +98,22 @@ export class ArticleIdeasService {
   }
 
   async createFromTopic(topicId: string): Promise<ArticleIdeaResponse> {
-    const topic = await this.prisma.trendingTopic.findUnique({
-      where: { id: topicId },
-      include: { matchedCategory: { select: { id: true, name: true } } },
-    });
+    try {
+      const result = await generateArticleIdeaFromTopic(this.prisma, topicId);
+      return this.findById(result.ideaId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Idea generation failed';
 
-    if (!topic) {
-      throw new NotFoundException(`Topic with id "${topicId}" not found`);
+      if (message.includes('not found')) {
+        throw new NotFoundException(message);
+      }
+
+      if (message.includes('no matched category')) {
+        throw new BadRequestException(message);
+      }
+
+      throw error;
     }
-
-    if (!topic.matchedCategoryId) {
-      throw new BadRequestException('Topic has no matched category for idea generation');
-    }
-
-    const title = refineMockTitle(topic.title);
-    const summary = buildMockSummary(topic.title, topic.description);
-    const outline = buildMockOutline(topic.title);
-    const slugCandidate = await this.generateSlugCandidate(title);
-
-    const idea = await this.prisma.articleIdea.create({
-      data: {
-        categoryId: topic.matchedCategoryId,
-        trendingTopicId: topic.id,
-        title,
-        slugCandidate,
-        summary,
-        outline: outline as unknown as Prisma.InputJsonValue,
-        intent: 'analysis',
-        status: ArticleIdeaStatus.DRAFT,
-      },
-      include: {
-        category: { select: { name: true } },
-        trendingTopic: { select: { title: true } },
-      },
-    });
-
-    if (topic.status === TopicStatus.DISCOVERED || topic.status === TopicStatus.SUGGESTED) {
-      await this.prisma.trendingTopic.update({
-        where: { id: topic.id },
-        data: { status: TopicStatus.USED },
-      });
-    }
-
-    return this.toResponse(idea);
   }
 
   async updateStatus(id: string, status: ArticleIdeaStatus): Promise<ArticleIdeaResponse> {
