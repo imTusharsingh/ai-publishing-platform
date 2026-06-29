@@ -1,6 +1,22 @@
 import { ArticleIdeaStatus, ArticleStatus } from '@prisma/client';
 import { buildMockArticleContent, generateMockArticle } from '../src/generate-mock-article';
 
+jest.mock('@repo/ai', () => {
+  const actual = jest.requireActual('@repo/ai');
+  return {
+    ...actual,
+    writeArticleContent: jest.fn().mockResolvedValue({
+      content: '<h1>Generated article</h1><p>Summary</p>',
+      contentPlain: 'Generated article\n\nSummary',
+      provider: 'mock',
+      model: 'mock-writer-v1',
+      promptTokens: null,
+      completionTokens: null,
+      costUsd: null,
+    }),
+  };
+});
+
 describe('generateMockArticle', () => {
   const prisma = {
     articleIdea: {
@@ -12,6 +28,7 @@ describe('generateMockArticle', () => {
       update: jest.fn(),
     },
     article: {
+      findFirst: jest.fn().mockResolvedValue(null),
       create: jest.fn(),
     },
   };
@@ -39,6 +56,7 @@ describe('generateMockArticle', () => {
       summary: 'Summary',
       outline: [{ heading: 'Intro', points: ['Point'] }],
       status: ArticleIdeaStatus.GENERATING,
+      intent: null,
       article: null,
       category: { id: 'cat-1', name: 'Tech' },
     });
