@@ -16,7 +16,16 @@ export {
   getOpenAiWriterConfig,
 } from './openai-config';
 export { ARTICLE_SYSTEM_PROMPT, buildArticlePrompt } from './openai-writer.prompt';
-export { estimateOpenAiCostUsd } from './cost';
+export { discoverTrendContent } from './discover-trends';
+export { discoverTrendsWithMock, applyCategoryMatching } from './mock-trend-discovery';
+export { matchTrendToCategory } from './match-trend-category';
+export {
+  fetchHackerNewsTrends,
+  fetchRedditTrends,
+  fetchNewsApiTrends,
+  fetchLiveTrendCandidates,
+} from './fetch-live-trends';
+export { resolveTrendDiscoveryProvider, getTrendDiscoveryMaxTopics } from './trend-provider';
 export type {
   ArticleOutlineSection,
   ArticleWriteInput,
@@ -25,4 +34,11 @@ export type {
   AiProvider,
   IdeaPlanningInput,
   IdeaPlanningResult,
+  TrendSourceType,
+  TrendDiscoveryProvider,
+  TrendDiscoveryCategoryInput,
+  DiscoveredTrendCandidate,
+  TrendDiscoveryInput,
+  TrendDiscoveryResult,
 } from './types';
+export { estimateOpenAiCostUsd } from './cost';

@@ -9,7 +9,8 @@ export type {
   AuditLog,
 } from '@prisma/client';
 export { prisma, PrismaService } from './prisma.service';
-export { discoverMockTrends } from './discover-mock-trends';
+export { discoverTrends, discoverMockTrends } from './discover-trends';
+export type { DiscoverTrendsResult } from './discover-trends';
 export {
   generateArticle,
   generateMockArticle,

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { TopicStatus } from '@prisma/client';
-import { discoverMockTrends as runMockTrendDiscovery } from '@repo/database';
+import { discoverTrends as runTrendDiscovery } from '@repo/database';
 import { JOB_NAMES, getDefaultQueue, type TrendDiscoveryJobData } from '@repo/queue';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListTopicsQueryDto } from './dto/list-topics-query.dto';
@@ -71,8 +71,8 @@ export class TopicsService {
     };
   }
 
-  async discoverMockTrends(runId: string): Promise<number> {
-    return runMockTrendDiscovery(this.prisma, runId);
+  async runDiscovery(runId: string) {
+    return runTrendDiscovery(this.prisma, runId);
   }
 
   private toResponse(topic: {
