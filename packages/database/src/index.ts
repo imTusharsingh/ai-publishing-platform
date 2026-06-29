@@ -20,4 +20,6 @@ export type {
   GenerateMockArticleResult,
   ArticleOutlineSection,
 } from './generate-mock-article';
+export { generateArticleIdeaFromTopic } from './generate-idea-from-topic';
+export type { GenerateIdeaFromTopicResult } from './generate-idea-from-topic';
 export { seed } from './seed';

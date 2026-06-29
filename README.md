@@ -105,6 +105,8 @@ AI_WRITER_PROVIDER=openai         # optional; auto-detected when key is set
 
 Restart the worker after changing env vars. Token usage and estimated cost are stored on each `AiJob` row.
 
+**Idea planning (Sprint 14+):** generating an idea from a topic uses the same `OPENAI_API_KEY` and provider settings. Rich topic descriptions produce better briefs and outlines.
+
 **Tips for production-grade output:** put a detailed brief in the idea **Summary** (audience, angle, items to cover, tone). The writer uses title + summary + outline as input — richer briefs yield deeper articles without extra API calls.
 
 | Script                   | Description                |
@@ -176,3 +178,4 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 11: Article ideas API + mock generation + admin UI
 - [x] Sprint 12: Mock article writing pipeline + admin articles UI
 - [x] Sprint 13: OpenAI article writer with mock fallback + token/cost tracking
+- [x] Sprint 14: OpenAI idea planning with mock fallback + PLANNING AiJob tracking
