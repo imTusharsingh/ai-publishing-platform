@@ -107,6 +107,18 @@ Restart the worker after changing env vars. Token usage and estimated cost are s
 
 **Idea planning (Sprint 14+):** generating an idea from a topic uses the same `OPENAI_API_KEY` and provider settings. Rich topic descriptions produce better briefs and outlines.
 
+### Live trend discovery (Sprint 15+)
+
+Trend discovery fetches real headlines from **Hacker News**, **Reddit**, and optionally **NewsAPI**, then matches them to your categories by keyword. Falls back to mock trends when live sources return nothing.
+
+```bash
+TREND_DISCOVERY_PROVIDER=auto   # auto | live | mock (default auto)
+TREND_DISCOVERY_MAX_TOPICS=12
+NEWS_API_KEY=                   # optional — https://newsapi.org
+```
+
+Trigger from admin **Topics → Discover trends** or `POST /v1/topics/discover`. Each run creates a `TREND_DISCOVERY` `AiJob` row.
+
 **Tips for production-grade output:** put a detailed brief in the idea **Summary** (audience, angle, items to cover, tone). The writer uses title + summary + outline as input — richer briefs yield deeper articles without extra API calls.
 
 | Script                   | Description                |
@@ -179,3 +191,4 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 12: Mock article writing pipeline + admin articles UI
 - [x] Sprint 13: OpenAI article writer with mock fallback + token/cost tracking
 - [x] Sprint 14: OpenAI idea planning with mock fallback + PLANNING AiJob tracking
+- [x] Sprint 15: Live trend discovery (HN, Reddit, NewsAPI) with mock fallback + TREND_DISCOVERY AiJob
