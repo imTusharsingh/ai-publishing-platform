@@ -193,18 +193,20 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 12: Mock article writing pipeline + admin articles UI
 - [x] Sprint 13: OpenAI article writer with mock fallback + token/cost tracking
 - [x] Sprint 14: OpenAI idea planning with mock fallback + PLANNING AiJob tracking
-- [x] Sprint 15: Live trend discovery (HN, Reddit, NewsAPI) with mock fallback + TREND_DISCOVERY AiJob
+- [x] Sprint 15: Live trend discovery (HN, Reddit, NewsAPI) — completes **Plan Sprint 10** live fetchers
 - [x] Plan Sprint 11: Topics admin UI — approve/reject/suggest, edit, status filter
 
 ## Plan alignment
 
-New work follows [the product plan](.cursor/plans/ai_publishing_platform_9e04d5dd.plan.md). PR titles: `[Plan Sprint N] feat: …`.
+We follow the [product plan](.cursor/plans/ai_publishing_platform_9e04d5dd.plan.md) (26 sprints, 1 feature per sprint). **New work uses plan sprint numbers** in PR titles: `[Plan Sprint N] feat: …`.
 
-| Plan sprint | Feature                                 | Status                                |
-| ----------- | --------------------------------------- | ------------------------------------- |
-| 0–10        | Foundation through live trend discovery | ✅                                    |
-| **11**      | Topics admin UI                         | ✅                                    |
-| 12–13       | Content planning + writing              | ✅ (shipped early)                    |
-| **14**      | Embeddings (pgvector)                   | 🔲 **Next** — branch `sprint-plan-14` |
-| 15–16       | Duplicate detection                     | 🔲 Pending                            |
-| 17–19       | Quality, SEO, automation                | 🔲 Pending                            |
+| Plan sprint | Plan feature                               | Status                                                |
+| ----------- | ------------------------------------------ | ----------------------------------------------------- |
+| 0–9         | Foundation, public web, admin core, BullMQ | ✅ Shipped (repo Sprints 0–9)                         |
+| **10**      | Trend discovery (queue + live fetchers)    | ✅ Repo Sprint 10 (mock) + **15** (HN/Reddit/NewsAPI) |
+| **11**      | Topics admin UI (approve/reject/edit)      | ✅ Shipped (`sprint-plan-11`)                         |
+| 12–13       | Content planning + writing                 | ✅ Early (repo Sprints 11–14)                         |
+| **14**      | Embeddings (pgvector)                      | 🔲 **Next** — branch `sprint-plan-14`                 |
+| 15–16       | Duplicate detection                        | 🔲 Pending                                            |
+| 17–19       | Quality, SEO, automated publishing         | 🔲 Pending                                            |
+| 20–25       | Search, analytics, AWS, scale              | 🔲 Pending                                            |
