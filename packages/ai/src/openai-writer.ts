@@ -1,28 +1,10 @@
 import OpenAI from 'openai';
 import { estimateOpenAiCostUsd } from './cost';
-import { getOpenAiModel } from './provider';
+import { getOpenAiWriterConfig } from './openai-config';
+import { ARTICLE_SYSTEM_PROMPT, buildArticlePrompt } from './openai-writer.prompt';
 import type { ArticleWriteInput, ArticleWriteResult } from './types';
 
-function buildPrompt(input: ArticleWriteInput): string {
-  const outlineText = input.outline.length
-    ? input.outline
-        .map((section) => `${section.heading}:\n- ${section.points.join('\n- ')}`)
-        .join('\n\n')
-    : 'No outline provided — write a coherent structure yourself.';
-
-  return [
-    `Title: ${input.title}`,
-    `Category: ${input.categoryName}`,
-    input.intent ? `Intent: ${input.intent}` : null,
-    input.summary ? `Summary: ${input.summary}` : null,
-    `Outline:\n${outlineText}`,
-    '',
-    'Write a complete editorial article as semantic HTML using h1, h2, p, and ul/li only.',
-    'Return only HTML body content starting with a single h1. No markdown fences.',
-  ]
-    .filter(Boolean)
-    .join('\n');
-}
+export { ARTICLE_SYSTEM_PROMPT, buildArticlePrompt };
 
 function stripCodeFences(value: string): string {
   return value
@@ -45,21 +27,15 @@ export async function writeArticleWithOpenAI(
   input: ArticleWriteInput,
   client: OpenAI = createOpenAiClient(),
 ): Promise<ArticleWriteResult> {
-  const model = getOpenAiModel();
+  const { model, temperature, maxCompletionTokens } = getOpenAiWriterConfig();
 
   const response = await client.chat.completions.create({
     model,
-    temperature: 0.7,
+    temperature,
+    max_tokens: maxCompletionTokens,
     messages: [
-      {
-        role: 'system',
-        content:
-          'You are an expert technology journalist. Write clear, factual, engaging articles in HTML.',
-      },
-      {
-        role: 'user',
-        content: buildPrompt(input),
-      },
+      { role: 'system', content: ARTICLE_SYSTEM_PROMPT },
+      { role: 'user', content: buildArticlePrompt(input) },
     ],
   });
 

@@ -7,6 +7,7 @@ import {
   PrismaClient,
 } from '@prisma/client';
 import { writeArticleContent, type ArticleOutlineSection } from '@repo/ai';
+import { resolveUniqueArticleSlug, resolveUniqueArticleTitle } from './article-uniqueness.util';
 
 export type { ArticleOutlineSection };
 
@@ -71,23 +72,26 @@ export async function generateArticle(
   });
 
   try {
+    const articleTitle = await resolveUniqueArticleTitle(prisma, idea.title);
+    const articleSlug = await resolveUniqueArticleSlug(prisma, idea.slugCandidate);
+
     const writeResult = await writeArticleContent({
-      title: idea.title,
+      title: articleTitle,
       summary: idea.summary,
       outline: parseOutline(idea.outline),
       categoryName: idea.category.name,
       intent: idea.intent,
     });
 
-    const seoTitle = idea.title.slice(0, 70);
-    const seoDescription = (idea.summary ?? idea.title).slice(0, 160);
+    const seoTitle = articleTitle.slice(0, 70);
+    const seoDescription = (idea.summary ?? articleTitle).slice(0, 160);
 
     const article = await prisma.article.create({
       data: {
         categoryId: idea.categoryId,
         articleIdeaId: idea.id,
-        title: idea.title,
-        slug: idea.slugCandidate,
+        title: articleTitle,
+        slug: articleSlug,
         summary: idea.summary,
         content: writeResult.content,
         contentPlain: writeResult.contentPlain,
