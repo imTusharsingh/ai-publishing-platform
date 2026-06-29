@@ -97,11 +97,15 @@ By default, article generation uses the **mock writer** (no API key required). T
 ```bash
 # In .env
 OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini   # optional
-AI_WRITER_PROVIDER=openai  # optional; auto-detected when key is set
+OPENAI_MODEL=gpt-4o-mini          # cost-efficient; use gpt-4o for highest quality
+OPENAI_TEMPERATURE=0.45           # lower = more focused, less fluff (default 0.45)
+OPENAI_MAX_COMPLETION_TOKENS=3200 # caps output cost; ~1000-1800 words (default 3200)
+AI_WRITER_PROVIDER=openai         # optional; auto-detected when key is set
 ```
 
 Restart the worker after changing env vars. Token usage and estimated cost are stored on each `AiJob` row.
+
+**Tips for production-grade output:** put a detailed brief in the idea **Summary** (audience, angle, items to cover, tone). The writer uses title + summary + outline as input — richer briefs yield deeper articles without extra API calls.
 
 | Script                   | Description                |
 | ------------------------ | -------------------------- |
