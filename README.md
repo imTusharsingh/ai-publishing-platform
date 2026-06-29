@@ -146,6 +146,8 @@ Trigger from admin **Topics → Discover trends** or `POST /v1/topics/discover`.
 - `POST /v1/jobs/ping` — Enqueue ping job (admin)
 - `GET /v1/topics` — List trending topics (admin)
 - `POST /v1/topics/discover` — Enqueue trend discovery (admin)
+- `PATCH /v1/topics/:id/status` — Approve/reject/suggest topic (admin)
+- `PATCH /v1/topics/:id` — Edit topic title, description, category (admin)
 - `GET /v1/article-ideas` — List article ideas (`?status=DRAFT&categoryId=uuid`, admin)
 - `POST /v1/article-ideas` — Create article idea (admin)
 - `POST /v1/article-ideas/from-topic/:topicId` — Generate idea from topic (admin)
@@ -192,3 +194,17 @@ chmod +x .github/scripts/setup-github-governance.sh
 - [x] Sprint 13: OpenAI article writer with mock fallback + token/cost tracking
 - [x] Sprint 14: OpenAI idea planning with mock fallback + PLANNING AiJob tracking
 - [x] Sprint 15: Live trend discovery (HN, Reddit, NewsAPI) with mock fallback + TREND_DISCOVERY AiJob
+- [x] Plan Sprint 11: Topics admin UI — approve/reject/suggest, edit, status filter
+
+## Plan alignment
+
+New work follows [the product plan](.cursor/plans/ai_publishing_platform_9e04d5dd.plan.md). PR titles: `[Plan Sprint N] feat: …`.
+
+| Plan sprint | Feature                                 | Status                                |
+| ----------- | --------------------------------------- | ------------------------------------- |
+| 0–10        | Foundation through live trend discovery | ✅                                    |
+| **11**      | Topics admin UI                         | ✅                                    |
+| 12–13       | Content planning + writing              | ✅ (shipped early)                    |
+| **14**      | Embeddings (pgvector)                   | 🔲 **Next** — branch `sprint-plan-14` |
+| 15–16       | Duplicate detection                     | 🔲 Pending                            |
+| 17–19       | Quality, SEO, automation                | 🔲 Pending                            |

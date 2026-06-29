@@ -47,8 +47,8 @@ export function ArticleIdeasPage() {
   });
 
   const topicsQuery = useQuery({
-    queryKey: ['admin-topics'],
-    queryFn: listTopics,
+    queryKey: ['admin-topics', 'approved'],
+    queryFn: () => listTopics({ status: 'APPROVED', limit: 50 }),
   });
 
   const invalidate = () => {
@@ -101,10 +101,7 @@ export function ArticleIdeasPage() {
     });
   };
 
-  const availableTopics =
-    topicsQuery.data?.data.filter(
-      (topic) => topic.matchedCategoryId && topic.status !== 'USED' && topic.status !== 'REJECTED',
-    ) ?? [];
+  const availableTopics = topicsQuery.data?.data.filter((topic) => topic.matchedCategoryId) ?? [];
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
@@ -171,13 +168,11 @@ export function ArticleIdeasPage() {
 
       <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h3 className="text-lg font-medium text-gray-900">Generate from topic</h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Mock pipeline — builds outline from a discovered topic.
-        </p>
+        <p className="mt-1 text-sm text-gray-500">Generate ideas from approved topics only.</p>
         {topicsQuery.isLoading && <p className="mt-4 text-sm text-gray-500">Loading topics…</p>}
         {availableTopics.length === 0 && !topicsQuery.isLoading && (
           <p className="mt-4 text-sm text-gray-500">
-            No eligible topics. Run discovery on the Topics page.
+            No approved topics. Approve topics on the Topics page first.
           </p>
         )}
         <ul className="mt-4 divide-y divide-gray-100">
