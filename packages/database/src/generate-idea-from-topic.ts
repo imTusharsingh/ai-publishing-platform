@@ -65,7 +65,6 @@ export async function generateArticleIdeaFromTopic(
       title: plan.title,
       slugCandidate,
       intent: plan.intent,
-      normalizedTopicTitle: topic.title,
     });
 
     if (!duplicateCheck.passed) {

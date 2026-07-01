@@ -49,6 +49,10 @@ jobs:
       JWT_REFRESH_EXPIRES_IN: 7d
       SEED_ADMIN_EMAIL: admin@example.com
       SEED_ADMIN_PASSWORD: Admin123!
+      AI_WRITER_PROVIDER: mock
+      AI_QUALITY_PROVIDER: mock
+      AI_EMBEDDING_PROVIDER: mock
+      AI_SEO_PROVIDER: mock
 
     steps:
       - name: Checkout

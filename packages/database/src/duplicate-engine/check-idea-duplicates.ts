@@ -11,6 +11,7 @@ export async function checkIdeaDuplicates(
     title: candidate.title,
     slugCandidate: candidate.slugCandidate,
     normalizedTopicTitle: candidate.normalizedTopicTitle,
+    excludeTopicId: candidate.excludeTopicId,
   });
 
   if (!layer1.passed) {
