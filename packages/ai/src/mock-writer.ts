@@ -1,4 +1,4 @@
-import { MEDIUM_EXPLAINER_SECTIONS } from './medium-article-format';
+import { PUBLICATION_SECTIONS } from './publication-writer.prompt';
 import { resolveQualityThresholds } from './quality-thresholds';
 import type { ArticleWriteInput, ArticleWriteResult } from './types';
 
@@ -11,17 +11,26 @@ function topicLabel(title: string): string {
   );
 }
 
+function buildIntroductionSection(topic: string, intro: string): string {
+  return [
+    `<h2>${PUBLICATION_SECTIONS.introduction}</h2>`,
+    `<p>${intro}</p>`,
+    `<p>${topic} shows up wherever teams need reliable, fast access to structured information under real-world constraints — from embedded devices to high-traffic services. Understanding it helps you choose the right tool, avoid costly misapplications, and debug production issues with confidence.</p>`,
+    `<p>This article walks from an intuitive mental model through implementation detail, practical scenarios, and actionable recommendations. Whether you are evaluating options or operating a system in production, each section adds something the last did not cover.</p>`,
+  ].join('');
+}
+
 function buildEasySection(topic: string): string {
   return [
-    `<p><strong>${MEDIUM_EXPLAINER_SECTIONS.easy}:</strong></p>`,
-    `<p>Imagine you have a giant box filled with everything you need to understand ${topic}. A traditional approach is like a big chest with labels — you can find things if you remember the label, but opening the chest and sorting through it takes time.</p>`,
-    `<p>${topic} is more like a super-organized workspace with see-through sections. Each section has a clear code that tells you exactly what is inside. You can spot what you need almost instantly because the layout is designed for fast access rather than manual digging.</p>`,
-    `<p>That speed comes from deliberate design choices: data is laid out so reads stay predictable, writes stay safe, and the system does not waste space on bookkeeping you never asked for. For teams shipping features under deadline pressure, that combination matters as much as raw throughput.</p>`,
-    `<h3>Here's the catch:</h3>`,
+    `<p><strong>Easy:</strong></p>`,
+    `<p>Picture a workshop wall with transparent bins, each labeled with a code you memorize once. Instead of opening every drawer to hunt for a part, you walk straight to the right bin. That is the everyday experience ${topic} optimizes for: organized storage where retrieval stays fast because the layout matches how you look things up.</p>`,
+    `<p>A conventional database can feel like a locked filing cabinet — powerful, but each lookup pays an opening cost. ${topic} keeps the cabinet open in memory: the map of where everything lives is cheap to consult, so repeated reads stay snappy even when the dataset grows.</p>`,
+    `<p>Another example: think of a library with a fixed card catalog taped to the front desk. Patrons do not rescan every shelf; they check the catalog, walk to one aisle, and leave. The catalog is the index; the aisles are pages on disk. The design trades flexibility in rearranging shelves for predictability in finding a book.</p>`,
+    `<h3>Here's the catch</h3>`,
     '<ul>',
-    `<li><strong>Limited flexibility:</strong> This model excels when access patterns are simple and well-defined, but it is not a universal replacement for every storage problem.</li>`,
-    `<li><strong>One writer at a time:</strong> Many high-performance designs serialize writes to protect consistency — plan workloads accordingly.</li>`,
-    `<li><strong>Not a relational database:</strong> If you need complex joins and ad-hoc SQL analytics, a different tool may fit better.</li>`,
+    `<li><strong>Not every problem is a lookup problem.</strong> Ad-hoc analytics across many dimensions still belongs elsewhere.</li>`,
+    `<li><strong>Writes are often serialized.</strong> Burst ingestion can queue; plan batching and backpressure.</li>`,
+    `<li><strong>Schema drift hurts.</strong> Key design and migration strategy must be decided early.</li>`,
     '</ul>',
   ].join('');
 }
@@ -30,57 +39,73 @@ function buildModerateSection(topic: string, outline: ArticleWriteInput['outline
   const points = outline.flatMap((section) => section.points);
   const featureBullets = (points.length > 0 ? points.slice(0, 4) : null) ?? [
     'Predictable read latency under concurrent access',
-    'Compact on-disk representation with memory-mapped access',
-    'ACID transactions with crash-safe durability semantics',
-    'Language bindings and a stable C-oriented API surface',
+    'Compact on-disk layout with memory-mapped reads',
+    'Transactional updates with explicit commit boundaries',
+    'Stable API surface with bindings for common languages',
   ];
 
   return [
-    `<h2>${MEDIUM_EXPLAINER_SECTIONS.moderate}</h2>`,
-    `<p>${topic} is a high-performance system designed for workloads that prize speed, reliability, and operational simplicity. Here is a structured breakdown of what practitioners care about on day one:</p>`,
+    `<h2>${PUBLICATION_SECTIONS.moderate}</h2>`,
+    `<p>At this level, ${topic} is best understood as an embedded system component: you link it into your process, open an environment, and perform transactional reads and writes against ordered key spaces.</p>`,
+    '<h3>Core Concepts</h3>',
     '<ul>',
-    `<li><strong>Type:</strong> Embedded, transactional store optimized for key-value and structured record access.</li>`,
-    `<li><strong>Structure:</strong> Tree-based indexing that keeps lookups and range scans efficient at scale.</li>`,
-    `<li><strong>Speed:</strong> Memory-mapped files and copy-on-write updates minimize syscall overhead during reads.</li>`,
-    `<li><strong>Memory:</strong> Lean footprint suitable for edge devices and services with tight resource budgets.</li>`,
-    `<li><strong>Durability:</strong> Committed data survives process crashes; design assumes explicit transaction boundaries.</li>`,
-    `<li><strong>API:</strong> Low-level primitives familiar to systems programmers; bindings exist for popular languages.</li>`,
+    `<li><strong>Purpose:</strong> Durable keyed storage with ordered iteration and minimal operational overhead.</li>`,
+    `<li><strong>Speed:</strong> Hot reads avoid extra copies when data is already mapped into the process address space.</li>`,
+    `<li><strong>Memory:</strong> Working set size tracks active data; cold pages can be reclaimed by the OS.</li>`,
+    `<li><strong>Complexity:</strong> Lower than running a separate database tier for many embedded workloads.</li>`,
+    `<li><strong>Scalability:</strong> Scales with CPU cores for reads; write throughput follows a single-writer model.</li>`,
+    `<li><strong>Trade-offs:</strong> Excellent locality and crash safety; less suited to ad-hoc relational queries.</li>`,
+    `<li><strong>Best For:</strong> Caches, configuration stores, indices, edge agents, and pipeline staging.</li>`,
+    `<li><strong>Avoid When:</strong> You need multi-table joins, heavy migrations, or multi-writer write scaling on one dataset.</li>`,
     '</ul>',
-    `<p><strong>Advantages of ${topic}:</strong></p>`,
+    '<h3>Advantages</h3>',
     '<ul>',
-    ...featureBullets.map(
-      (point) =>
-        `<li>${point} — with measurable impact on latency, cost, or engineering velocity.</li>`,
-    ),
-    `<li>Operational simplicity: fewer moving parts than a full database cluster for many embedded use cases.</li>`,
-    `<li>Excellent read scaling when many consumers access the same dataset concurrently.</li>`,
+    ...featureBullets.map((point) => `<li>${point}</li>`),
     '</ul>',
-    '<p><strong>Things to Consider:</strong></p>',
+    '<h3>Common Use Cases</h3>',
+    `<p>Teams adopt ${topic} when latency budgets are tight and operational surface area must stay small — for example, a service that must restart quickly without replaying hours of logs, or an edge node that cannot depend on a remote database.</p>`,
+  ].join('');
+}
+
+function buildAdvancedSection(topic: string, title: string): string {
+  return [
+    `<h2>${PUBLICATION_SECTIONS.advanced}</h2>`,
+    `<p>Internally, ${topic} relies on tree-structured indexing so point lookups and range scans share one ordered layout. Pages are allocated append-only: updates write new versions rather than mutating live pages in place, which is how readers continue without blocking writers during commits.</p>`,
+    `<p>Concurrency typically follows multiversion semantics — readers observe a consistent snapshot while a writer prepares a new root. That pattern removes reader locks on the hot path but caps write parallelism by design. Failure modes to rehearse in staging include partial writes during crash, disk full conditions, and mmap failures when file limits are misconfigured.</p>`,
+    `<p>Security implications are easy to overlook: file permissions on the data directory, backup encryption, and ensuring untrusted inputs cannot blow key or value size limits. Optimization work should start with realistic key distributions and measured p99 latency, not micro-benchmarks on synthetic keys.</p>`,
+    `<p>For ${title}, production debugging usually centers on transaction boundaries, environment handle lifetimes, and verifying that readers are not holding snapshots open long enough to block reuse of old pages. Document key-prefix conventions and provide runbooks for compaction, resize, and restore before you need them under incident pressure.</p>`,
+  ].join('');
+}
+
+function buildPracticalExamplesSection(topic: string): string {
+  return [
+    `<h2>${PUBLICATION_SECTIONS.practicalExamples}</h2>`,
+    `<p><strong>Use it when</strong> you need microsecond-scale reads colocated with application logic, can tolerate a single writer, and benefit from crash-safe commits without operating a separate database cluster.</p>`,
+    `<p><strong>Avoid it when</strong> analysts need SQL across many entities, writers must scale horizontally on one logical dataset, or schemas change weekly without a migration plan.</p>`,
+    `<p><strong>Common mistakes</strong> include treating it as a message queue, opening environments per request instead of pooling handles, ignoring fsync policy during benchmarks, and sharing one environment across untrusted tenants without isolation.</p>`,
+    `<p><strong>Better alternatives</strong> might include a managed relational database for reporting, an object store for large blobs, or an in-memory cache when durability is not required — ${topic} wins when durability and local speed matter together.</p>`,
+  ].join('');
+}
+
+function buildBestPracticesSection(topic: string): string {
+  return [
+    `<h2>${PUBLICATION_SECTIONS.bestPractices}</h2>`,
     '<ul>',
-    `<li>Schema evolution and migration strategies must be planned — the sweet spot is stable access patterns.</li>`,
-    `<li>Write-heavy bursts can queue behind the single-writer model; batch or pipeline writes when possible.</li>`,
-    `<li>Observability hooks are lighter than cloud-native DBs; you may need custom metrics around transaction rates.</li>`,
-    `<li>Team expertise: strongest when engineers understand mmap, B-trees, and transactional semantics.</li>`,
+    `<li>Benchmark with production-like keys, value sizes, and read/write ratios before committing.</li>`,
+    `<li>Define key namespaces and document them in the repository README or internal wiki.</li>`,
+    `<li>Cap reader transaction lifetime; long-lived read transactions can pin old pages.</li>`,
+    `<li>Automate backups and test restore on a clean host quarterly.</li>`,
+    `<li>Expose metrics: commit rate, map size, reader count, and error codes from the API.</li>`,
+    `<li>Run crash-injection tests in staging before trusting durability claims for ${topic}.</li>`,
     '</ul>',
   ].join('');
 }
 
-function buildHardSection(topic: string, title: string): string {
+function buildConclusionSection(topic: string): string {
   return [
-    `<h2>${MEDIUM_EXPLAINER_SECTIONS.hard}</h2>`,
-    `<p>Under the hood, ${topic} is engineered as a transactional embedded store rather than a general-purpose relational engine. Records are addressed by keys and stored as byte arrays, with range scans supported for ordered iteration. The implementation favors predictable read paths: readers do not block writers, and writers do not block readers, which is essential for services that mix ingestion pipelines with interactive queries.</p>`,
-    `<p>The on-disk layout uses copy-on-write semantics. New versions of pages are written to fresh locations instead of overwriting live data, so a crash mid-transaction cannot tear a valid structure. That design removes the need for a separate write-ahead log in many deployments, improving write throughput because bytes are not duplicated across log and table files.</p>`,
-    `<p>Concurrency is handled with multiversion techniques: read transactions see a consistent snapshot while write transactions commit atomically. In practice, read throughput scales with available cores because hot paths avoid global reader locks. Write throughput is bounded by intentional serialization, which is a deliberate trade-off for correctness on commodity hardware.</p>`,
-    `<p>For ${title}, the engineering implications are concrete. Teams embedding this technology should benchmark their real key distributions, measure tail latency under parallel readers, and validate recovery behavior by killing processes during writes in staging. Production hardening also means capacity planning for file growth, backup strategy for mmap files, and clear ownership of schema or key-prefix conventions across microservices.</p>`,
-    `<p>Common production patterns include local caches fronting remote services, configuration and feature-flag stores, high-churn indices inside larger pipelines, and embedded persistence in edge agents. When paired with disciplined key design and idempotent writers, ${topic} can deliver Medium-grade depth in production — not just benchmark slides.</p>`,
-  ].join('');
-}
-
-function buildSummarySection(topic: string): string {
-  return [
-    `<h2>${MEDIUM_EXPLAINER_SECTIONS.summary}</h2>`,
-    `<p>${topic} rewards teams that need fast, dependable access with minimal operational surface area. The Easy mental model — organized, transparent, quick to navigate — maps directly to how the system behaves under load. The Moderate checklist captures the features architects compare in evaluations, while the Hard details explain why those features exist and where they break down.</p>`,
-    `<p>If your workload matches keyed lookups, ordered scans, and transactional updates with more reads than writes, ${topic} is a strong candidate. If you need ad-hoc analytics, multi-table joins, or constantly shifting schemas, weigh alternatives — but for focused, high-performance storage, the design remains one of the most instructive examples in modern systems engineering.</p>`,
+    `<h2>${PUBLICATION_SECTIONS.conclusion}</h2>`,
+    `<p>${topic} solves the problem of fast, dependable local persistence when a full database tier is heavier than the workload demands. It excels at keyed access, ordered scans, and read-heavy services that colocate storage with compute.</p>`,
+    `<p>Prefer another approach when relational analytics, elastic write scaling, or schema chaos dominate. The key takeaway: match the tool to access patterns, validate durability under your fsync policy, and invest in key design up front — that is what separates a smooth production rollout from a painful retrofit.</p>`,
   ].join('');
 }
 
@@ -92,17 +117,20 @@ export function buildMockArticleContent(
   const topic = topicLabel(title);
   const intro =
     summary?.trim() ||
-    `A layered explainer on ${topic} — from intuitive analogies to implementation depth.`;
+    `A publication-quality explainer on ${topic}, from first principles through production practice.`;
 
   const body = [
+    buildIntroductionSection(topic, intro),
     buildEasySection(topic),
     buildModerateSection(topic, outline),
-    buildHardSection(topic, title),
-    buildSummarySection(topic),
+    buildAdvancedSection(topic, title),
+    buildPracticalExamplesSection(topic),
+    buildBestPracticesSection(topic),
+    buildConclusionSection(topic),
   ].join('');
 
   const minWords = resolveQualityThresholds().minWordCount;
-  let content = `<h1>${title}</h1><p>${intro}</p>${body}`;
+  let content = `<h1>${title}</h1>${body}`;
   let contentPlain = content
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
@@ -111,9 +139,9 @@ export function buildMockArticleContent(
   let wordCount = contentPlain.split(/\s+/).filter(Boolean).length;
   let extraIndex = 0;
   const expansions = [
-    `A practical nuance for ${topic}: measure p99 read latency, not just averages, when you size hardware.`,
-    `Operators should document key-prefix conventions early — future migrations are cheaper when naming is consistent.`,
-    `Security reviews should include file permissions on mmap paths and backup encryption for at-rest copies.`,
+    `When operating ${topic} in production, treat observability as part of the schema: log commit failures, map growth, and reader lifetimes alongside application metrics.`,
+    `Capacity planning for ${topic} should include headroom for copy-on-write amplification during bulk imports — steady-state size is not peak size.`,
+    `On-call runbooks for ${topic} should list safe restart steps, backup locations, and how to verify integrity after an unclean shutdown.`,
   ];
 
   while (wordCount < minWords) {
@@ -138,7 +166,7 @@ export function writeArticleWithMock(input: ArticleWriteInput): ArticleWriteResu
     content,
     contentPlain,
     provider: 'mock',
-    model: 'mock-writer-v2-medium',
+    model: 'mock-writer-v3-publication',
     promptTokens: null,
     completionTokens: null,
     costUsd: null,

@@ -9,7 +9,7 @@ jest.mock('@repo/ai', () => {
       content: '<h1>Generated article</h1><p>Summary</p>',
       contentPlain: 'Generated article\n\nSummary',
       provider: 'mock',
-      model: 'mock-writer-v2-medium',
+      model: 'mock-writer-v3-publication',
       promptTokens: null,
       completionTokens: null,
       costUsd: null,

@@ -13,7 +13,7 @@ describe('buildArticlePrompt', () => {
     expect(prompt).toContain('TITLE:Top 10 AI startups');
     expect(prompt).toContain('BRIEF:Healthcare focus in India');
     expect(prompt).toContain('Leaders→Company A; Company B');
-    expect(prompt).toContain('h2 not h1');
+    expect(prompt).toContain('no h1');
   });
 
   it('uses listicle structure for top-N titles', () => {
@@ -28,7 +28,7 @@ describe('buildArticlePrompt', () => {
     expect(prompt).toContain('Comparative analysis');
   });
 
-  it('uses Medium-style Easy/Moderate/Hard format for explainers', () => {
+  it('uses publication explainer structure for standard articles', () => {
     const prompt = buildArticlePrompt({
       title: 'Lightning Memory-Mapped Database',
       summary: 'Embedded key-value store',
@@ -37,16 +37,20 @@ describe('buildArticlePrompt', () => {
       intent: 'explainer',
     });
 
+    expect(prompt).toContain('Introduction');
     expect(prompt).toContain('Easy:');
-    expect(prompt).toContain('Moderate');
-    expect(prompt).toContain('Hard');
-    expect(prompt).toContain('In summary');
+    expect(prompt).toContain('Moderate Understanding');
+    expect(prompt).toContain('Advanced Deep Dive');
+    expect(prompt).toContain('Practical Examples');
+    expect(prompt).toContain('Best Practices');
+    expect(prompt).toContain('Conclusion');
   });
 
-  it('system prompt requires Medium-style layered depth', () => {
-    expect(ARTICLE_SYSTEM_PROMPT).toContain('Medium');
-    expect(ARTICLE_SYSTEM_PROMPT).toContain('Easy');
-    expect(ARTICLE_SYSTEM_PROMPT).toContain('no filler');
+  it('system prompt defines publication-quality expert writer role', () => {
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('expert writer, researcher, educator, and editor');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('publication-quality');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain("Let's dive in");
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('1,500–2,500 words');
   });
 
   it('includes quality gate contract in user prompt', () => {

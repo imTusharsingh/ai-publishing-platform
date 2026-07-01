@@ -27,7 +27,7 @@ describe('writeArticleWithOpenAI', () => {
     expect(result.content).toContain('<h2>Overview</h2>');
     expect(client.chat.completions.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        max_tokens: 3200,
+        max_tokens: 4500,
         temperature: 0.45,
       }),
     );

@@ -51,6 +51,18 @@
     @apply text-on-surface;
   }
 
+  .article-content em {
+    @apply italic text-on-surface;
+  }
+
+  .article-content code {
+    @apply rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-body-sm text-on-surface;
+  }
+
+  .article-content pre {
+    @apply mb-4 overflow-x-auto rounded-lg bg-surface-container-high p-stack-md font-mono text-body-sm text-on-surface;
+  }
+
   .article-content blockquote {
     @apply my-stack-lg rounded-lg border-l-4 border-primary bg-surface-container p-stack-md italic text-primary;
   }

@@ -53,7 +53,7 @@ describe('generateArticleIdeaFromTopic', () => {
       intent: 'analysis',
       outline: [{ heading: 'Overview', points: ['Point A'] }],
       provider: 'mock',
-      model: 'mock-idea-v2-medium',
+      model: 'mock-idea-v3-publication',
       promptTokens: null,
       completionTokens: null,
       costUsd: null,
