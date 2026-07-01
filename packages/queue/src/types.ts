@@ -6,6 +6,9 @@ export const JOB_NAMES = {
   PING: 'ping',
   TREND_DISCOVERY: 'trend-discovery',
   ARTICLE_WRITING: 'article-writing',
+  EMBEDDING: 'embedding',
+  DUPLICATE_CHECK: 'duplicate-check',
+  QUALITY: 'quality',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -38,6 +41,35 @@ export interface ArticleWritingJobResult {
   articleId: string;
   ideaId: string;
   slug: string;
+  aiJobId: string;
+}
+
+export interface EmbeddingJobData {
+  articleId: string;
+}
+
+export interface EmbeddingJobResult {
+  articleId: string;
+  aiJobId: string;
+}
+
+export interface DuplicateCheckJobData {
+  articleId: string;
+}
+
+export interface DuplicateCheckJobResult {
+  articleId: string;
+  passed: boolean;
+  aiJobId: string;
+}
+
+export interface QualityJobData {
+  articleId: string;
+}
+
+export interface QualityJobResult {
+  articleId: string;
+  passed: boolean;
   aiJobId: string;
 }
 
