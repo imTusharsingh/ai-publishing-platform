@@ -17,12 +17,12 @@ export function getOpenAiTemperature(): number {
 export function getOpenAiMaxCompletionTokens(): number {
   const raw = process.env.OPENAI_MAX_COMPLETION_TOKENS?.trim();
   if (!raw) {
-    return 3200;
+    return 4500;
   }
 
   const value = Number.parseInt(raw, 10);
   if (Number.isNaN(value) || value < 500 || value > 8000) {
-    return 3200;
+    return 4500;
   }
 
   return value;

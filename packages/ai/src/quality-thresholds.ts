@@ -11,7 +11,7 @@ export const DEFAULT_QUALITY_THRESHOLDS: QualityThresholds = {
   minGrammar: 0.7,
   minReadability: 0.55,
   maxSpam: 0.4,
-  minWordCount: 120,
+  minWordCount: 400,
 };
 
 /** Compact quality contract injected into writer prompts so drafts pass the gate first try. */
@@ -20,11 +20,13 @@ export function buildWriterQualityContract(
 ): string {
   return [
     `QUALITY GATE (must pass):`,
-    `- At least ${thresholds.minWordCount} words of connected prose`,
+    `- At least ${thresholds.minWordCount} words; target 1,500–2,500 for OpenAI drafts`,
+    `- Full publication structure: Introduction through Conclusion with progressive depth`,
     `- Clear grammar, capitalization, and complete sentences`,
-    `- Readable newsroom style: mix short and medium sentences; avoid jargon stacks`,
-    `- No repeated paragraphs, boilerplate, or list-only stubs without prose`,
-    `- Each h2 section: 2+ substantive paragraphs before any list`,
+    `- Natural engineer-to-engineer voice; explain jargon after intuition`,
+    `- No repeated paragraphs, filler phrases, or list-only stubs without prose`,
+    `- Each h2 section: multiple substantive paragraphs; lists must be explained in context`,
+    `- Factually careful: no invented statistics, benchmarks, or history`,
   ].join('\n');
 }
 

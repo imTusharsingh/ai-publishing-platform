@@ -16,6 +16,7 @@ export {
   getOpenAiWriterConfig,
 } from './openai-config';
 export { ARTICLE_SYSTEM_PROMPT, buildArticlePrompt } from './openai-writer.prompt';
+export { PUBLICATION_SECTIONS } from './publication-writer.prompt';
 export { discoverTrendContent } from './discover-trends';
 export { discoverTrendsWithMock, applyCategoryMatching } from './mock-trend-discovery';
 export { matchTrendToCategory } from './match-trend-category';

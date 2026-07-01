@@ -90,8 +90,8 @@ describe('ArticleIdeasService', () => {
       id: 'idea-2',
       categoryId: 'cat-1',
       trendingTopicId: 'topic-1',
-      title: 'How AI chips surge is reshaping the industry',
-      slugCandidate: 'how-ai-chips-surge-is-reshaping-the-industry',
+      title: 'AI chips surge',
+      slugCandidate: 'ai-chips-surge',
       summary: 'Semiconductor demand rises',
       outline: [
         { heading: 'Introduction', points: ['Context for AI chips surge', 'Why this matters now'] },

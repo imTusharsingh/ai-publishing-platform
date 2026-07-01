@@ -2,7 +2,7 @@ import { validateQualityWithMock } from '../src/mock-quality';
 
 describe('validateQualityWithMock', () => {
   it('passes well-formed articles', () => {
-    const content = Array.from({ length: 140 }, (_, index) => `Word${index}`).join(' ');
+    const content = Array.from({ length: 420 }, (_, index) => `Word${index}`).join(' ');
     const sentences = Array.from(
       { length: 8 },
       (_, index) => `Sentence ${index} explains the topic clearly.`,

@@ -31,6 +31,14 @@
     @apply mb-3 mt-8 font-display text-headline-sm text-on-surface;
   }
 
+  .article-content h3 {
+    @apply mb-2 mt-6 font-display text-title-md text-on-surface;
+  }
+
+  .article-content strong {
+    @apply font-semibold text-on-surface;
+  }
+
   .article-content p {
     @apply mb-4 font-sans text-body-md leading-relaxed text-on-surface;
   }
@@ -41,6 +49,18 @@
 
   .article-content li {
     @apply text-on-surface;
+  }
+
+  .article-content em {
+    @apply italic text-on-surface;
+  }
+
+  .article-content code {
+    @apply rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-body-sm text-on-surface;
+  }
+
+  .article-content pre {
+    @apply mb-4 overflow-x-auto rounded-lg bg-surface-container-high p-stack-md font-mono text-body-sm text-on-surface;
   }
 
   .article-content blockquote {
