@@ -13,7 +13,7 @@ export function Alert({
     <div
       className={cn(
         'rounded-xl border px-4 py-3 text-sm',
-        variant === 'danger' && 'border-danger-border bg-danger-surface text-danger',
+        variant === 'danger' && 'border-error-container bg-error-container text-on-error-container',
         className,
       )}
     >

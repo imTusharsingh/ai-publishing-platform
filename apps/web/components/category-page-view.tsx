@@ -28,8 +28,8 @@ export function CategoryPageView({ category }: { category: CategoryDetail }) {
   });
 
   return (
-    <PageShell>
-      <div className="page-container space-y-8">
+    <PageShell categories={categoriesQuery.data?.data.map((c) => ({ name: c.name, slug: c.slug }))}>
+      <div className="page-container space-y-12">
         <SectionHeader
           title={`${category.name} Articles`}
           description={
@@ -68,7 +68,7 @@ export function CategoryPageView({ category }: { category: CategoryDetail }) {
 
         {articlesQuery.data && articlesQuery.data.data.length > 0 && (
           <>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-stack-lg md:grid-cols-2">
               {articlesQuery.data.data.map((article) => (
                 <ArticleCard key={article.id} article={article} />
               ))}
