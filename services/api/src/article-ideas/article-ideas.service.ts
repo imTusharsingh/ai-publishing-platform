@@ -108,7 +108,7 @@ export class ArticleIdeasService {
         throw new NotFoundException(message);
       }
 
-      if (message.includes('no matched category')) {
+      if (message.includes('no matched category') || message.includes('Duplicate')) {
         throw new BadRequestException(message);
       }
 

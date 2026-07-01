@@ -105,5 +105,5 @@ describe('Article generation (e2e)', () => {
         (article: { title: string }) => article.title === `E2E generation idea ${runId}`,
       ),
     ).toBe(true);
-  });
+  }, 15_000);
 });

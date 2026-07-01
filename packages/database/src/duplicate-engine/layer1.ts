@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import { normalizeTopicTitle } from '@repo/shared';
 import type { LayerCheckResult } from './types';
 import { normalizeText, slugifyCandidate } from './normalize-text';
 
@@ -8,6 +9,7 @@ export interface Layer1Input {
   normalizedTopicTitle?: string | null;
   excludeArticleId?: string;
   excludeIdeaId?: string;
+  excludeTopicId?: string;
 }
 
 export async function checkLayer1Exact(
@@ -42,7 +44,10 @@ export async function checkLayer1Exact(
     }),
     input.normalizedTopicTitle
       ? prisma.trendingTopic.findFirst({
-          where: { normalizedTitle: normalizeText(input.normalizedTopicTitle) },
+          where: {
+            normalizedTitle: normalizeTopicTitle(input.normalizedTopicTitle),
+            ...(input.excludeTopicId ? { id: { not: input.excludeTopicId } } : {}),
+          },
           select: { id: true, normalizedTitle: true },
         })
       : Promise.resolve(null),

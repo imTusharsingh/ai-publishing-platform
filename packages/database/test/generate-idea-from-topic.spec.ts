@@ -65,6 +65,7 @@ describe('generateArticleIdeaFromTopic', () => {
     const result = await generateArticleIdeaFromTopic(prisma as never, 'topic-1');
 
     expect(result).toEqual({ ideaId: 'idea-1', aiJobId: 'ai-job-1', provider: 'mock' });
+    expect(prisma.trendingTopic.findFirst).not.toHaveBeenCalled();
     expect(prisma.aiJob.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ jobType: AiJobType.PLANNING }),

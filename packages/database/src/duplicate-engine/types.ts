@@ -21,6 +21,7 @@ export interface IdeaDuplicateCandidate {
   slugCandidate?: string;
   intent?: string | null;
   normalizedTopicTitle?: string | null;
+  excludeTopicId?: string;
 }
 
 export interface PublishDuplicateCandidate {
