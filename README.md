@@ -210,5 +210,6 @@ We follow the [product plan](.cursor/plans/ai_publishing_platform_9e04d5dd.plan.
 | **15**      | Duplicate detection L1+L4                  | ✅ Shipped (`sprint-plan-15`)                         |
 | **16**      | Duplicate detection L2+L3 + settings UI    | ✅ Shipped (`sprint-plan-16`)                         |
 | **17**      | Quality validation agent                   | ✅ Shipped (`sprint-plan-17`)                         |
-| 18–19       | SEO, automated publishing                  | 🔲 Pending                                            |
+| **18**      | SEO agent + sitemaps                       | ✅ Shipped (`sprint-plan-18`)                         |
+| **19**      | Automated publishing                       | 🔲 **Next** — branch `sprint-plan-19`                 |
 | 20–25       | Search, analytics, AWS, scale              | 🔲 Pending                                            |

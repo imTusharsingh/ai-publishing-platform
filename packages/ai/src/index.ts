@@ -59,3 +59,7 @@ export {
 } from './quality-thresholds';
 export type { QualityThresholds } from './quality-thresholds';
 export type { ArticleQualityInput, ArticleQualityResult, ArticleQualityScores } from './types';
+export { generateArticleSeo } from './generate-article-seo';
+export { generateSeoWithMock } from './mock-seo';
+export { resolveSeoProvider, getPublicSiteBaseUrl } from './seo-provider';
+export type { ArticleSeoInput, ArticleSeoResult } from './seo-types';

@@ -17,6 +17,15 @@ jest.mock('@repo/ai', () => {
   };
 });
 
+jest.mock('../src/generate-article-seo', () => ({
+  runArticleSeoEnrichment: jest.fn().mockResolvedValue({
+    articleId: 'article-1',
+    aiJobId: 'seo-job-1',
+    seoTitle: 'Generated article',
+    seoDescription: 'Summary',
+  }),
+}));
+
 jest.mock('../src/validate-article-quality', () => ({
   runArticleQualityGate: jest.fn().mockResolvedValue({
     passed: true,

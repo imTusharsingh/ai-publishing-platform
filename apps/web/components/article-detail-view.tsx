@@ -14,9 +14,16 @@ export function ArticleDetailView({
 }) {
   const htmlBody =
     article.content && isHtmlContent(article.content) ? prepareArticleHtml(article.content) : null;
+  const structuredData = article.seo.structuredData;
 
   return (
     <PageShell>
+      {structuredData ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      ) : null}
       <div className="page-container py-stack-lg">
         <nav className="mb-stack-lg flex items-center gap-2 text-label-sm text-on-surface-variant">
           <Link href="/" className="transition-colors hover:text-primary">

@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ArticleStatus, Prisma } from '@prisma/client';
-import { checkPrePublishDuplicates, registerCanonicalTopic } from '@repo/database';
+import {
+  checkPrePublishDuplicates,
+  registerCanonicalTopic,
+  runArticleSeoEnrichment,
+} from '@repo/database';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListAdminArticlesQueryDto } from './dto/list-admin-articles-query.dto';
 
@@ -127,6 +131,7 @@ export class ArticlesAdminService {
         intent: existing.articleIdea.intent,
         summary: article.summary,
       });
+      await runArticleSeoEnrichment(this.prisma, article.id);
     }
 
     return this.toDetail(article);
