@@ -25,6 +25,8 @@ export { QUEUE_NAMES, JOB_NAMES } from './types';
 export type {
   ArticleWritingJobData,
   ArticleWritingJobResult,
+  DailyPublishingJobData,
+  DailyPublishingJobResult,
   DuplicateCheckJobData,
   DuplicateCheckJobResult,
   EmbeddingJobData,
@@ -40,4 +42,9 @@ export type {
   TrendDiscoveryJobResult,
 } from './types';
 export { createRedisConnection } from './redis';
-export { enqueueEmbeddingJob, enqueueDuplicateCheckJob } from './enqueue';
+export {
+  enqueueEmbeddingJob,
+  enqueueDuplicateCheckJob,
+  enqueueDailyPublishingJob,
+  scheduleDailyPublishingCron,
+} from './enqueue';

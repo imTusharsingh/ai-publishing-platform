@@ -11,6 +11,7 @@ import { ArticlesModule } from './articles/articles.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SettingsModule } from './settings/settings.module';
 import { DuplicateRejectionsModule } from './duplicate-rejections/duplicate-rejections.module';
+import { PublishingModule } from './publishing/publishing.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 
