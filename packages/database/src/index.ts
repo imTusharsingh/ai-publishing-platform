@@ -58,4 +58,6 @@ export { checkLayer2Semantic } from './duplicate-engine/layer2';
 export { checkLayer3TopicCluster } from './duplicate-engine/layer3';
 export { runArticleQualityGate } from './validate-article-quality';
 export type { RunArticleQualityGateResult } from './validate-article-quality';
+export { runArticleSeoEnrichment } from './generate-article-seo';
+export type { GenerateArticleSeoResult } from './generate-article-seo';
 export { seed } from './seed';

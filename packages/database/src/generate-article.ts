@@ -9,6 +9,7 @@ import {
 import { writeArticleContent, type ArticleOutlineSection } from '@repo/ai';
 import { resolveUniqueArticleSlug, resolveUniqueArticleTitle } from './article-uniqueness.util';
 import { runArticleQualityGate } from './validate-article-quality';
+import { runArticleSeoEnrichment } from './generate-article-seo';
 
 export type { ArticleOutlineSection };
 
@@ -117,9 +118,6 @@ export async function generateArticle(
       });
     }
 
-    const seoTitle = articleTitle.slice(0, 70);
-    const seoDescription = (idea.summary ?? articleTitle).slice(0, 160);
-
     const article = await prisma.article.create({
       data: {
         categoryId: idea.categoryId,
@@ -130,10 +128,10 @@ export async function generateArticle(
         content: writeResult.content,
         contentPlain: writeResult.contentPlain,
         status: ArticleStatus.DRAFT,
-        seoTitle,
-        seoDescription,
       },
     });
+
+    await runArticleSeoEnrichment(prisma, article.id);
 
     await prisma.aiJob.update({
       where: { id: aiJob.id },
