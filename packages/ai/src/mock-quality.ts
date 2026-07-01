@@ -1,6 +1,6 @@
+import { evaluateQualityScores, resolveQualityThresholds } from './quality-thresholds';
 import type { ArticleQualityInput, ArticleQualityResult, ArticleQualityScores } from './types';
 
-const MIN_WORD_COUNT = 120;
 const MAX_REPEATED_LINE_RATIO = 0.35;
 
 function scoreGrammar(text: string): number {
@@ -13,10 +13,10 @@ function scoreGrammar(text: string): number {
   return Math.min(1, capitalizationHits / sentences.length);
 }
 
-function scoreReadability(text: string): number {
+function scoreReadability(text: string, minWordCount: number): number {
   const words = text.split(/\s+/).filter(Boolean);
-  if (words.length < MIN_WORD_COUNT) {
-    return words.length / MIN_WORD_COUNT;
+  if (words.length < minWordCount) {
+    return words.length / minWordCount;
   }
 
   const avgWordLength = words.reduce((sum, word) => sum + word.length, 0) / words.length;
@@ -44,34 +44,26 @@ function scoreSpam(text: string): number {
 
 export function validateQualityWithMock(input: ArticleQualityInput): ArticleQualityResult {
   const text = input.contentPlain.trim();
-  const issues: string[] = [];
+  const thresholds = resolveQualityThresholds();
 
   const scores: ArticleQualityScores = {
     grammar: scoreGrammar(text),
-    readability: scoreReadability(text),
+    readability: scoreReadability(text, thresholds.minWordCount),
     spam: scoreSpam(text),
   };
 
-  if (text.split(/\s+/).filter(Boolean).length < MIN_WORD_COUNT) {
-    issues.push(`Article is shorter than ${MIN_WORD_COUNT} words`);
-  }
-
-  if (scores.grammar < 0.6) {
-    issues.push('Grammar score below threshold');
-  }
-
-  if (scores.readability < 0.45) {
-    issues.push('Readability score below threshold');
-  }
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  const evaluation = evaluateQualityScores(scores, wordCount, thresholds);
 
   if (scores.spam >= 1) {
-    issues.push('Repeated lines detected');
+    evaluation.issues.push('Repeated lines detected');
+    evaluation.passed = false;
   }
 
   return {
-    passed: issues.length === 0,
+    passed: evaluation.passed,
     scores,
-    issues,
+    issues: evaluation.issues,
     provider: 'mock',
     model: 'mock-quality-v1',
     promptTokens: null,

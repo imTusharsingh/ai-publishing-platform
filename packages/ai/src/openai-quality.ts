@@ -1,14 +1,14 @@
 import { estimateOpenAiCostUsd } from './cost';
 import { createOpenAiClient } from './openai-writer';
 import { getOpenAiModel } from './provider';
+import { evaluateQualityScores } from './quality-thresholds';
 import type { ArticleQualityInput, ArticleQualityResult } from './types';
 
 interface QualityResponse {
-  passed: boolean;
   grammar: number;
   readability: number;
   spam: number;
-  issues: string[];
+  notes?: string[];
 }
 
 export async function validateQualityWithOpenAI(
@@ -25,7 +25,7 @@ export async function validateQualityWithOpenAI(
       {
         role: 'system',
         content:
-          'You are a strict news editor. Score grammar, readability, and spam risk from 0 to 1. Return JSON: {"passed":boolean,"grammar":number,"readability":number,"spam":number,"issues":string[]}. Fail if grammar<0.7, readability<0.55, spam>0.4, or article is incoherent.',
+          'You are a news editor scoring draft articles. Return JSON only: {"grammar":number,"readability":number,"spam":number,"notes":string[]}. All scores are 0-1 where higher grammar/readability is better and higher spam is worse.',
       },
       {
         role: 'user',
@@ -40,17 +40,22 @@ export async function validateQualityWithOpenAI(
   }
 
   const parsed = JSON.parse(content) as QualityResponse;
+  const scores = {
+    grammar: Number(parsed.grammar),
+    readability: Number(parsed.readability),
+    spam: Number(parsed.spam),
+  };
+  const wordCount = input.contentPlain.split(/\s+/).filter(Boolean).length;
+  const evaluation = evaluateQualityScores(scores, wordCount);
+  const modelNotes = Array.isArray(parsed.notes) ? parsed.notes.map(String) : [];
+
   const promptTokens = response.usage?.prompt_tokens ?? null;
   const completionTokens = response.usage?.completion_tokens ?? null;
 
   return {
-    passed: Boolean(parsed.passed),
-    scores: {
-      grammar: Number(parsed.grammar),
-      readability: Number(parsed.readability),
-      spam: Number(parsed.spam),
-    },
-    issues: Array.isArray(parsed.issues) ? parsed.issues.map(String) : [],
+    passed: evaluation.passed,
+    scores,
+    issues: evaluation.passed ? modelNotes : [...evaluation.issues, ...modelNotes],
     provider: 'openai',
     model,
     promptTokens,

@@ -1,12 +1,12 @@
 import { validateQualityWithMock } from './mock-quality';
 import { validateQualityWithOpenAI } from './openai-quality';
-import { resolveAiProvider } from './provider';
+import { resolveQualityProvider } from './quality-provider';
 import type { ArticleQualityInput, ArticleQualityResult } from './types';
 
 export async function validateArticleQuality(
   input: ArticleQualityInput,
 ): Promise<ArticleQualityResult> {
-  const provider = resolveAiProvider();
+  const provider = resolveQualityProvider();
 
   if (provider === 'openai') {
     return validateQualityWithOpenAI(input);

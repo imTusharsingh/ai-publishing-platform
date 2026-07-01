@@ -9,6 +9,8 @@ export interface ArticleWriteInput {
   outline: ArticleOutlineSection[];
   categoryName: string;
   intent?: string | null;
+  /** Set when revising a draft that failed the quality gate. */
+  qualityFeedback?: string | null;
 }
 
 export interface ArticleWriteResult {

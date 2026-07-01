@@ -7,6 +7,7 @@ describe('runArticleQualityGate', () => {
   beforeAll(async () => {
     await seed();
     process.env.AI_WRITER_PROVIDER = 'mock';
+    process.env.AI_QUALITY_PROVIDER = 'mock';
   });
 
   it('creates QUALITY ai job and fails short drafts', async () => {
@@ -38,10 +39,13 @@ describe('runArticleQualityGate', () => {
       return;
     }
 
-    const contentPlain = Array.from(
-      { length: 150 },
-      (_, index) => `Sentence ${index} provides useful context for readers.`,
-    ).join(' ');
+    const contentPlain = [
+      Array.from({ length: 80 }, (_, index) => `Word${index}`).join(' '),
+      Array.from(
+        { length: 8 },
+        (_, index) => `Sentence ${index} explains the topic clearly for readers.`,
+      ).join(' '),
+    ].join('\n\n');
 
     const result = await runArticleQualityGate(prisma, {
       articleIdeaId: idea.id,

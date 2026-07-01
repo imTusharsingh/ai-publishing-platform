@@ -76,20 +76,46 @@ export async function generateArticle(
     const articleTitle = await resolveUniqueArticleTitle(prisma, idea.title);
     const articleSlug = await resolveUniqueArticleSlug(prisma, idea.slugCandidate);
 
-    const writeResult = await writeArticleContent({
+    const writeInput = {
       title: articleTitle,
       summary: idea.summary,
       outline: parseOutline(idea.outline),
       categoryName: idea.category.name,
       intent: idea.intent,
-    });
+    };
 
-    await runArticleQualityGate(prisma, {
-      articleIdeaId: idea.id,
-      title: articleTitle,
-      summary: idea.summary,
-      contentPlain: writeResult.contentPlain,
-    });
+    let writeResult = await writeArticleContent(writeInput);
+    let totalPromptTokens = writeResult.promptTokens ?? 0;
+    let totalCompletionTokens = writeResult.completionTokens ?? 0;
+
+    try {
+      await runArticleQualityGate(prisma, {
+        articleIdeaId: idea.id,
+        title: articleTitle,
+        summary: idea.summary,
+        contentPlain: writeResult.contentPlain,
+      });
+    } catch (qualityError) {
+      if (writeResult.provider !== 'openai') {
+        throw qualityError;
+      }
+
+      const feedback = qualityError instanceof Error ? qualityError.message : 'Quality gate failed';
+
+      writeResult = await writeArticleContent({
+        ...writeInput,
+        qualityFeedback: feedback,
+      });
+      totalPromptTokens += writeResult.promptTokens ?? 0;
+      totalCompletionTokens += writeResult.completionTokens ?? 0;
+
+      await runArticleQualityGate(prisma, {
+        articleIdeaId: idea.id,
+        title: articleTitle,
+        summary: idea.summary,
+        contentPlain: writeResult.contentPlain,
+      });
+    }
 
     const seoTitle = articleTitle.slice(0, 70);
     const seoDescription = (idea.summary ?? articleTitle).slice(0, 160);
@@ -115,8 +141,8 @@ export async function generateArticle(
         status: AiJobStatus.COMPLETED,
         provider: writeResult.provider,
         model: writeResult.model,
-        promptTokens: writeResult.promptTokens,
-        completionTokens: writeResult.completionTokens,
+        promptTokens: totalPromptTokens || writeResult.promptTokens,
+        completionTokens: totalCompletionTokens || writeResult.completionTokens,
         costUsd: writeResult.costUsd !== null ? new Prisma.Decimal(writeResult.costUsd) : undefined,
         completedAt: new Date(),
         outputSnapshot: {
