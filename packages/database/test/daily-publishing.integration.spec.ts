@@ -7,6 +7,7 @@ import {
   prisma,
   runDailyPublishingPipeline,
   seed,
+  updateDuplicateSettings,
 } from '../src';
 
 describe('automated publishing pipeline', () => {
@@ -16,10 +17,19 @@ describe('automated publishing pipeline', () => {
     process.env.AI_WRITING_PROVIDER = 'mock';
     process.env.AI_QUALITY_PROVIDER = 'mock';
     process.env.AI_SEO_PROVIDER = 'mock';
+    process.env.AI_EMBEDDING_PROVIDER = 'mock';
+
+    await updateDuplicateSettings(prisma, {
+      titleThreshold: 0.999,
+      summaryThreshold: 0.999,
+      contentThreshold: 0.999,
+      topicCooldownDays: 1,
+      clusterDistanceThreshold: 0.01,
+    });
   });
 
   it('auto-publishes a draft article and records publishing job', async () => {
-    const unique = Date.now();
+    const unique = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const category = await prisma.category.findFirstOrThrow();
     const idea = await prisma.articleIdea.create({
       data: {
@@ -57,12 +67,17 @@ describe('automated publishing pipeline', () => {
   }, 60_000);
 
   it('runs daily pipeline end-to-end with mocked AI', async () => {
-    const unique = Date.now();
+    const unique = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const category = await prisma.category.findFirstOrThrow();
 
     await prisma.category.updateMany({
       where: { id: { not: category.id } },
       data: { isActive: false },
+    });
+
+    await prisma.category.update({
+      where: { id: category.id },
+      data: { articlesPerCycle: 10, isActive: true },
     });
 
     await prisma.trendingTopic.create({
