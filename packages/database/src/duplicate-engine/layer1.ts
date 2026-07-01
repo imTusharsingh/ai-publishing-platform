@@ -6,6 +6,8 @@ export interface Layer1Input {
   title: string;
   slugCandidate?: string;
   normalizedTopicTitle?: string | null;
+  excludeArticleId?: string;
+  excludeIdeaId?: string;
 }
 
 export async function checkLayer1Exact(
@@ -14,18 +16,28 @@ export async function checkLayer1Exact(
 ): Promise<LayerCheckResult> {
   const normalizedTitle = normalizeText(input.title);
   const slug = input.slugCandidate?.trim() || slugifyCandidate(input.title);
+  const excludeArticleId = input.excludeArticleId;
 
   const [articleTitleMatch, articleSlugMatch, ideaSlugMatch, topicMatch] = await Promise.all([
     prisma.article.findFirst({
-      where: { title: { equals: input.title.trim(), mode: 'insensitive' } },
+      where: {
+        title: { equals: input.title.trim(), mode: 'insensitive' },
+        ...(excludeArticleId ? { id: { not: excludeArticleId } } : {}),
+      },
       select: { id: true, title: true },
     }),
     prisma.article.findFirst({
-      where: { slug },
+      where: {
+        slug,
+        ...(excludeArticleId ? { id: { not: excludeArticleId } } : {}),
+      },
       select: { id: true, slug: true },
     }),
     prisma.articleIdea.findFirst({
-      where: { slugCandidate: slug },
+      where: {
+        slugCandidate: slug,
+        ...(input.excludeIdeaId ? { id: { not: input.excludeIdeaId } } : {}),
+      },
       select: { id: true, slugCandidate: true },
     }),
     input.normalizedTopicTitle

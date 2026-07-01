@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/articles', label: 'Articles', icon: 'description' },
   { href: '/jobs', label: 'AI Jobs', icon: 'robot_2' },
   { href: '/audit', label: 'Audit Log', icon: 'history' },
+  { href: '/duplicate-settings', label: 'Duplicates', icon: 'content_copy' },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {

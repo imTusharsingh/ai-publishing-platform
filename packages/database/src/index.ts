@@ -46,4 +46,14 @@ export type {
   LayerCheckResult,
   PublishDuplicateCandidate,
 } from './duplicate-engine/types';
+export {
+  DEFAULT_DUPLICATE_THRESHOLDS,
+  getDuplicateSettings,
+  updateDuplicateSettings,
+} from './duplicate-engine/duplicate-settings';
+export type { DuplicateThresholdSettings } from './duplicate-engine/duplicate-settings';
+export { checkPrePublishDuplicates } from './duplicate-engine/check-pre-publish';
+export { registerCanonicalTopic } from './duplicate-engine/register-canonical-topic';
+export { checkLayer2Semantic } from './duplicate-engine/layer2';
+export { checkLayer3TopicCluster } from './duplicate-engine/layer3';
 export { seed } from './seed';
