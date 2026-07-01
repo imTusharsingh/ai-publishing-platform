@@ -1,5 +1,20 @@
 import { prisma, seed, checkIdeaDuplicates, logDuplicateRejection } from '../src';
 import { buildTopicKey } from '../src/duplicate-engine/normalize-text';
+import { normalizeTopicTitle } from '@repo/shared';
+
+async function createTopic(title: string) {
+  return prisma.trendingTopic.create({
+    data: {
+      source: 'REDDIT',
+      title,
+      normalizedTitle: normalizeTopicTitle(title),
+      description: 'Duplicate engine test topic',
+      popularityScore: 50,
+      sourceUrl: 'https://example.com/topic',
+      status: 'DISCOVERED',
+    },
+  });
+}
 
 describe('duplicate detection layers 1 and 4', () => {
   beforeAll(async () => {
@@ -19,7 +34,7 @@ describe('duplicate detection layers 1 and 4', () => {
   });
 
   it('allows idea generation from source topic when excluding topic id', async () => {
-    const topic = await prisma.trendingTopic.findFirstOrThrow();
+    const topic = await createTopic(`Source topic ${Date.now()}`);
 
     const result = await checkIdeaDuplicates(prisma, {
       title: `Idea from topic ${Date.now()}`,
@@ -33,7 +48,7 @@ describe('duplicate detection layers 1 and 4', () => {
   });
 
   it('rejects idea when another topic shares normalized title', async () => {
-    const topic = await prisma.trendingTopic.findFirstOrThrow();
+    const topic = await createTopic(`Shared normalized topic ${Date.now()}`);
 
     const result = await checkIdeaDuplicates(prisma, {
       title: `Duplicate topic idea ${Date.now()}`,
