@@ -64,4 +64,10 @@ export { autoPublishArticle } from './publishing/auto-publish-article';
 export type { AutoPublishArticleResult } from './publishing/auto-publish-article';
 export { runDailyPublishingPipeline } from './publishing/run-daily-pipeline';
 export type { DailyPipelineResult } from './publishing/run-daily-pipeline';
+export { searchArticles } from './search-articles';
+export type {
+  SearchArticlesInput,
+  SearchArticlesResult,
+  SearchArticleHit,
+} from './search-articles';
 export { seed } from './seed';
