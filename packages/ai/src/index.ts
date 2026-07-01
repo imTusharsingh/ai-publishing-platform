@@ -42,3 +42,9 @@ export type {
   TrendDiscoveryResult,
 } from './types';
 export { estimateOpenAiCostUsd } from './cost';
+export { embedTexts, getDefaultEmbeddingModel } from './embed-text';
+export { mockEmbedText } from './mock-embedder';
+export { resolveEmbeddingProvider, getEmbeddingModel } from './embedding-provider';
+export { vectorToPgLiteral, normalizeVector, EMBEDDING_DIMENSIONS } from './vector.util';
+export type { EmbeddingProvider } from './embedding-provider';
+export type { EmbedTextsResult } from './embed-text';

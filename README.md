@@ -206,7 +206,7 @@ We follow the [product plan](.cursor/plans/ai_publishing_platform_9e04d5dd.plan.
 | **10**      | Trend discovery (queue + live fetchers)    | ✅ Repo Sprint 10 (mock) + **15** (HN/Reddit/NewsAPI) |
 | **11**      | Topics admin UI (approve/reject/edit)      | ✅ Shipped (`sprint-plan-11`)                         |
 | 12–13       | Content planning + writing                 | ✅ Early (repo Sprints 11–14)                         |
-| **14**      | Embeddings (pgvector)                      | 🔲 **Next** — branch `sprint-plan-14`                 |
-| 15–16       | Duplicate detection                        | 🔲 Pending                                            |
+| **14**      | Embeddings (pgvector)                      | ✅ Shipped (`sprint-plan-14`)                         |
+| **15**      | Duplicate detection L1+L4                  | 🔲 **Next** — branch `sprint-plan-15`                 |
 | 17–19       | Quality, SEO, automated publishing         | 🔲 Pending                                            |
 | 20–25       | Search, analytics, AWS, scale              | 🔲 Pending                                            |

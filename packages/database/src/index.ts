@@ -23,4 +23,14 @@ export type {
 } from './generate-mock-article';
 export { generateArticleIdeaFromTopic } from './generate-idea-from-topic';
 export type { GenerateIdeaFromTopicResult } from './generate-idea-from-topic';
+export {
+  generateArticleEmbeddings,
+  embedCandidateTexts,
+} from './embedding/generate-article-embeddings';
+export type { GenerateArticleEmbeddingsResult } from './embedding/generate-article-embeddings';
+export { findSimilarArticles, vectorToPgLiteral } from './embedding/embedding-similarity';
+export type {
+  FindSimilarArticlesInput,
+  SimilarArticleMatch,
+} from './embedding/embedding-similarity';
 export { seed } from './seed';
