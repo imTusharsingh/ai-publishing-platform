@@ -1,25 +1,20 @@
 import { expect, test } from '@playwright/test';
+import { loginAsAdmin, logoutAdmin, sidebarLink } from './helpers';
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@example.com';
-const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'Admin123!';
 
-test('redirects unauthenticated users to login', async ({ page }) => {
-  await page.goto('/');
-  await expect(page).toHaveURL('/login');
-  await expect(page.getByRole('heading', { name: 'Admin sign in' })).toBeVisible();
-});
+test.describe('unauthenticated', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
 
-test('login and logout flow', async ({ page }) => {
-  await page.goto('/login');
+  test('redirects unauthenticated users to login', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveURL('/login');
+    await expect(page.getByRole('heading', { name: 'Aura Admin' })).toBeVisible();
+  });
 
-  await page.getByLabel('Email').fill(ADMIN_EMAIL);
-  await page.getByLabel('Password').fill(ADMIN_PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-
-  await expect(page).toHaveURL('/');
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-  await expect(page.getByText(ADMIN_EMAIL)).toBeVisible();
-
-  await page.getByRole('button', { name: 'Sign out' }).click();
-  await expect(page).toHaveURL('/login');
+  test('login and logout flow', async ({ page }) => {
+    await loginAsAdmin(page);
+    await expect(page.getByText(ADMIN_EMAIL)).toBeVisible();
+    await logoutAdmin(page);
+  });
 });

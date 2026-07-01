@@ -17,7 +17,7 @@ export function Pagination({
       <Button variant="secondary" disabled={page <= 1} onClick={onPrevious}>
         Previous
       </Button>
-      <span className="text-sm text-content-muted">
+      <span className="text-body-sm text-on-surface-variant">
         Page {page} of {totalPages}
       </span>
       <Button variant="secondary" disabled={page >= totalPages} onClick={onNext}>

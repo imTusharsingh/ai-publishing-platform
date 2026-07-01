@@ -15,10 +15,10 @@ export function Pill({
   className?: string;
 }) {
   const classNames = cn(
-    'inline-flex shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
+    'inline-flex shrink-0 rounded-full border px-4 py-2 text-label-md transition-colors',
     active
-      ? 'border-accent bg-accent text-accent-foreground shadow-card'
-      : 'border-line bg-surface text-content-muted hover:border-content-subtle hover:bg-surface-muted hover:text-content',
+      ? 'border-primary bg-primary text-on-primary shadow-card'
+      : 'border-outline-variant bg-surface text-on-surface-variant hover:border-primary/30 hover:bg-surface-container-low hover:text-primary',
     className,
   );
 

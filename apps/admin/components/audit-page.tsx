@@ -1,54 +1,66 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import {
+  AdminPageBody,
+  AdminPageHeader,
+  AdminPageShell,
+  AdminScrollCard,
+} from '@/components/admin-ui';
 import { listAuditLogs } from '@/lib/audit-api';
 
 export function AuditPage() {
   const auditQuery = useQuery({
-    queryKey: ['admin-audit-logs'],
-    queryFn: () => listAuditLogs(),
+    queryKey: ['admin-audit'],
+    queryFn: () => listAuditLogs(1, 50),
   });
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10">
-      <h2 className="text-3xl font-bold text-gray-900">Audit log</h2>
-      <p className="mt-2 text-gray-600">Recent admin actions across the platform.</p>
+    <AdminPageShell>
+      <AdminPageHeader
+        breadcrumb="Audit Log"
+        title="Platform Audit"
+        description="Recent admin actions across the platform."
+        className="mb-stack-md shrink-0"
+      />
 
-      <div className="mt-8 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        {auditQuery.isLoading && (
-          <p className="p-6 text-sm text-gray-500">Loading audit entries…</p>
-        )}
-        {auditQuery.isError && (
-          <p className="p-6 text-sm text-red-600">Failed to load audit log.</p>
-        )}
-        {auditQuery.data && (
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-700">When</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700">User</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700">Action</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700">Entity</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {auditQuery.data.data.map((entry) => (
-                <tr key={entry.id}>
-                  <td className="px-4 py-3 text-gray-600">
-                    {new Date(entry.createdAt).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-gray-900">{entry.userEmail ?? '—'}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-800">{entry.action}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {entry.entityType}
-                    {entry.entityId ? ` · ${entry.entityId.slice(0, 8)}…` : ''}
-                  </td>
+      <AdminPageBody>
+        <AdminScrollCard>
+          {auditQuery.isLoading && (
+            <p className="p-6 text-body-sm text-on-surface-variant">Loading audit entries…</p>
+          )}
+          {auditQuery.isError && (
+            <p className="p-6 text-body-sm text-on-error-container">Failed to load audit log.</p>
+          )}
+          {auditQuery.data && (
+            <table className="admin-table admin-table-sticky">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Entity</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </section>
+              </thead>
+              <tbody>
+                {auditQuery.data.data.map((entry) => (
+                  <tr key={entry.id}>
+                    <td className="text-on-surface-variant">
+                      {new Date(entry.createdAt).toLocaleString()}
+                    </td>
+                    <td>{entry.userEmail ?? '—'}</td>
+                    <td className="font-mono text-xs">{entry.action}</td>
+                    <td className="text-on-surface-variant">
+                      {entry.entityType}
+                      {entry.entityId ? ` · ${entry.entityId.slice(0, 8)}…` : ''}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </AdminScrollCard>
+      </AdminPageBody>
+    </AdminPageShell>
   );
 }

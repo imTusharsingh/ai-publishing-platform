@@ -64,8 +64,9 @@ export function CategoryNav({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-content-subtle">
-        Categories
+      <h2 className="flex items-center gap-2 text-label-md text-primary">
+        <span className="material-symbols-outlined text-[18px]">bolt</span>
+        Browse Categories
       </h2>
 
       <div className="flex flex-wrap gap-2">
@@ -96,8 +97,8 @@ export function CategoryNav({
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
                 selectedOverflow
-                  ? 'border-accent bg-accent text-accent-foreground shadow-card'
-                  : 'border-line bg-surface text-content-muted hover:border-content-subtle hover:bg-surface-muted hover:text-content',
+                  ? 'border-primary bg-primary text-on-primary shadow-card'
+                  : 'border-outline-variant bg-surface text-on-surface-variant hover:border-primary/30 hover:bg-surface-container-low hover:text-primary',
               )}
             >
               {selectedOverflow ? selectedOverflow.name : 'More'}
@@ -109,7 +110,7 @@ export function CategoryNav({
             {menuOpen && (
               <ul
                 role="listbox"
-                className="absolute left-0 top-full z-20 mt-2 max-h-64 w-56 overflow-y-auto rounded-xl border border-line bg-surface py-1 shadow-panel"
+                className="absolute left-0 top-full z-20 mt-2 max-h-64 w-56 overflow-y-auto rounded-xl border border-outline-variant bg-surface py-1 shadow-panel"
               >
                 {overflowCategories.map((category) => (
                   <li key={category.id}>
@@ -122,8 +123,8 @@ export function CategoryNav({
                         className={cn(
                           'block w-full px-4 py-2.5 text-left text-sm transition-colors',
                           selectedSlug === category.slug
-                            ? 'bg-surface-muted font-medium text-content'
-                            : 'text-content-muted hover:bg-surface-muted hover:text-content',
+                            ? 'bg-surface-container-low font-medium text-on-surface'
+                            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface',
                         )}
                       >
                         {category.name}
@@ -137,8 +138,8 @@ export function CategoryNav({
                         className={cn(
                           'block w-full px-4 py-2.5 text-left text-sm transition-colors',
                           selectedSlug === category.slug
-                            ? 'bg-surface-muted font-medium text-content'
-                            : 'text-content-muted hover:bg-surface-muted hover:text-content',
+                            ? 'bg-surface-container-low font-medium text-on-surface'
+                            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface',
                         )}
                       >
                         {category.name}

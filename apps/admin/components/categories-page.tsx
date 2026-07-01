@@ -4,12 +4,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormEvent, useState } from 'react';
 import type { CategoryAdmin, CreateCategoryRequest } from '@repo/shared';
 import {
+  AdminPageBody,
+  AdminPageHeader,
+  AdminPageShell,
+  AdminScrollCard,
+} from '@/components/admin-ui';
+import {
   createCategory,
   deleteCategory,
   listCategories,
   updateCategory,
 } from '@/lib/categories-api';
 import { ApiError } from '@/lib/api';
+import { cn } from '@/lib/cn';
 
 const emptyForm: CreateCategoryRequest = {
   name: '',
@@ -26,6 +33,8 @@ export function CategoriesPage() {
   const [form, setForm] = useState<CreateCategoryRequest>(emptyForm);
   const [keywordsInput, setKeywordsInput] = useState('');
   const [editing, setEditing] = useState<CategoryAdmin | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const parseKeywords = (value: string) =>
@@ -38,6 +47,8 @@ export function CategoriesPage() {
     setForm(emptyForm);
     setKeywordsInput('');
     setError(null);
+    setEditing(null);
+    setShowForm(false);
   };
 
   const categoriesQuery = useQuery({
@@ -60,7 +71,6 @@ export function CategoriesPage() {
     mutationFn: ({ id, payload }: { id: string; payload: CreateCategoryRequest }) =>
       updateCategory(id, payload),
     onSuccess: () => {
-      setEditing(null);
       resetForm();
       invalidate();
     },
@@ -91,6 +101,7 @@ export function CategoriesPage() {
 
   const startEdit = (category: CategoryAdmin) => {
     setEditing(category);
+    setShowForm(true);
     setForm({
       name: category.name,
       description: category.description ?? '',
@@ -104,40 +115,75 @@ export function CategoriesPage() {
     setError(null);
   };
 
-  return (
-    <section className="mx-auto max-w-6xl px-4 py-10">
-      <h2 className="text-3xl font-bold text-gray-900">Categories</h2>
-      <p className="mt-2 text-gray-600">Manage publishing categories for the platform.</p>
+  const categories =
+    categoriesQuery.data?.data.filter(
+      (c) =>
+        !search ||
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.slug.toLowerCase().includes(search.toLowerCase()),
+    ) ?? [];
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
+  const avgPriority =
+    categories.length > 0
+      ? (categories.reduce((sum, c) => sum + c.priorityScore, 0) / categories.length).toFixed(1)
+      : '—';
+
+  return (
+    <AdminPageShell>
+      <AdminPageHeader
+        breadcrumb="Categories"
+        title="News Categories"
+        description="Manage global news taxonomy, prioritize AI content harvesting, and monitor publication throughput across all vertical channels."
+        titleClassName="text-on-surface"
+        className="mb-stack-md shrink-0"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            resetForm();
+            setShowForm(true);
+          }}
+          className="admin-btn-primary"
+        >
+          <span className="material-symbols-outlined">add_circle</span>
+          Add Category
+        </button>
+      </AdminPageHeader>
+
+      <div className="mb-stack-md grid shrink-0 grid-cols-1 gap-gutter md:grid-cols-4">
+        <Stat
+          label="Total Categories"
+          value={String(categoriesQuery.data?.meta.total ?? '—')}
+          hint="+ active"
+        />
+        <Stat label="Avg Priority" value={avgPriority} hint="Across taxonomy" />
+        <Stat
+          label="Active Streams"
+          value={String(categories.filter((c) => c.isActive).length)}
+          hint="Publishing"
+        />
+        <Stat
+          label="Inactive"
+          value={String(categories.filter((c) => !c.isActive).length)}
+          hint="Paused"
+        />
+      </div>
+
+      {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+          className="admin-card mb-stack-md shrink-0 space-y-4 p-stack-md"
         >
-          <h3 className="text-lg font-semibold text-gray-900">
-            {editing ? 'Edit category' : 'Create category'}
+          <h3 className="font-display text-headline-sm">
+            {editing ? 'Edit Category' : 'Add Category'}
           </h3>
-
-          <div className="mt-4 space-y-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <input
               required
               placeholder="Name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            />
-            <textarea
-              placeholder="Description"
-              value={form.description ?? ''}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              rows={3}
-            />
-            <input
-              placeholder="Keywords (comma-separated)"
-              value={keywordsInput}
-              onChange={(e) => setKeywordsInput(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="admin-input"
             />
             <input
               type="number"
@@ -145,88 +191,155 @@ export function CategoriesPage() {
               max={100}
               value={form.priorityScore ?? 50}
               onChange={(e) => setForm({ ...form, priorityScore: Number(e.target.value) })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="admin-input"
+              placeholder="Priority score"
             />
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+            <textarea
+              placeholder="Description"
+              value={form.description ?? ''}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="admin-input md:col-span-2"
+              rows={2}
+            />
+            <input
+              placeholder="Keywords (comma-separated)"
+              value={keywordsInput}
+              onChange={(e) => setKeywordsInput(e.target.value)}
+              className="admin-input md:col-span-2"
+            />
+            <label className="flex items-center gap-2 text-body-sm text-on-surface-variant">
               <input
                 type="checkbox"
                 checked={form.isActive ?? true}
                 onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
               />
-              Active
+              Active category
             </label>
           </div>
-
-          {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-
-          <div className="mt-4 flex gap-2">
+          {error && <p className="text-body-sm text-on-error-container">{error}</p>}
+          <div className="flex gap-2">
             <button
               type="submit"
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60"
+              className="admin-btn-primary"
             >
               {editing ? 'Save changes' : 'Create category'}
             </button>
-            {editing && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(null);
-                  resetForm();
-                }}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm"
-              >
-                Cancel
-              </button>
-            )}
+            <button type="button" onClick={resetForm} className="admin-btn-secondary">
+              Cancel
+            </button>
           </div>
         </form>
+      )}
 
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+      <AdminPageBody>
+        <AdminScrollCard
+          header={
+            <div className="border-b border-outline-variant p-stack-md">
+              <div className="relative w-full sm:max-w-md">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">
+                  search
+                </span>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search categories..."
+                  className="admin-input pl-10"
+                />
+              </div>
+            </div>
+          }
+        >
           {categoriesQuery.isLoading && (
-            <p className="p-6 text-sm text-gray-500">Loading categories…</p>
+            <p className="p-6 text-body-sm text-on-surface-variant">Loading categories…</p>
           )}
           {categoriesQuery.isError && (
-            <p className="p-6 text-sm text-red-600">Failed to load categories.</p>
+            <p className="p-6 text-body-sm text-on-error-container">Failed to load categories.</p>
           )}
-          {categoriesQuery.data && (
-            <ul className="divide-y divide-gray-200">
-              {categoriesQuery.data.data.map((category) => (
-                <li key={category.id} className="flex items-start justify-between gap-4 p-4">
-                  <div>
-                    <p className="font-medium text-gray-900">{category.name}</p>
-                    <p className="text-sm text-gray-500">{category.slug}</p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      Priority {category.priorityScore} ·{' '}
-                      {category.isActive ? 'Active' : 'Inactive'}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => startEdit(category)}
-                      className="rounded border border-gray-300 px-3 py-1 text-xs"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`Delete or deactivate "${category.name}"?`)) {
-                          deleteMutation.mutate(category.id);
-                        }
-                      }}
-                      className="rounded border border-red-200 px-3 py-1 text-xs text-red-700"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          {categories.length > 0 && (
+            <table className="admin-table admin-table-sticky">
+              <thead>
+                <tr>
+                  <th>Category Name</th>
+                  <th>Slug</th>
+                  <th className="text-center">Priority Score</th>
+                  <th>Status</th>
+                  <th className="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((category) => (
+                  <tr key={category.id}>
+                    <td>
+                      <div className="font-display text-on-surface">{category.name}</div>
+                      {category.description && (
+                        <div className="text-body-sm text-on-surface-variant">
+                          {category.description}
+                        </div>
+                      )}
+                    </td>
+                    <td className="font-mono text-body-sm text-on-surface-variant">
+                      {category.slug}
+                    </td>
+                    <td className="text-center">
+                      <span className="rounded-full bg-primary-container/20 px-3 py-1 text-label-sm text-primary">
+                        {category.priorityScore}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={cn(
+                          'rounded-full px-3 py-1 text-label-sm',
+                          category.isActive
+                            ? 'bg-secondary-container text-on-secondary-container'
+                            : 'bg-surface-container-high text-on-surface-variant',
+                        )}
+                      >
+                        {category.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => startEdit(category)}
+                          className="admin-btn-secondary px-3 py-1 text-label-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete or deactivate "${category.name}"?`)) {
+                              deleteMutation.mutate(category.id);
+                            }
+                          }}
+                          className="rounded-lg border border-error-container px-3 py-1 text-label-sm text-on-error-container hover:bg-error-container"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
-        </div>
+        </AdminScrollCard>
+      </AdminPageBody>
+    </AdminPageShell>
+  );
+}
+
+function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="admin-card p-stack-md">
+      <p className="mb-1 text-label-sm uppercase tracking-wider text-on-surface-variant">{label}</p>
+      <div className="flex items-baseline gap-2">
+        <span className="font-display text-[28px] font-bold text-on-surface">{value}</span>
+        <span className="text-label-sm text-secondary">{hint}</span>
       </div>
-    </section>
+    </div>
   );
 }
