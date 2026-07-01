@@ -12,6 +12,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { SettingsModule } from './settings/settings.module';
 import { DuplicateRejectionsModule } from './duplicate-rejections/duplicate-rejections.module';
 import { PublishingModule } from './publishing/publishing.module';
+import { AdminDashboardModule } from './admin-dashboard/admin-dashboard.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -29,6 +30,8 @@ import { PrismaModule } from './prisma/prisma.module';
     CategoriesModule,
     ArticlesModule,
     DuplicateRejectionsModule,
+    PublishingModule,
+    AdminDashboardModule,
     SettingsModule,
   ],
   providers: [

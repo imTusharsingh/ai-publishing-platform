@@ -70,4 +70,8 @@ export type {
   SearchArticlesResult,
   SearchArticleHit,
 } from './search-articles';
+export { computeArticleRelated } from './compute-article-related';
+export type { ComputeRelatedArticlesResult } from './compute-article-related';
+export { getAdminDashboardMetrics } from './admin-dashboard-metrics';
+export type { AdminDashboardMetrics } from './admin-dashboard-metrics';
 export { seed } from './seed';
