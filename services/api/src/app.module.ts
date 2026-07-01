@@ -9,6 +9,7 @@ import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { ArticlesModule } from './articles/articles.module';
 import { CategoriesModule } from './categories/categories.module';
+import { SettingsModule } from './settings/settings.module';
 import { DuplicateRejectionsModule } from './duplicate-rejections/duplicate-rejections.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -27,6 +28,7 @@ import { PrismaModule } from './prisma/prisma.module';
     CategoriesModule,
     ArticlesModule,
     DuplicateRejectionsModule,
+    SettingsModule,
   ],
   providers: [
     {

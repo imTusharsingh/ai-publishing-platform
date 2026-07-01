@@ -314,6 +314,14 @@ model DuplicateRejection {
   @@map("duplicate_rejections")
 }
 
+model PlatformSetting {
+  key       String   @id @db.VarChar(100)
+  value     Json     @db.JsonB
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("platform_settings")
+}
+
 model AuditLog {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId     String?  @map("user_id") @db.Uuid

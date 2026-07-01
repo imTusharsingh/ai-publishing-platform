@@ -208,6 +208,7 @@ We follow the [product plan](.cursor/plans/ai_publishing_platform_9e04d5dd.plan.
 | 12–13       | Content planning + writing                 | ✅ Early (repo Sprints 11–14)                         |
 | **14**      | Embeddings (pgvector)                      | ✅ Shipped (`sprint-plan-14`)                         |
 | **15**      | Duplicate detection L1+L4                  | ✅ Shipped (`sprint-plan-15`)                         |
-| **16**      | Duplicate detection L2+L3 + settings UI    | 🔲 **Next** — branch `sprint-plan-16`                 |
+| **16**      | Duplicate detection L2+L3 + settings UI    | ✅ Shipped (`sprint-plan-16`)                         |
+| **17**      | Quality validation agent                   | 🔲 **Next** — branch `sprint-plan-17`                 |
 | 17–19       | Quality, SEO, automated publishing         | 🔲 Pending                                            |
 | 20–25       | Search, analytics, AWS, scale              | 🔲 Pending                                            |

@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ArticleStatus, Prisma } from '@prisma/client';
+import { checkPrePublishDuplicates, registerCanonicalTopic } from '@repo/database';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListAdminArticlesQueryDto } from './dto/list-admin-articles-query.dto';
 
@@ -74,13 +75,35 @@ export class ArticlesAdminService {
   }
 
   async updateStatus(id: string, status: ArticleStatus): Promise<ArticleAdminDetailResponse> {
-    const existing = await this.prisma.article.findUnique({ where: { id } });
+    const existing = await this.prisma.article.findUnique({
+      where: { id },
+      include: {
+        articleIdea: { select: { intent: true } },
+      },
+    });
     if (!existing) {
       throw new NotFoundException(`Article with id "${id}" not found`);
     }
 
     if (status === ArticleStatus.PUBLISHED && !existing.content?.trim()) {
       throw new BadRequestException('Cannot publish an article without content');
+    }
+
+    if (status === ArticleStatus.PUBLISHED && existing.status !== ArticleStatus.PUBLISHED) {
+      const duplicateCheck = await checkPrePublishDuplicates(this.prisma, {
+        articleId: existing.id,
+        title: existing.title,
+        slug: existing.slug,
+        summary: existing.summary,
+        contentPlain: existing.contentPlain,
+        intent: existing.articleIdea.intent,
+      });
+
+      if (!duplicateCheck.passed) {
+        throw new BadRequestException(
+          duplicateCheck.reason ?? 'Article rejected by duplicate detection',
+        );
+      }
     }
 
     const article = await this.prisma.article.update({
@@ -96,6 +119,15 @@ export class ArticlesAdminService {
       },
       include: { category: { select: { id: true, name: true } } },
     });
+
+    if (status === ArticleStatus.PUBLISHED && existing.status !== ArticleStatus.PUBLISHED) {
+      await registerCanonicalTopic(this.prisma, {
+        articleId: article.id,
+        title: article.title,
+        intent: existing.articleIdea.intent,
+        summary: article.summary,
+      });
+    }
 
     return this.toDetail(article);
   }
