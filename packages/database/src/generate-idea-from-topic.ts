@@ -8,6 +8,10 @@ import {
 } from '@prisma/client';
 import { generateIdeaContent } from '@repo/ai';
 import { resolveUniqueIdeaSlug } from './idea-slug.util';
+import {
+  checkIdeaDuplicates,
+  duplicateCheckResultToJson,
+} from './duplicate-engine/check-idea-duplicates';
 
 export interface GenerateIdeaFromTopicResult {
   ideaId: string;
@@ -57,6 +61,27 @@ export async function generateArticleIdeaFromTopic(
 
     const slugCandidate = await resolveUniqueIdeaSlug(prisma, plan.title);
 
+    const duplicateCheck = await checkIdeaDuplicates(prisma, {
+      title: plan.title,
+      slugCandidate,
+      intent: plan.intent,
+      normalizedTopicTitle: topic.title,
+    });
+
+    if (!duplicateCheck.passed) {
+      await prisma.aiJob.update({
+        where: { id: aiJob.id },
+        data: {
+          status: AiJobStatus.FAILED,
+          completedAt: new Date(),
+          errorMessage: duplicateCheck.reason ?? 'Duplicate idea rejected',
+          outputSnapshot: duplicateCheckResultToJson(duplicateCheck),
+        },
+      });
+
+      throw new Error(duplicateCheck.reason ?? 'Duplicate idea rejected');
+    }
+
     const idea = await prisma.articleIdea.create({
       data: {
         categoryId: topic.matchedCategoryId,
@@ -67,6 +92,7 @@ export async function generateArticleIdeaFromTopic(
         outline: plan.outline as unknown as Prisma.InputJsonValue,
         intent: plan.intent,
         status: ArticleIdeaStatus.DRAFT,
+        duplicateCheckResult: duplicateCheckResultToJson(duplicateCheck),
       },
     });
 
