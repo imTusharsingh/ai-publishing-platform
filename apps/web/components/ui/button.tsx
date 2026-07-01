@@ -4,10 +4,11 @@ import { cn } from '@/lib/cn';
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'border-accent bg-accent text-accent-foreground hover:bg-content',
-  secondary: 'border-line bg-surface text-content hover:bg-surface-muted',
+  primary: 'border-primary bg-primary text-on-primary hover:opacity-90',
+  secondary:
+    'border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low',
   ghost:
-    'border-transparent bg-transparent text-content-muted hover:bg-surface-muted hover:text-content',
+    'border-transparent bg-transparent text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface',
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

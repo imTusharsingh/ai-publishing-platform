@@ -20,10 +20,10 @@ test('article page renders content and SEO metadata', async ({ page }) => {
   );
 });
 
-test('home page links to article detail', async ({ page }) => {
-  await page.goto('/');
+test('category page links to article detail', async ({ page }) => {
+  await page.goto('/category/startups');
   await page
-    .getByRole('link', { name: /Seed Funding Rebounds/ })
+    .getByRole('link', { name: /Seed Funding Rebounds/i })
     .first()
     .click();
   await expect(page).toHaveURL('/articles/seed-funding-rebounds-ai-infrastructure-q2');

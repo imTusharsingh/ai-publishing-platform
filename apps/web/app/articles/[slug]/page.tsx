@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ArticleDetailView } from '@/components/article-detail-view';
-import { getArticle } from '@/lib/api';
+import { getArticle, getArticles } from '@/lib/api';
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -42,5 +42,13 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound();
   }
 
-  return <ArticleDetailView article={article} />;
+  let relatedArticles: Awaited<ReturnType<typeof getArticles>>['data'] = [];
+  try {
+    const related = await getArticles({ category: article.category.slug, limit: 4 });
+    relatedArticles = related.data.filter((item) => item.slug !== article.slug).slice(0, 3);
+  } catch {
+    relatedArticles = [];
+  }
+
+  return <ArticleDetailView article={article} relatedArticles={relatedArticles} />;
 }

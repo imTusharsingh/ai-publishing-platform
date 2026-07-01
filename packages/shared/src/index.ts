@@ -1,4 +1,9 @@
-export const APP_NAME = 'AI Publishing Platform';
+export const PUBLIC_APP_NAME = 'AuraNews';
+export const ADMIN_APP_NAME = 'Aura Admin';
+/** @deprecated Use PUBLIC_APP_NAME or ADMIN_APP_NAME */
+export const APP_NAME = PUBLIC_APP_NAME;
+
+export { auraColors, auraFontSize, auraSpacing, auraTailwindTheme } from './aura-tailwind';
 
 export function formatApiVersion(version: string): string {
   return `v${version}`;

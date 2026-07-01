@@ -1,22 +1,31 @@
 import { Inter } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
+import { PUBLIC_APP_NAME } from '@repo/shared';
 
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
-  title: 'AI Publishing Platform',
-  description: 'Automated AI-powered news and article publishing',
+  title: `${PUBLIC_APP_NAME} | Intelligent Authority`,
+  description: 'AI-powered news and analysis — curated with intelligent authority.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className={`${inter.variable} ${GeistSans.variable}`}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className={`${inter.className} font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>

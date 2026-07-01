@@ -3,6 +3,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormEvent, useState } from 'react';
 import type { TopicStatus, TopicSummary } from '@repo/shared';
+import {
+  AdminInsightCard,
+  AdminPageBody,
+  AdminPageHeader,
+  AdminPageShell,
+  AdminScrollCard,
+  AdminStatusBadge,
+} from '@/components/admin-ui';
 import { listCategories } from '@/lib/categories-api';
 import {
   listTopics,
@@ -11,24 +19,13 @@ import {
   updateTopicStatus,
 } from '@/lib/topics-api';
 import { ApiError } from '@/lib/api';
+import { cn } from '@/lib/cn';
 
-const STATUS_OPTIONS: TopicStatus[] = [
-  'DISCOVERED',
-  'SUGGESTED',
-  'APPROVED',
-  'REJECTED',
-  'USED',
-  'EXPIRED',
-];
-
-const STATUS_STYLES: Record<TopicStatus, string> = {
-  DISCOVERED: 'bg-blue-100 text-blue-800',
-  SUGGESTED: 'bg-amber-100 text-amber-800',
-  APPROVED: 'bg-green-100 text-green-800',
-  REJECTED: 'bg-red-100 text-red-800',
-  USED: 'bg-gray-100 text-gray-700',
-  EXPIRED: 'bg-gray-100 text-gray-500',
-};
+const QUEUE_FILTERS = [
+  { id: 'DISCOVERED', label: 'Pending' },
+  { id: 'APPROVED', label: 'Approved' },
+  { id: '', label: 'All' },
+] as const;
 
 function canReview(status: TopicStatus): boolean {
   return status === 'DISCOVERED' || status === 'SUGGESTED';
@@ -51,6 +48,11 @@ export function TopicsPage() {
         status: (statusFilter || undefined) as TopicStatus | undefined,
       }),
     refetchInterval: 10000,
+  });
+
+  const allTopicsQuery = useQuery({
+    queryKey: ['admin-topics-stats'],
+    queryFn: () => listTopics({ limit: 1 }),
   });
 
   const categoriesQuery = useQuery({
@@ -106,200 +108,226 @@ export function TopicsPage() {
     });
   };
 
+  const topics = topicsQuery.data?.data ?? [];
+  const totalTopics = allTopicsQuery.data?.meta.total ?? 0;
+
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">Trending topics</h2>
-          <p className="mt-2 text-gray-600">
-            Review discovered trends — approve before generating ideas.
-          </p>
-        </div>
+    <AdminPageShell>
+      <AdminPageHeader
+        breadcrumb="Topics Discovery"
+        title="AI Topic Discovery"
+        description="Real-time trending news entities across global sources."
+        className="mb-stack-md shrink-0"
+      >
         <button
           type="button"
           onClick={() => discoverMutation.mutate()}
           disabled={discoverMutation.isPending}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60"
+          className="admin-btn-accent"
         >
-          {discoverMutation.isPending ? 'Discovering…' : 'Run discovery'}
+          <span className="material-symbols-outlined">refresh</span>
+          {discoverMutation.isPending ? 'Syncing…' : 'Sync Now'}
         </button>
-      </div>
+      </AdminPageHeader>
 
       {discoverMutation.isSuccess && (
-        <p className="mt-4 text-sm text-green-700">
-          Discovery job queued. New topics appear after the worker finishes (usually within 15s).
+        <p className="mb-4 shrink-0 text-body-sm text-secondary">
+          Discovery job queued. New topics appear after the worker finishes.
         </p>
       )}
+      {error && <p className="mb-4 shrink-0 text-body-sm text-on-error-container">{error}</p>}
 
-      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-        <select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-        >
-          <option value="">All statuses</option>
-          {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-        {topicsQuery.data && (
-          <p className="text-sm text-gray-500">
-            Showing {topicsQuery.data.data.length} of {topicsQuery.data.meta.total}
-          </p>
-        )}
+      <div className="bento-grid mb-stack-md shrink-0">
+        <div className="col-span-12 md:col-span-4">
+          <AdminInsightCard
+            label="Active Discovered Topics"
+            value={String(totalTopics)}
+            icon="trending_up"
+            meta="+ live"
+            accent="primary"
+          />
+        </div>
+        <div className="col-span-12 md:col-span-4">
+          <AdminInsightCard
+            label="Queue Size"
+            value={String(topicsQuery.data?.meta.total ?? 0)}
+            icon="verified"
+            meta="Current filter"
+            accent="secondary"
+          />
+        </div>
+        <div className="col-span-12 md:col-span-4">
+          <AdminInsightCard
+            label="Sources Active"
+            value="3"
+            icon="hub"
+            meta="HN · Reddit · News"
+            accent="tertiary"
+          />
+        </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        {topicsQuery.isLoading && <p className="p-6 text-sm text-gray-500">Loading topics…</p>}
-        {topicsQuery.isError && <p className="p-6 text-sm text-red-600">Failed to load topics.</p>}
-        {topicsQuery.data?.data.length === 0 && !topicsQuery.isLoading && (
-          <p className="p-6 text-sm text-gray-500">No topics for this filter.</p>
-        )}
-        {topicsQuery.data && topicsQuery.data.data.length > 0 && (
-          <ul className="divide-y divide-gray-200">
-            {topicsQuery.data.data.map((topic) => (
-              <li key={topic.id} className="p-4">
-                {editingId === topic.id ? (
-                  <form onSubmit={(event) => handleSaveEdit(event, topic.id)} className="space-y-3">
-                    <label className="block text-sm">
-                      <span className="text-gray-700">Title</span>
-                      <input
-                        value={editTitle}
-                        onChange={(event) => setEditTitle(event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        required
-                        minLength={5}
-                      />
-                    </label>
-                    <label className="block text-sm">
-                      <span className="text-gray-700">Description</span>
-                      <textarea
-                        value={editDescription}
-                        onChange={(event) => setEditDescription(event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                        rows={3}
-                      />
-                    </label>
-                    <label className="block text-sm">
-                      <span className="text-gray-700">Category</span>
-                      <select
-                        value={editCategoryId}
-                        onChange={(event) => setEditCategoryId(event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                      >
-                        <option value="">Uncategorized</option>
-                        {categoriesQuery.data?.data.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        disabled={updateMutation.isPending}
-                        className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-800 disabled:opacity-60"
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingId(null)}
-                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-gray-900">{topic.title}</p>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[topic.status]}`}
+      <AdminPageBody>
+        <AdminScrollCard
+          header={
+            <div className="flex items-center justify-between border-b border-outline-variant bg-surface-bright px-6 py-4">
+              <h2 className="font-display text-headline-sm text-on-surface">Queue</h2>
+              <div className="admin-filter-tabs">
+                {QUEUE_FILTERS.map((filter) => (
+                  <button
+                    key={filter.id}
+                    type="button"
+                    onClick={() => setStatusFilter(filter.id)}
+                    className={cn(
+                      'admin-filter-tab',
+                      statusFilter === filter.id && 'admin-filter-tab-active',
+                    )}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          }
+        >
+          {topicsQuery.isLoading && (
+            <p className="p-6 text-body-sm text-on-surface-variant">Loading topics…</p>
+          )}
+          {topicsQuery.isError && (
+            <p className="p-6 text-body-sm text-on-error-container">Failed to load topics.</p>
+          )}
+          {topics.length === 0 && !topicsQuery.isLoading && (
+            <p className="p-6 text-body-sm text-on-surface-variant">No topics for this filter.</p>
+          )}
+
+          {topics.length > 0 && (
+            <table className="admin-table admin-table-sticky">
+              <thead>
+                <tr>
+                  <th>Topic / Entity</th>
+                  <th>Source</th>
+                  <th>Popularity</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th className="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topics.map((topic) => (
+                  <tr key={topic.id}>
+                    <td>
+                      {editingId === topic.id ? (
+                        <form
+                          onSubmit={(event) => handleSaveEdit(event, topic.id)}
+                          className="space-y-2 py-2"
                         >
-                          {topic.status}
-                        </span>
-                        {topic.discoveryProvider && (
-                          <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-800">
-                            {topic.discoveryProvider}
-                          </span>
-                        )}
-                      </div>
-                      {topic.description && (
-                        <p className="mt-1 text-sm text-gray-500">{topic.description}</p>
-                      )}
-                      <p className="mt-2 text-xs text-gray-400">
-                        {topic.source} · score {topic.popularityScore}
-                        {topic.matchedCategoryName ? ` · ${topic.matchedCategoryName}` : ''}
-                        {topic.sourceUrl && (
-                          <>
-                            {' · '}
-                            <a
-                              href={topic.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
+                          <input
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            className="admin-input"
+                            required
+                            minLength={5}
+                          />
+                          <textarea
+                            value={editDescription}
+                            onChange={(e) => setEditDescription(e.target.value)}
+                            className="admin-input"
+                            rows={2}
+                          />
+                          <select
+                            value={editCategoryId}
+                            onChange={(e) => setEditCategoryId(e.target.value)}
+                            className="admin-input"
+                          >
+                            <option value="">Uncategorized</option>
+                            {categoriesQuery.data?.data.map((category) => (
+                              <option key={category.id} value={category.id}>
+                                {category.name}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="flex gap-2">
+                            <button
+                              type="submit"
+                              className="admin-btn-primary px-3 py-1.5 text-label-sm"
                             >
-                              Source
-                            </a>
-                          </>
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {canReview(topic.status) && (
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingId(null)}
+                              className="admin-btn-secondary px-3 py-1.5 text-label-sm"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
                         <>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              statusMutation.mutate({ id: topic.id, status: 'APPROVED' })
-                            }
-                            className="rounded-lg bg-green-700 px-3 py-1.5 text-sm text-white hover:bg-green-800"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              statusMutation.mutate({ id: topic.id, status: 'SUGGESTED' })
-                            }
-                            className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm text-amber-900 hover:bg-amber-50"
-                          >
-                            Suggest
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              statusMutation.mutate({ id: topic.id, status: 'REJECTED' })
-                            }
-                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
-                          >
-                            Reject
-                          </button>
+                          <div className="font-display text-on-surface">{topic.title}</div>
+                          {topic.description && (
+                            <div className="line-clamp-2 text-body-sm text-on-surface-variant">
+                              {topic.description}
+                            </div>
+                          )}
                         </>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => startEdit(topic)}
-                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </section>
+                    </td>
+                    <td className="text-on-surface-variant">{topic.source}</td>
+                    <td>
+                      <div className="h-2 w-24 overflow-hidden rounded-full bg-surface-container-high">
+                        <div
+                          className="h-full bg-primary"
+                          style={{ width: `${Math.min(100, topic.popularityScore)}%` }}
+                        />
+                      </div>
+                    </td>
+                    <td className="text-on-surface-variant">{topic.matchedCategoryName ?? '—'}</td>
+                    <td>
+                      <AdminStatusBadge status={topic.status} />
+                    </td>
+                    <td className="text-right">
+                      {editingId !== topic.id && (
+                        <div className="flex justify-end gap-2">
+                          {canReview(topic.status) && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  statusMutation.mutate({ id: topic.id, status: 'APPROVED' })
+                                }
+                                className="rounded bg-secondary px-3 py-1 text-label-sm text-on-secondary"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  statusMutation.mutate({ id: topic.id, status: 'REJECTED' })
+                                }
+                                className="admin-btn-secondary px-3 py-1 text-label-sm"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => startEdit(topic)}
+                            className="admin-btn-secondary px-3 py-1 text-label-sm"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </AdminScrollCard>
+      </AdminPageBody>
+    </AdminPageShell>
   );
 }
