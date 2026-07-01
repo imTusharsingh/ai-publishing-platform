@@ -33,4 +33,17 @@ export type {
   FindSimilarArticlesInput,
   SimilarArticleMatch,
 } from './embedding/embedding-similarity';
+export {
+  checkIdeaDuplicates,
+  duplicateCheckResultToJson,
+} from './duplicate-engine/check-idea-duplicates';
+export { checkLayer1Exact, logDuplicateRejection } from './duplicate-engine/layer1';
+export { checkLayer4Canonical } from './duplicate-engine/layer4';
+export { normalizeText, buildTopicKey } from './duplicate-engine/normalize-text';
+export type {
+  DuplicateCheckOutcome,
+  IdeaDuplicateCandidate,
+  LayerCheckResult,
+  PublishDuplicateCandidate,
+} from './duplicate-engine/types';
 export { seed } from './seed';

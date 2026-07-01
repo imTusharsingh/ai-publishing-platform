@@ -10,7 +10,11 @@ describe('generateArticleIdeaFromTopic', () => {
   const prisma = {
     trendingTopic: {
       findUnique: jest.fn(),
+      findFirst: jest.fn().mockResolvedValue(null),
       update: jest.fn(),
+    },
+    article: {
+      findFirst: jest.fn().mockResolvedValue(null),
     },
     aiJob: {
       create: jest.fn(),
@@ -18,6 +22,13 @@ describe('generateArticleIdeaFromTopic', () => {
     },
     articleIdea: {
       findUnique: jest.fn().mockResolvedValue(null),
+      findFirst: jest.fn().mockResolvedValue(null),
+      create: jest.fn(),
+    },
+    canonicalTopic: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
+    duplicateRejection: {
       create: jest.fn(),
     },
   };
