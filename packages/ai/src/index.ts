@@ -48,3 +48,14 @@ export { resolveEmbeddingProvider, getEmbeddingModel } from './embedding-provide
 export { vectorToPgLiteral, normalizeVector, EMBEDDING_DIMENSIONS } from './vector.util';
 export type { EmbeddingProvider } from './embedding-provider';
 export type { EmbedTextsResult } from './embed-text';
+export { validateArticleQuality } from './validate-quality';
+export { validateQualityWithMock } from './mock-quality';
+export { resolveQualityProvider } from './quality-provider';
+export {
+  DEFAULT_QUALITY_THRESHOLDS,
+  buildWriterQualityContract,
+  evaluateQualityScores,
+  resolveQualityThresholds,
+} from './quality-thresholds';
+export type { QualityThresholds } from './quality-thresholds';
+export type { ArticleQualityInput, ArticleQualityResult, ArticleQualityScores } from './types';

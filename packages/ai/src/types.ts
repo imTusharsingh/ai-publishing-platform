@@ -9,6 +9,8 @@ export interface ArticleWriteInput {
   outline: ArticleOutlineSection[];
   categoryName: string;
   intent?: string | null;
+  /** Set when revising a draft that failed the quality gate. */
+  qualityFeedback?: string | null;
 }
 
 export interface ArticleWriteResult {
@@ -71,4 +73,27 @@ export interface TrendDiscoveryResult {
   trends: DiscoveredTrendCandidate[];
   provider: 'mock' | 'live';
   sources: string[];
+}
+
+export interface ArticleQualityInput {
+  title: string;
+  contentPlain: string;
+  summary?: string | null;
+}
+
+export interface ArticleQualityScores {
+  grammar: number;
+  readability: number;
+  spam: number;
+}
+
+export interface ArticleQualityResult {
+  passed: boolean;
+  scores: ArticleQualityScores;
+  issues: string[];
+  provider: 'mock' | 'openai';
+  model: string;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  costUsd: number | null;
 }

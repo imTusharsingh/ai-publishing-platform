@@ -30,6 +30,18 @@ describe('buildArticlePrompt', () => {
 
   it('system prompt forbids filler and requires analytical depth', () => {
     expect(ARTICLE_SYSTEM_PROMPT).toContain('No filler');
-    expect(ARTICLE_SYSTEM_PROMPT).toContain('h3 per item');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('prose paragraphs');
+  });
+
+  it('includes quality gate contract in user prompt', () => {
+    const prompt = buildArticlePrompt({
+      title: 'AI policy shifts',
+      summary: 'Regulators move faster',
+      outline: [],
+      categoryName: 'Policy',
+    });
+
+    expect(prompt).toContain('QUALITY GATE');
+    expect(prompt).toContain('At least 120 words');
   });
 });

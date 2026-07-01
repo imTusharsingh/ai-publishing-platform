@@ -56,4 +56,6 @@ export { checkPrePublishDuplicates } from './duplicate-engine/check-pre-publish'
 export { registerCanonicalTopic } from './duplicate-engine/register-canonical-topic';
 export { checkLayer2Semantic } from './duplicate-engine/layer2';
 export { checkLayer3TopicCluster } from './duplicate-engine/layer3';
+export { runArticleQualityGate } from './validate-article-quality';
+export type { RunArticleQualityGateResult } from './validate-article-quality';
 export { seed } from './seed';

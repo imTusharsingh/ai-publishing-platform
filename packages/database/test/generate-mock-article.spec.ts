@@ -17,6 +17,20 @@ jest.mock('@repo/ai', () => {
   };
 });
 
+jest.mock('../src/validate-article-quality', () => ({
+  runArticleQualityGate: jest.fn().mockResolvedValue({
+    passed: true,
+    aiJobId: 'quality-job-1',
+    provider: 'mock',
+    model: 'mock-quality-v1',
+    scores: { grammar: 1, readability: 1, spam: 0 },
+    issues: [],
+    promptTokens: null,
+    completionTokens: null,
+    costUsd: null,
+  }),
+}));
+
 describe('generateMockArticle', () => {
   const prisma = {
     articleIdea: {
