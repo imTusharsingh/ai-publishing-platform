@@ -72,3 +72,26 @@ export interface TrendDiscoveryResult {
   provider: 'mock' | 'live';
   sources: string[];
 }
+
+export interface ArticleQualityInput {
+  title: string;
+  contentPlain: string;
+  summary?: string | null;
+}
+
+export interface ArticleQualityScores {
+  grammar: number;
+  readability: number;
+  spam: number;
+}
+
+export interface ArticleQualityResult {
+  passed: boolean;
+  scores: ArticleQualityScores;
+  issues: string[];
+  provider: 'mock' | 'openai';
+  model: string;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  costUsd: number | null;
+}

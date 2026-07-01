@@ -8,6 +8,7 @@ import {
 } from '@prisma/client';
 import { writeArticleContent, type ArticleOutlineSection } from '@repo/ai';
 import { resolveUniqueArticleSlug, resolveUniqueArticleTitle } from './article-uniqueness.util';
+import { runArticleQualityGate } from './validate-article-quality';
 
 export type { ArticleOutlineSection };
 
@@ -81,6 +82,13 @@ export async function generateArticle(
       outline: parseOutline(idea.outline),
       categoryName: idea.category.name,
       intent: idea.intent,
+    });
+
+    await runArticleQualityGate(prisma, {
+      articleIdeaId: idea.id,
+      title: articleTitle,
+      summary: idea.summary,
+      contentPlain: writeResult.contentPlain,
     });
 
     const seoTitle = articleTitle.slice(0, 70);
