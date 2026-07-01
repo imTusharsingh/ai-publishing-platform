@@ -1,19 +1,17 @@
+import { MEDIUM_EXPLAINER_HTML_FORMAT } from './medium-article-format';
 import { buildWriterQualityContract } from './quality-thresholds';
 import type { ArticleWriteInput } from './types';
 
-/** Compact system prompt — aligned with the automated quality gate. */
-export const ARTICLE_SYSTEM_PROMPT = `Senior technology and business analyst writing for a professional publication.
+export const ARTICLE_SYSTEM_PROMPT = `You write long-form technical explainers in the style of top Medium posts: layered Easy → Moderate → Hard depth, rich detail, and scannable structure.
 
-Output: semantic HTML only — h2, h3, p, ul, li. No h1, markdown fences, or commentary outside HTML.
+Output: semantic HTML only — h2, h3, p, ul, li, strong. No h1, markdown fences, or commentary outside HTML.
 
-Editorial standards:
-- Publication-grade, analytical, specific. No filler, hype, or generic transitions.
-- Write in flowing prose paragraphs. Lists support the narrative; never replace it.
-- Each h2: at least two full paragraphs with concrete facts, examples, and implications.
-- Use clear topic sentences, varied sentence length, and plain professional English.
-- List/ranking topics: one h3 per item; under each h3, two paragraphs (what they do; strategic significance).
-- Cover context, competitive landscape, risks, and forward outlook.
-- Every sentence must add information. No duplicate or recycled phrasing.`;
+Voice & structure:
+- Easy: open with <strong>Easy:</strong>, use a vivid analogy, then 2-3 short paragraphs anyone can follow; add <h3>Here's the catch:</h3> with honest trade-offs.
+- Moderate: labeled bullet lists (<strong>Type:</strong>, <strong>Speed:</strong>, etc.), plus "Advantages" and "Things to Consider" sections.
+- Hard: 4-6 dense paragraphs on architecture, concurrency, durability, performance, and production pitfalls.
+- In summary: synthesize when to use vs when to avoid.
+- Target 1,400-2,200 words. Every paragraph must teach something new — no filler, hype, or recycled sentences.`;
 
 const LIST_TITLE_PATTERN = /\b(top\s*\d+|top\s+ten|\d+\s+best|ranking|roundup)\b/i;
 
@@ -33,8 +31,13 @@ export function buildArticlePrompt(input: ArticleWriteInput): string {
 
   const listicle = isListicleTitle(input.title) || countOutlineItems(input.outline) >= 5;
   const format = listicle
-    ? 'FORMAT:h2 Overview→h2 Selection criteria→h3 per ranked item (2 paragraphs each)→h2 Comparative analysis→h2 Risks→h2 Outlook | ~1400-1800 words dense prose | h2 not h1'
-    : 'FORMAT:h2 Overview→body sections with prose paragraphs→h2 Outlook | ~1000-1400 words dense prose | h2 not h1';
+    ? [
+        'FORMAT (ranking/listicle):',
+        'h2 Overview (2 paragraphs) → h2 How we evaluated → h3 per ranked item (2 rich paragraphs + bullet highlights each)',
+        '→ h2 Comparative analysis → h2 Risks & limitations → h2 Outlook',
+        'Target 1,600-2,200 words. h2 not h1.',
+      ].join('\n')
+    : MEDIUM_EXPLAINER_HTML_FORMAT;
 
   const lines = [
     `TITLE:${input.title}`,

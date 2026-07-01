@@ -11,7 +11,7 @@ export const DEFAULT_QUALITY_THRESHOLDS: QualityThresholds = {
   minGrammar: 0.7,
   minReadability: 0.55,
   maxSpam: 0.4,
-  minWordCount: 120,
+  minWordCount: 400,
 };
 
 /** Compact quality contract injected into writer prompts so drafts pass the gate first try. */
@@ -20,11 +20,12 @@ export function buildWriterQualityContract(
 ): string {
   return [
     `QUALITY GATE (must pass):`,
-    `- At least ${thresholds.minWordCount} words of connected prose`,
+    `- At least ${thresholds.minWordCount} words across Easy, Moderate, and Hard sections`,
+    `- Medium-style structure: analogy intro, labeled bullets, technical depth, summary`,
     `- Clear grammar, capitalization, and complete sentences`,
-    `- Readable newsroom style: mix short and medium sentences; avoid jargon stacks`,
+    `- Readable voice: mix short and medium sentences; explain jargon when used`,
     `- No repeated paragraphs, boilerplate, or list-only stubs without prose`,
-    `- Each h2 section: 2+ substantive paragraphs before any list`,
+    `- Each major h2 section: multiple substantive paragraphs plus supporting lists`,
   ].join('\n');
 }
 

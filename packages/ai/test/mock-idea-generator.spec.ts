@@ -10,7 +10,7 @@ describe('generateIdeaWithMock', () => {
 
     expect(result.provider).toBe('mock');
     expect(result.title).toContain('AI chips surge');
-    expect(result.summary).toBe('Semiconductor demand rises');
-    expect(result.outline.length).toBeGreaterThan(0);
+    expect(result.summary).toContain('Semiconductor demand rises');
+    expect(result.outline.some((section) => section.heading === 'Easy')).toBe(true);
   });
 });

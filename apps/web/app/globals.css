@@ -31,6 +31,14 @@
     @apply mb-3 mt-8 font-display text-headline-sm text-on-surface;
   }
 
+  .article-content h3 {
+    @apply mb-2 mt-6 font-display text-title-md text-on-surface;
+  }
+
+  .article-content strong {
+    @apply font-semibold text-on-surface;
+  }
+
   .article-content p {
     @apply mb-4 font-sans text-body-md leading-relaxed text-on-surface;
   }

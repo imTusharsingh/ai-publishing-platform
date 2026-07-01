@@ -28,9 +28,25 @@ describe('buildArticlePrompt', () => {
     expect(prompt).toContain('Comparative analysis');
   });
 
-  it('system prompt forbids filler and requires analytical depth', () => {
-    expect(ARTICLE_SYSTEM_PROMPT).toContain('No filler');
-    expect(ARTICLE_SYSTEM_PROMPT).toContain('prose paragraphs');
+  it('uses Medium-style Easy/Moderate/Hard format for explainers', () => {
+    const prompt = buildArticlePrompt({
+      title: 'Lightning Memory-Mapped Database',
+      summary: 'Embedded key-value store',
+      outline: [],
+      categoryName: 'Databases',
+      intent: 'explainer',
+    });
+
+    expect(prompt).toContain('Easy:');
+    expect(prompt).toContain('Moderate');
+    expect(prompt).toContain('Hard');
+    expect(prompt).toContain('In summary');
+  });
+
+  it('system prompt requires Medium-style layered depth', () => {
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('Medium');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('Easy');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('no filler');
   });
 
   it('includes quality gate contract in user prompt', () => {
@@ -42,6 +58,6 @@ describe('buildArticlePrompt', () => {
     });
 
     expect(prompt).toContain('QUALITY GATE');
-    expect(prompt).toContain('At least 120 words');
+    expect(prompt).toContain('At least 400 words');
   });
 });
