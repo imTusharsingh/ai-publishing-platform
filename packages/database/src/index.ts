@@ -60,4 +60,18 @@ export { runArticleQualityGate } from './validate-article-quality';
 export type { RunArticleQualityGateResult } from './validate-article-quality';
 export { runArticleSeoEnrichment } from './generate-article-seo';
 export type { GenerateArticleSeoResult } from './generate-article-seo';
+export { autoPublishArticle } from './publishing/auto-publish-article';
+export type { AutoPublishArticleResult } from './publishing/auto-publish-article';
+export { runDailyPublishingPipeline } from './publishing/run-daily-pipeline';
+export type { DailyPipelineResult } from './publishing/run-daily-pipeline';
+export { searchArticles } from './search-articles';
+export type {
+  SearchArticlesInput,
+  SearchArticlesResult,
+  SearchArticleHit,
+} from './search-articles';
+export { computeArticleRelated } from './compute-article-related';
+export type { ComputeRelatedArticlesResult } from './compute-article-related';
+export { getAdminDashboardMetrics } from './admin-dashboard-metrics';
+export type { AdminDashboardMetrics } from './admin-dashboard-metrics';
 export { seed } from './seed';

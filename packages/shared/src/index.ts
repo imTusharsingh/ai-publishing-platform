@@ -45,8 +45,11 @@ export type {
 } from './trends.types';
 export { MOCK_TREND_BATCH, normalizeTopicTitle } from './trends.types';
 export type {
+  AdminDashboardMetrics,
   ArticleDetail,
   ArticleListResponse,
+  ArticleSearchHit,
+  ArticleSearchResponse,
   ArticleSeo,
   ArticleSummary,
   CategoryDetail,

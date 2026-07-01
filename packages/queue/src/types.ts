@@ -9,6 +9,7 @@ export const JOB_NAMES = {
   EMBEDDING: 'embedding',
   DUPLICATE_CHECK: 'duplicate-check',
   QUALITY: 'quality',
+  DAILY_PUBLISHING: 'daily-publishing',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -71,6 +72,19 @@ export interface QualityJobResult {
   articleId: string;
   passed: boolean;
   aiJobId: string;
+}
+
+export interface DailyPublishingJobData {
+  runId: string;
+}
+
+export interface DailyPublishingJobResult {
+  runId: string;
+  topicsDiscovered: number;
+  ideasGenerated: number;
+  articlesWritten: number;
+  articlesPublished: number;
+  failureCount: number;
 }
 
 export interface JobStatusResponse {

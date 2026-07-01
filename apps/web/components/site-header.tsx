@@ -22,6 +22,12 @@ export function SiteHeader({ categories = [] }: { categories?: CategoryLink[] })
                   {category.name}
                 </Link>
               ))}
+              <Link
+                href="/search"
+                className="text-label-md text-on-surface-variant transition-colors hover:text-primary"
+              >
+                Search
+              </Link>
             </nav>
           )}
         </div>
