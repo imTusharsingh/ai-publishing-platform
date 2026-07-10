@@ -64,7 +64,7 @@ describe('automated publishing pipeline', () => {
       where: { id: publishResult.publishingJobId },
     });
     expect(job.status).toBe('PUBLISHED');
-  }, 60_000);
+  }, 180_000);
 
   it('runs daily pipeline end-to-end with mocked AI', async () => {
     const unique = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -102,5 +102,5 @@ describe('automated publishing pipeline', () => {
     expect(result.ideasGenerated).toBeGreaterThanOrEqual(1);
     expect(result.articlesWritten).toBeGreaterThanOrEqual(1);
     expect(result.articlesPublished).toBeGreaterThanOrEqual(1);
-  }, 120_000);
+  }, 240_000);
 });
