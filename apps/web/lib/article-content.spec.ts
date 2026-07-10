@@ -51,6 +51,7 @@ describe('article-content', () => {
     const html = '<p>Intro</p>[IMAGE: Request lifecycle diagram]<p>More</p>';
     const enriched = enrichArticleHtmlWithImages(html, [
       {
+        position: 'after introduction',
         title: 'Request lifecycle',
         description: 'Shows request lifecycle diagram',
         type: 'diagram',
@@ -76,6 +77,7 @@ describe('article-content', () => {
     const html = '<p>Intro</p>[IMAGE: Request lifecycle diagram]<p>More</p>';
     const enriched = enrichArticleHtmlWithImages(html, [
       {
+        position: 'after introduction',
         title: 'Request lifecycle',
         description: 'Request lifecycle diagram',
         type: 'diagram',

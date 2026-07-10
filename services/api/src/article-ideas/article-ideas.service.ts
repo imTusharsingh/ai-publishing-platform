@@ -14,7 +14,7 @@ import {
   ArticleIdeaListResponse,
   ArticleIdeaOutlineSection,
   ArticleIdeaResponse,
-  GenerateArticleResult,
+  EnqueueArticleGenerationResult,
 } from './article-ideas.types';
 import { generateArticleIdeaFromTopic } from '@repo/database';
 
@@ -154,7 +154,7 @@ export class ArticleIdeasService {
     return this.toResponse(idea);
   }
 
-  async enqueueGenerate(id: string): Promise<GenerateArticleResult> {
+  async enqueueGenerate(id: string): Promise<EnqueueArticleGenerationResult> {
     const idea = await this.prisma.articleIdea.findUnique({
       where: { id },
       include: { article: { select: { id: true } } },

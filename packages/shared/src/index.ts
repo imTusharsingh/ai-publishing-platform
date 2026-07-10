@@ -1,7 +1,15 @@
 export const PUBLIC_APP_NAME = 'AuraNews';
 export const ADMIN_APP_NAME = 'Aura Admin';
-/** @deprecated Use PUBLIC_APP_NAME or ADMIN_APP_NAME */
-export const APP_NAME = PUBLIC_APP_NAME;
+
+export {
+  buildIllustrationPlaceholder,
+  buildInlineImageFigure,
+  countArticleImagePlaceholders,
+  escapeArticleHtml,
+  parseImageSuggestions,
+  replaceArticleImagePlaceholders,
+} from './article-html';
+export type { ReplaceArticleImagePlaceholdersOptions } from './article-html';
 
 export { auraColors, auraFontSize, auraSpacing, auraTailwindTheme } from './aura-tailwind';
 

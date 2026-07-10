@@ -22,11 +22,6 @@ export function resolveAiProvider(): AiProvider {
   return 'mock';
 }
 
-/** @deprecated Use resolveAiProvider */
-export function resolveArticleWriterProvider(): AiProvider {
-  return resolveAiProvider();
-}
-
 export function getOpenAiModel(): string {
   return process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini';
 }

@@ -9,18 +9,10 @@ export type {
   AuditLog,
 } from '@prisma/client';
 export { prisma, PrismaService } from './prisma.service';
-export { discoverTrends, discoverMockTrends } from './discover-trends';
+export { discoverTrends } from './discover-trends';
 export type { DiscoverTrendsResult } from './discover-trends';
-export {
-  generateArticle,
-  generateMockArticle,
-  buildMockArticleContent,
-} from './generate-mock-article';
-export type {
-  GenerateArticleResult,
-  GenerateMockArticleResult,
-  ArticleOutlineSection,
-} from './generate-mock-article';
+export { generateArticle, buildMockArticleContent } from './generate-article';
+export type { GenerateArticleResult, ArticleOutlineSection } from './generate-article';
 export { generateArticleIdeaFromTopic } from './generate-idea-from-topic';
 export type { GenerateIdeaFromTopicResult } from './generate-idea-from-topic';
 export {

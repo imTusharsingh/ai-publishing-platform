@@ -1,5 +1,5 @@
 import { AiJobStatus, AiJobType, Prisma, PrismaClient } from '@prisma/client';
-import { embedTexts, getDefaultEmbeddingModel } from '@repo/ai';
+import { embedTexts } from '@repo/ai';
 import { vectorToPgLiteral } from './embedding-similarity';
 
 export interface GenerateArticleEmbeddingsResult {
@@ -124,8 +124,4 @@ export async function embedCandidateTexts(texts: {
   const [titleEmbedding, summaryEmbedding, contentEmbedding] = result.embeddings;
 
   return { titleEmbedding, summaryEmbedding, contentEmbedding };
-}
-
-export function getEmbeddingModelName(): string {
-  return getDefaultEmbeddingModel();
 }

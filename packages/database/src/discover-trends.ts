@@ -188,9 +188,3 @@ export async function discoverTrends(
     throw error;
   }
 }
-
-/** @deprecated Use discoverTrends */
-export async function discoverMockTrends(prisma: PrismaClient, runId: string): Promise<number> {
-  const result = await discoverTrends(prisma, runId);
-  return result.created;
-}

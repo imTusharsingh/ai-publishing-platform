@@ -2,10 +2,10 @@ export { generateContentPlan } from './generate-content-plan';
 export { generateContentPlanWithMock, generateContentPlanWithOpenAI } from './content-planning';
 export {
   generateArticleImageSuggestionsWithOpenAI,
-  type ArticleImageSuggestion,
   type ArticleImageSuggestionsInput,
   type ArticleImageSuggestionsResult,
 } from './article-image-suggestions';
+export type { ArticleImageSuggestion } from '@repo/shared';
 export { writeArticleContent } from './write-article';
 export { generateIdeaContent } from './generate-idea';
 export { writeArticleWithMock, buildMockArticleContent } from './mock-writer';
@@ -17,7 +17,7 @@ export {
 } from './mock-idea-generator';
 export { writeArticleWithOpenAI, createOpenAiClient } from './openai-writer';
 export { generateIdeaWithOpenAI } from './openai-idea-generator';
-export { resolveAiProvider, resolveArticleWriterProvider, getOpenAiModel } from './provider';
+export { resolveAiProvider, getOpenAiModel } from './provider';
 export {
   getOpenAiTemperature,
   getOpenAiMaxCompletionTokens,
