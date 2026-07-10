@@ -48,7 +48,7 @@ export function parseImageSuggestionsFromStructuredData(
   }
 
   return structuredData.imageSuggestions
-    .map((entry) => {
+    .map((entry): ArticleImageSuggestion | null => {
       if (!entry || typeof entry !== 'object') {
         return null;
       }
