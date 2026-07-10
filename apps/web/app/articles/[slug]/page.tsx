@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ArticleDetailView } from '@/components/article-detail-view';
-import { getArticle } from '@/lib/api';
+import { getArticle, getCategories } from '@/lib/api';
+
+export const revalidate = 60;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -42,5 +44,17 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound();
   }
 
-  return <ArticleDetailView article={article} />;
+  const [categoriesResponse, relatedArticles] = await Promise.all([
+    getCategories().catch(() => ({ data: [] as { name: string; slug: string }[] })),
+    Promise.resolve(article.relatedArticles ?? []),
+  ]);
+  const categories = categoriesResponse.data.map((c) => ({ name: c.name, slug: c.slug }));
+
+  return (
+    <ArticleDetailView
+      article={article}
+      relatedArticles={relatedArticles}
+      categories={categories}
+    />
+  );
 }

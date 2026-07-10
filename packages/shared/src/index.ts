@@ -1,4 +1,9 @@
-export const APP_NAME = 'AI Publishing Platform';
+export const PUBLIC_APP_NAME = 'AuraNews';
+export const ADMIN_APP_NAME = 'Aura Admin';
+/** @deprecated Use PUBLIC_APP_NAME or ADMIN_APP_NAME */
+export const APP_NAME = PUBLIC_APP_NAME;
+
+export { auraColors, auraFontSize, auraSpacing, auraTailwindTheme } from './aura-tailwind';
 
 export function formatApiVersion(version: string): string {
   return `v${version}`;
@@ -10,6 +15,7 @@ export type {
   AuditLogListResponse,
   CategoryAdmin,
   CategoryAdminListResponse,
+  CategoryRemoveResult,
   CreateCategoryRequest,
   JobStatusEntry,
   PublishFrequency,
@@ -24,10 +30,12 @@ export type {
   UpdateArticleStatusRequest,
 } from './articles-admin.types';
 export type {
+  ArticleIdeaContentPlan,
   ArticleIdeaListResponse,
   ArticleIdeaOutlineSection,
   ArticleIdeaStatus,
   ArticleIdeaSummary,
+  ArticleImageSuggestion,
   CreateArticleIdeaRequest,
   UpdateArticleIdeaStatusRequest,
 } from './article-ideas.types';
@@ -40,8 +48,11 @@ export type {
 } from './trends.types';
 export { MOCK_TREND_BATCH, normalizeTopicTitle } from './trends.types';
 export type {
+  AdminDashboardMetrics,
   ArticleDetail,
   ArticleListResponse,
+  ArticleSearchHit,
+  ArticleSearchResponse,
   ArticleSeo,
   ArticleSummary,
   CategoryDetail,
@@ -49,3 +60,22 @@ export type {
   CategorySummary,
   PaginatedMeta,
 } from './api.types';
+export type {
+  CreatePromptTemplateRequest,
+  DefaultPromptDefinitionResponse,
+  PromptCatalogPrompt,
+  PromptCatalogResponse,
+  PromptCatalogSection,
+  PromptTemplateEntry,
+  PromptTemplateKey,
+  PromptTemplateListResponse,
+  SavePromptTemplateRequest,
+  UpdatePromptTemplateRequest,
+} from './prompt-templates.types';
+export {
+  PROMPT_TEMPLATE_DESCRIPTIONS,
+  PROMPT_TEMPLATE_KEY_LABELS,
+  PROMPT_TEMPLATE_SECTIONS,
+  PROMPT_TEMPLATE_VARIABLE_HINTS,
+} from './prompt-templates.types';
+export { renderPromptTemplate } from './render-prompt-template';

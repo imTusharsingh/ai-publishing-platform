@@ -4,34 +4,193 @@
 
 @layer base {
   body {
-    @apply bg-surface-muted text-content antialiased;
+    @apply bg-surface text-on-surface antialiased;
   }
 
   h1,
   h2,
   h3 {
-    @apply text-content;
+    @apply font-display text-on-surface;
   }
 }
 
 @layer components {
   .page-container {
-    @apply mx-auto w-full max-w-page px-4 sm:px-6;
+    @apply mx-auto w-full max-w-container-max px-margin-mobile md:px-margin-desktop;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
   }
 
   .article-content h2 {
-    @apply mb-3 mt-8 text-xl font-semibold text-content;
+    @apply mb-4 mt-12 border-b border-outline-variant pb-2 font-display text-headline-md font-semibold text-on-surface;
+  }
+
+  .article-content h2:first-child {
+    @apply mt-0;
+  }
+
+  .article-content h3 {
+    @apply mb-2 mt-8 font-display text-headline-sm font-semibold text-on-surface-variant;
+  }
+
+  .article-content strong {
+    @apply font-semibold text-on-surface;
   }
 
   .article-content p {
-    @apply mb-4 text-base leading-7 text-content;
+    @apply mb-4 font-sans text-body-md leading-relaxed text-on-surface;
   }
 
   .article-content ul {
-    @apply mb-4 list-disc space-y-2 pl-6 text-base leading-7 text-content;
+    @apply mb-4 list-disc space-y-2 pl-6 font-sans text-body-md leading-relaxed text-on-surface;
   }
 
   .article-content li {
-    @apply text-content;
+    @apply text-on-surface;
   }
+
+  .article-content em {
+    @apply italic text-on-surface;
+  }
+
+  .article-content code {
+    @apply rounded bg-surface-container-high px-1.5 py-0.5 font-mono text-body-sm text-on-surface;
+  }
+
+  .article-content pre {
+    @apply mb-4 overflow-x-auto rounded-lg border border-outline-variant bg-surface-container-high p-stack-md font-mono text-body-sm leading-relaxed text-on-surface;
+  }
+
+  .article-content pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+
+  .article-content blockquote {
+    @apply my-stack-lg rounded-lg border-l-4 border-primary bg-surface-container p-stack-md italic text-primary;
+  }
+
+  .article-content figure {
+    @apply my-stack-lg;
+  }
+
+  .article-content figcaption {
+    @apply mt-3 text-center text-label-sm text-on-surface-variant italic;
+  }
+
+  .article-content .article-illustration {
+    @apply overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-low shadow-card;
+  }
+
+  .article-content .article-illustration-frame {
+    @apply relative flex min-h-[12rem] flex-col items-center justify-center gap-3 bg-gradient-to-br from-primary-container/40 via-surface-container to-secondary-container/30 px-stack-md py-stack-lg text-center;
+    background-image: radial-gradient(circle at 20% 20%, rgb(21 21 125 / 0.08), transparent 45%),
+      radial-gradient(circle at 80% 70%, rgb(0 102 102 / 0.08), transparent 40%);
+  }
+
+  .article-content .article-illustration-badge {
+    @apply rounded-full border border-outline-variant bg-surface px-3 py-1 text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant;
+  }
+
+  .article-content .article-illustration-description {
+    @apply max-w-prose font-sans text-body-sm leading-relaxed text-on-surface;
+  }
+
+  .article-content .article-illustration figcaption {
+    @apply border-t border-outline-variant bg-surface-container px-stack-md py-3 text-center text-label-sm not-italic text-on-surface-variant;
+  }
+
+  .article-content .article-inline-image {
+    @apply overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-low shadow-card;
+  }
+
+  .article-content .article-inline-image img {
+    @apply block h-auto w-full bg-surface-container;
+  }
+
+  .article-content .article-inline-image figcaption {
+    @apply border-t border-outline-variant bg-surface-container px-stack-md py-3 text-center text-label-sm not-italic text-on-surface-variant;
+  }
+
+  .grain-overlay {
+    background-image: radial-gradient(circle at 1px 1px, rgb(21 21 125 / 0.04) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+}
+
+:root {
+  --scrollbar-gutter: 6px;
+  --scrollbar-thumb: rgb(21 21 125 / 0.16);
+  --scrollbar-thumb-hover: rgb(21 21 125 / 0.3);
+  --scrollbar-inset: 2px;
+}
+
+html,
+body,
+.thin-scrollbar,
+.overflow-auto,
+.overflow-x-auto,
+.overflow-y-auto,
+.overflow-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.thin-scrollbar::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-scroll::-webkit-scrollbar {
+  width: var(--scrollbar-gutter);
+  height: var(--scrollbar-gutter);
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+.thin-scrollbar::-webkit-scrollbar-track,
+.overflow-auto::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+.thin-scrollbar::-webkit-scrollbar-thumb,
+.overflow-auto::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border: var(--scrollbar-inset) solid transparent;
+  background-clip: padding-box;
+  border-radius: 9999px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+.thin-scrollbar::-webkit-scrollbar-thumb:hover,
+.overflow-auto::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.overflow-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner,
+.thin-scrollbar::-webkit-scrollbar-corner,
+.overflow-auto::-webkit-scrollbar-corner,
+.overflow-x-auto::-webkit-scrollbar-corner,
+.overflow-y-auto::-webkit-scrollbar-corner,
+.overflow-scroll::-webkit-scrollbar-corner {
+  background: transparent;
 }

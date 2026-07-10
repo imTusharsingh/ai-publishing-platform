@@ -206,7 +206,14 @@ We follow the [product plan](.cursor/plans/ai_publishing_platform_9e04d5dd.plan.
 | **10**      | Trend discovery (queue + live fetchers)    | ✅ Repo Sprint 10 (mock) + **15** (HN/Reddit/NewsAPI) |
 | **11**      | Topics admin UI (approve/reject/edit)      | ✅ Shipped (`sprint-plan-11`)                         |
 | 12–13       | Content planning + writing                 | ✅ Early (repo Sprints 11–14)                         |
-| **14**      | Embeddings (pgvector)                      | 🔲 **Next** — branch `sprint-plan-14`                 |
-| 15–16       | Duplicate detection                        | 🔲 Pending                                            |
-| 17–19       | Quality, SEO, automated publishing         | 🔲 Pending                                            |
-| 20–25       | Search, analytics, AWS, scale              | 🔲 Pending                                            |
+| **14**      | Embeddings (pgvector)                      | ✅ Shipped (`sprint-plan-14`)                         |
+| **15**      | Duplicate detection L1+L4                  | ✅ Shipped (`sprint-plan-15`)                         |
+| **16**      | Duplicate detection L2+L3 + settings UI    | ✅ Shipped (`sprint-plan-16`)                         |
+| **17**      | Quality validation agent                   | ✅ Shipped (`sprint-plan-17`)                         |
+| **18**      | SEO agent + sitemaps                       | ✅ Shipped (`sprint-plan-18`)                         |
+| **19**      | Automated publishing                       | ✅ Shipped (`sprint-plan-19`)                         |
+| **20**      | Full-text search                           | ✅ Shipped (`sprint-plan-20`)                         |
+| **21**      | Related articles + ISR                     | ✅ Shipped (`sprint-plan-21`)                         |
+| **22**      | Admin analytics dashboard                  | ✅ Shipped (`sprint-plan-22`)                         |
+| **23**      | AWS staging (Terraform + deploy)           | ✅ Shipped (`sprint-plan-23`)                         |
+| 24–25       | Production hardening, scale                | 🔲 Pending                                            |

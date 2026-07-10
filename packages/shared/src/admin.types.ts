@@ -32,6 +32,11 @@ export interface CreateCategoryRequest {
 
 export type UpdateCategoryRequest = Partial<CreateCategoryRequest>;
 
+export interface CategoryRemoveResult {
+  action: 'deactivated' | 'deleted';
+  articleCount: number;
+}
+
 export interface AuditLogEntry {
   id: string;
   userId: string | null;

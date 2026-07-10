@@ -2,6 +2,220 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+@layer base {
+  body {
+    @apply bg-background text-on-background antialiased;
+  }
+}
+
+@layer components {
+  .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
+  }
+
+  .admin-page {
+    @apply ml-0 min-h-screen bg-background md:ml-64;
+  }
+
+  .admin-page-content {
+    @apply p-margin-mobile md:p-margin-desktop;
+  }
+
+  .admin-card {
+    @apply rounded-xl border border-outline-variant bg-surface-container-lowest shadow-card;
+  }
+
+  .admin-table {
+    @apply w-full border-collapse text-left text-body-sm;
+  }
+
+  .admin-table thead tr {
+    @apply bg-surface-container-low;
+  }
+
+  .admin-table th {
+    @apply px-6 py-3 text-label-sm uppercase tracking-wider text-on-surface-variant;
+  }
+
+  .admin-table td {
+    @apply px-6 py-4 text-on-surface;
+  }
+
+  .admin-table tbody tr {
+    @apply border-t border-outline-variant transition-colors hover:bg-surface-container-low;
+  }
+
+  .admin-table-sticky thead {
+    @apply sticky top-0 z-10;
+  }
+
+  .admin-table-sticky thead tr {
+    @apply border-b border-outline-variant bg-surface-container-low;
+  }
+
+  .admin-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-all hover:opacity-90 disabled:opacity-60;
+  }
+
+  .admin-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-label-md text-on-surface transition-all hover:bg-surface-container-high disabled:opacity-60;
+  }
+
+  .admin-btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2 text-label-md text-on-secondary transition-opacity hover:opacity-90 disabled:opacity-60;
+  }
+
+  .admin-input {
+    @apply w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2 text-body-sm outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-primary;
+  }
+
+  .bento-grid {
+    @apply grid grid-cols-12 gap-gutter;
+  }
+
+  .admin-filter-tabs {
+    @apply flex max-w-full flex-nowrap gap-0.5 overflow-x-auto rounded-lg bg-surface-container p-1;
+  }
+
+  .admin-filter-tab {
+    @apply shrink-0 rounded-md px-4 py-1.5 text-label-md whitespace-nowrap text-on-surface-variant transition-colors hover:text-on-surface;
+  }
+
+  .admin-filter-tab-active {
+    @apply bg-white font-bold text-primary shadow-sm;
+  }
+
+  .error-grid-bg {
+    background-image:
+      linear-gradient(rgb(21 21 125 / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(21 21 125 / 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .status-pulse {
+    animation: status-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes status-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.85;
+    }
+  }
+
+  .article-content h2 {
+    @apply mb-4 mt-8 border-b border-outline-variant pb-2 font-display text-headline-sm font-semibold text-on-surface;
+  }
+
+  .article-content h2:first-child {
+    @apply mt-0;
+  }
+
+  .article-content h3 {
+    @apply mb-2 mt-6 font-display text-headline-sm font-semibold text-on-surface-variant;
+  }
+
+  .article-content p {
+    @apply mb-4 leading-relaxed text-on-surface;
+  }
+
+  .article-content ul {
+    @apply mb-4 list-disc space-y-2 pl-6 leading-relaxed text-on-surface;
+  }
+
+  .article-content blockquote {
+    @apply my-4 rounded-lg border-l-4 border-primary bg-surface-container-low p-4 italic text-on-surface-variant;
+  }
+}
+
+/* Outside @layer so styles beat Tailwind utilities. WebKit ignores sub-8px widths — use a thin thumb inside a narrow gutter. */
+:root {
+  --scrollbar-gutter: 6px;
+  --scrollbar-thumb: rgb(21 21 125 / 0.16);
+  --scrollbar-thumb-hover: rgb(21 21 125 / 0.3);
+  --scrollbar-inset: 2px;
+}
+
+html,
+body,
+.thin-scrollbar,
+.admin-page-content,
+.admin-filter-tabs,
+.overflow-auto,
+.overflow-x-auto,
+.overflow-y-auto,
+.overflow-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.thin-scrollbar::-webkit-scrollbar,
+.admin-page-content::-webkit-scrollbar,
+.admin-filter-tabs::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-scroll::-webkit-scrollbar {
+  width: var(--scrollbar-gutter);
+  height: var(--scrollbar-gutter);
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+.thin-scrollbar::-webkit-scrollbar-track,
+.admin-page-content::-webkit-scrollbar-track,
+.admin-filter-tabs::-webkit-scrollbar-track,
+.overflow-auto::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+.thin-scrollbar::-webkit-scrollbar-thumb,
+.admin-page-content::-webkit-scrollbar-thumb,
+.admin-filter-tabs::-webkit-scrollbar-thumb,
+.overflow-auto::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border: var(--scrollbar-inset) solid transparent;
+  background-clip: padding-box;
+  border-radius: 9999px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+.thin-scrollbar::-webkit-scrollbar-thumb:hover,
+.admin-page-content::-webkit-scrollbar-thumb:hover,
+.admin-filter-tabs::-webkit-scrollbar-thumb:hover,
+.overflow-auto::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.overflow-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner,
+.thin-scrollbar::-webkit-scrollbar-corner,
+.admin-page-content::-webkit-scrollbar-corner,
+.admin-filter-tabs::-webkit-scrollbar-corner,
+.overflow-auto::-webkit-scrollbar-corner,
+.overflow-x-auto::-webkit-scrollbar-corner,
+.overflow-y-auto::-webkit-scrollbar-corner,
+.overflow-scroll::-webkit-scrollbar-corner {
+  background: transparent;
 }

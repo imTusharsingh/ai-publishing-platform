@@ -1,8 +1,10 @@
-import { APP_NAME, formatApiVersion } from './index';
+import { ADMIN_APP_NAME, APP_NAME, PUBLIC_APP_NAME, formatApiVersion } from './index';
 
 describe('shared utilities', () => {
   it('exports app name', () => {
-    expect(APP_NAME).toBe('AI Publishing Platform');
+    expect(APP_NAME).toBe('AuraNews');
+    expect(PUBLIC_APP_NAME).toBe('AuraNews');
+    expect(ADMIN_APP_NAME).toBe('Aura Admin');
   });
 
   it('formats api version', () => {

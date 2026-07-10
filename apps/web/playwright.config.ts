@@ -3,6 +3,7 @@ import type { Config } from '@playwright/test';
 const config: Config = {
   testDir: './e2e',
   timeout: 30_000,
+  workers: 1,
   use: {
     baseURL: 'http://localhost:3006',
   },

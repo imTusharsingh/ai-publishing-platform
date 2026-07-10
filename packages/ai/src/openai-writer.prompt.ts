@@ -1,16 +1,13 @@
+import { renderPromptTemplate } from '@repo/shared';
+import {
+  ARTICLE_SYSTEM_PROMPT,
+  PUBLICATION_EXPLAINER_FORMAT,
+  PUBLICATION_LISTICLE_FORMAT,
+} from './publication-writer.prompt';
+import { buildWriterQualityContract } from './quality-thresholds';
 import type { ArticleWriteInput } from './types';
 
-/** Compact system prompt — high signal, low token count. */
-export const ARTICLE_SYSTEM_PROMPT = `Senior technology and business analyst writing for a professional publication.
-
-Output: semantic HTML only — h2, h3, p, ul, li. No h1, markdown fences, or commentary outside HTML.
-
-Quality bar:
-- Publication-grade, analytical, specific. No filler, hype, or generic transitions.
-- Each h2: 2–4 tight paragraphs with concrete facts, examples, and implications.
-- List/ranking topics: one h3 per item; under each h3, two paragraphs (what they do; strategic significance).
-- Cover context, competitive landscape, risks, and forward outlook.
-- Prefer precise language over length. Every sentence must add information.`;
+export { ARTICLE_SYSTEM_PROMPT };
 
 const LIST_TITLE_PATTERN = /\b(top\s*\d+|top\s+ten|\d+\s+best|ranking|roundup)\b/i;
 
@@ -29,17 +26,39 @@ export function buildArticlePrompt(input: ArticleWriteInput): string {
       : 'auto';
 
   const listicle = isListicleTitle(input.title) || countOutlineItems(input.outline) >= 5;
-  const format = listicle
-    ? 'FORMAT:h2 Overview→h2 Selection criteria→h3 per ranked item (2 paragraphs each)→h2 Comparative analysis→h2 Risks→h2 Outlook | ~1400-1800 words dense | h2 not h1'
-    : 'FORMAT:h2 Overview→body sections→h2 Outlook | ~1000-1400 words dense | h2 not h1';
+  const explainerFormat = input.prompts?.explainerFormat ?? PUBLICATION_EXPLAINER_FORMAT;
+  const listicleFormat = input.prompts?.listicleFormat ?? PUBLICATION_LISTICLE_FORMAT;
+  const formatBlock = listicle ? listicleFormat : explainerFormat;
+  const qualityContract = input.prompts?.qualityContract ?? buildWriterQualityContract();
+
+  const intentLine = input.intent ? `INTENT:${input.intent}` : '';
+  const summaryLine = input.summary ? `BRIEF:${input.summary}` : '';
+  const revisionBlock = input.qualityFeedback
+    ? `REVISE:Previous draft failed quality review. Fix these issues and rewrite the full article from scratch at full length:\n${input.qualityFeedback}\nIf word count is mentioned, the revision MUST exceed the minimum word count — expand sections rather than trimming.`
+    : '';
+
+  if (input.prompts?.userPromptTemplate) {
+    return renderPromptTemplate(input.prompts.userPromptTemplate, {
+      title: input.title,
+      categoryName: input.categoryName,
+      intentLine,
+      summaryLine,
+      outline,
+      formatBlock,
+      qualityContract,
+      revisionBlock,
+    });
+  }
 
   const lines = [
     `TITLE:${input.title}`,
     `CAT:${input.categoryName}`,
-    input.intent ? `INTENT:${input.intent}` : null,
-    input.summary ? `BRIEF:${input.summary}` : null,
+    intentLine || null,
+    summaryLine || null,
     `OUTLINE:${outline}`,
-    format,
+    formatBlock,
+    qualityContract,
+    revisionBlock || null,
   ];
 
   return lines.filter(Boolean).join('\n');

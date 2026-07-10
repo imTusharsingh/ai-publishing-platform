@@ -6,6 +6,11 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { generateUniqueSlug, slugify } from './slug.util';
 
+export type CategoryRemoveResult = {
+  action: 'deactivated' | 'deleted';
+  articleCount: number;
+};
+
 @Injectable()
 export class CategoriesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -16,12 +21,13 @@ export class CategoriesService {
       this.prisma.category.findMany({
         where,
         orderBy: [{ priorityScore: 'desc' }, { name: 'asc' }],
+        include: { _count: { select: { articles: true } } },
       }),
       this.prisma.category.count({ where }),
     ]);
 
     return {
-      data: categories.map((category) => this.toResponse(category)),
+      data: categories.map((category) => this.toResponse(category, category._count.articles)),
       meta: { total },
     };
   }
@@ -98,7 +104,7 @@ export class CategoriesService {
     return this.toResponse(category);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<CategoryRemoveResult> {
     const category = await this.prisma.category.findUnique({
       where: { id },
       include: { _count: { select: { articles: true } } },
@@ -108,15 +114,18 @@ export class CategoriesService {
       throw new NotFoundException(`Category with id "${id}" not found`);
     }
 
-    if (category._count.articles > 0) {
+    const articleCount = category._count.articles;
+
+    if (articleCount > 0 && category.isActive) {
       await this.prisma.category.update({
         where: { id },
         data: { isActive: false },
       });
-      return;
+      return { action: 'deactivated', articleCount };
     }
 
     await this.prisma.category.delete({ where: { id } });
+    return { action: 'deleted', articleCount };
   }
 
   private async ensureUniqueName(name: string, excludeId?: string): Promise<void> {

@@ -32,6 +32,13 @@ export class JobsController {
     return this.jobsService.findRecent(query.limit ?? 20);
   }
 
+  @Post(':id/retry')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.EDITOR)
+  retry(@Param('id') id: string) {
+    return this.jobsService.retryJob(id);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.EDITOR)

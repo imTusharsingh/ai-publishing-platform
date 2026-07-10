@@ -34,7 +34,7 @@ export async function writeArticleWithOpenAI(
     temperature,
     max_tokens: maxCompletionTokens,
     messages: [
-      { role: 'system', content: ARTICLE_SYSTEM_PROMPT },
+      { role: 'system', content: input.prompts?.systemPrompt ?? ARTICLE_SYSTEM_PROMPT },
       { role: 'user', content: buildArticlePrompt(input) },
     ],
   });

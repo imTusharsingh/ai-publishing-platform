@@ -1,3 +1,4 @@
+import { renderPromptTemplate } from '@repo/shared';
 import OpenAI from 'openai';
 import { estimateOpenAiCostUsd } from './cost';
 import { getOpenAiTemperature, getOpenAiMaxCompletionTokens } from './openai-config';
@@ -80,14 +81,29 @@ export async function generateIdeaWithOpenAI(
   const temperature = Math.min(getOpenAiTemperature(), 0.5);
   const maxTokens = Math.min(getOpenAiMaxCompletionTokens(), IDEA_MAX_COMPLETION_TOKENS);
 
+  const userPrompt = input.prompts?.userPromptTemplate
+    ? renderPromptTemplate(input.prompts.userPromptTemplate, {
+        topicTitle: input.topicTitle,
+        categoryName: input.categoryName,
+        topicDescription: input.topicDescription?.trim() || 'none',
+      })
+    : buildIdeaPrompt(input);
+
+  const userContent = input.duplicateFeedback?.trim()
+    ? `${userPrompt}\n\nAVOID DUPLICATE — choose a distinct title and editorial angle:\n${input.duplicateFeedback.trim()}`
+    : userPrompt;
+
   const response = await client.chat.completions.create({
     model,
     temperature,
     max_tokens: maxTokens,
     response_format: { type: 'json_object' },
     messages: [
-      { role: 'system', content: IDEA_SYSTEM_PROMPT },
-      { role: 'user', content: buildIdeaPrompt(input) },
+      { role: 'system', content: input.prompts?.systemPrompt ?? IDEA_SYSTEM_PROMPT },
+      {
+        role: 'user',
+        content: userContent,
+      },
     ],
   });
 

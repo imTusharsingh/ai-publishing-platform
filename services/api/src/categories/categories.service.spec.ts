@@ -46,16 +46,18 @@ describe('CategoriesService', () => {
   });
 
   it('lists categories with total meta', async () => {
-    prisma.category.findMany.mockResolvedValue([category]);
+    prisma.category.findMany.mockResolvedValue([{ ...category, _count: { articles: 3 } }]);
     prisma.category.count.mockResolvedValue(1);
 
     const result = await service.findAll(true);
 
     expect(result.meta.total).toBe(1);
     expect(result.data).toHaveLength(1);
+    expect(result.data[0]?.articleCount).toBe(3);
     expect(prisma.category.findMany).toHaveBeenCalledWith({
       where: { isActive: true },
       orderBy: [{ priorityScore: 'desc' }, { name: 'asc' }],
+      include: { _count: { select: { articles: true } } },
     });
   });
 
@@ -91,19 +93,34 @@ describe('CategoriesService', () => {
     await expect(service.create({ name: 'Startups' })).rejects.toThrow(ConflictException);
   });
 
-  it('soft-deletes categories that have articles', async () => {
+  it('soft-deletes active categories that have articles', async () => {
     prisma.category.findUnique.mockResolvedValue({
       ...category,
       _count: { articles: 2 },
     });
 
-    await service.remove('cat-1');
+    const result = await service.remove('cat-1');
 
+    expect(result).toEqual({ action: 'deactivated', articleCount: 2 });
     expect(prisma.category.update).toHaveBeenCalledWith({
       where: { id: 'cat-1' },
       data: { isActive: false },
     });
     expect(prisma.category.delete).not.toHaveBeenCalled();
+  });
+
+  it('hard-deletes inactive categories that still have articles', async () => {
+    prisma.category.findUnique.mockResolvedValue({
+      ...category,
+      isActive: false,
+      _count: { articles: 2 },
+    });
+
+    const result = await service.remove('cat-1');
+
+    expect(result).toEqual({ action: 'deleted', articleCount: 2 });
+    expect(prisma.category.delete).toHaveBeenCalledWith({ where: { id: 'cat-1' } });
+    expect(prisma.category.update).not.toHaveBeenCalled();
   });
 
   it('hard-deletes empty categories', async () => {
@@ -112,8 +129,9 @@ describe('CategoriesService', () => {
       _count: { articles: 0 },
     });
 
-    await service.remove('cat-1');
+    const result = await service.remove('cat-1');
 
+    expect(result).toEqual({ action: 'deleted', articleCount: 0 });
     expect(prisma.category.delete).toHaveBeenCalledWith({ where: { id: 'cat-1' } });
   });
 

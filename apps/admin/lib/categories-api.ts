@@ -1,6 +1,7 @@
 import type {
   CategoryAdmin,
   CategoryAdminListResponse,
+  CategoryRemoveResult,
   CreateCategoryRequest,
   UpdateCategoryRequest,
 } from '@repo/shared';
@@ -33,8 +34,8 @@ export function updateCategory(id: string, payload: UpdateCategoryRequest): Prom
   });
 }
 
-export function deleteCategory(id: string): Promise<void> {
-  return authFetch<void>(`/v1/categories/${id}`, getAccessToken(), {
+export function deleteCategory(id: string): Promise<CategoryRemoveResult> {
+  return authFetch<CategoryRemoveResult>(`/v1/categories/${id}`, getAccessToken(), {
     method: 'DELETE',
   });
 }

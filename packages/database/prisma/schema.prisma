@@ -125,6 +125,7 @@ model Category {
   trendingTopics TrendingTopic[]
   articleIdeas   ArticleIdea[]
   articles       Article[]
+  promptTemplates PromptTemplate[]
 
   @@index([isActive, priorityScore(sort: Desc)])
   @@map("categories")
@@ -181,6 +182,7 @@ model ArticleIdea {
   slugCandidate        String            @unique @map("slug_candidate") @db.VarChar(520)
   summary              String?           @db.Text
   outline              Json?             @db.JsonB
+  contentPlan          Json?             @map("content_plan") @db.JsonB
   intent               String?           @db.VarChar(100)
   status               ArticleIdeaStatus @default(DRAFT)
   duplicateCheckResult Json?             @map("duplicate_check_result") @db.JsonB
@@ -312,6 +314,32 @@ model DuplicateRejection {
   @@index([rejectedAt(sort: Desc)])
   @@index([layer])
   @@map("duplicate_rejections")
+}
+
+model PlatformSetting {
+  key       String   @id @db.VarChar(100)
+  value     Json     @db.JsonB
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("platform_settings")
+}
+
+model PromptTemplate {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key        String   @db.VarChar(100)
+  name       String   @db.VarChar(200)
+  body       String   @db.Text
+  variables  String[]
+  categoryId String?  @map("category_id") @db.Uuid
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([key, categoryId])
+  @@index([key, isActive])
+  @@map("prompt_templates")
 }
 
 model AuditLog {

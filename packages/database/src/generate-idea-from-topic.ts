@@ -8,12 +8,19 @@ import {
 } from '@prisma/client';
 import { generateIdeaContent } from '@repo/ai';
 import { resolveUniqueIdeaSlug } from './idea-slug.util';
+import { resolveIdeaPlanningPrompts } from './prompt-templates';
+import {
+  checkIdeaDuplicates,
+  duplicateCheckResultToJson,
+} from './duplicate-engine/check-idea-duplicates';
 
 export interface GenerateIdeaFromTopicResult {
   ideaId: string;
   aiJobId: string;
   provider: string;
 }
+
+const MAX_IDEA_PLAN_ATTEMPTS = 3;
 
 export async function generateArticleIdeaFromTopic(
   prisma: PrismaClient,
@@ -49,13 +56,55 @@ export async function generateArticleIdeaFromTopic(
   });
 
   try {
-    const plan = await generateIdeaContent({
-      topicTitle: topic.title,
-      topicDescription: topic.description,
-      categoryName: topic.matchedCategory.name,
-    });
+    const prompts = await resolveIdeaPlanningPrompts(prisma, topic.matchedCategoryId);
 
-    const slugCandidate = await resolveUniqueIdeaSlug(prisma, plan.title);
+    let duplicateFeedback: string | undefined;
+    let plan: Awaited<ReturnType<typeof generateIdeaContent>> | undefined;
+    let slugCandidate = '';
+    let duplicateCheck: Awaited<ReturnType<typeof checkIdeaDuplicates>> | undefined;
+
+    for (let attempt = 1; attempt <= MAX_IDEA_PLAN_ATTEMPTS; attempt += 1) {
+      plan = await generateIdeaContent({
+        topicTitle: topic.title,
+        topicDescription: topic.description,
+        categoryName: topic.matchedCategory.name,
+        duplicateFeedback,
+        prompts,
+      });
+
+      slugCandidate = await resolveUniqueIdeaSlug(prisma, plan.title);
+      duplicateCheck = await checkIdeaDuplicates(prisma, {
+        title: plan.title,
+        slugCandidate,
+        intent: plan.intent,
+      });
+
+      if (duplicateCheck.passed) {
+        break;
+      }
+
+      if (attempt === MAX_IDEA_PLAN_ATTEMPTS) {
+        await prisma.aiJob.update({
+          where: { id: aiJob.id },
+          data: {
+            status: AiJobStatus.FAILED,
+            completedAt: new Date(),
+            errorMessage: duplicateCheck.reason ?? 'Duplicate idea rejected',
+            outputSnapshot: duplicateCheckResultToJson(duplicateCheck),
+          },
+        });
+
+        throw new Error(duplicateCheck.reason ?? 'Duplicate idea rejected');
+      }
+
+      duplicateFeedback =
+        duplicateCheck.reason ??
+        'Choose a distinct title and editorial angle that does not overlap existing coverage.';
+    }
+
+    if (!plan || !duplicateCheck?.passed) {
+      throw new Error('Idea planning failed');
+    }
 
     const idea = await prisma.articleIdea.create({
       data: {
@@ -67,6 +116,7 @@ export async function generateArticleIdeaFromTopic(
         outline: plan.outline as unknown as Prisma.InputJsonValue,
         intent: plan.intent,
         status: ArticleIdeaStatus.DRAFT,
+        duplicateCheckResult: duplicateCheckResultToJson(duplicateCheck),
       },
     });
 
