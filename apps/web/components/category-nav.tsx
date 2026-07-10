@@ -63,7 +63,7 @@ export function CategoryNav({
   const categoryHref = (slug: string) => `/category/${slug}`;
 
   return (
-    <div className="space-y-4">
+    <div className="relative z-40 space-y-4">
       <h2 className="flex items-center gap-2 text-label-md text-primary">
         <span className="material-symbols-outlined text-[18px]">bolt</span>
         Browse Categories
@@ -88,7 +88,7 @@ export function CategoryNav({
         ))}
 
         {hasOverflow && (
-          <div className="relative" ref={menuRef}>
+          <div className="relative z-50" ref={menuRef}>
             <button
               type="button"
               aria-expanded={menuOpen}
@@ -110,7 +110,7 @@ export function CategoryNav({
             {menuOpen && (
               <ul
                 role="listbox"
-                className="absolute left-0 top-full z-20 mt-2 max-h-64 w-56 overflow-y-auto rounded-xl border border-outline-variant bg-surface py-1 shadow-panel"
+                className="absolute left-0 top-full z-50 mt-2 max-h-64 w-56 overflow-y-auto rounded-xl border border-outline-variant bg-surface py-1 shadow-panel"
               >
                 {overflowCategories.map((category) => (
                   <li key={category.id}>

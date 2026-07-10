@@ -38,19 +38,21 @@ describe('buildArticlePrompt', () => {
     });
 
     expect(prompt).toContain('Introduction');
-    expect(prompt).toContain('Easy:');
-    expect(prompt).toContain('Moderate Understanding');
-    expect(prompt).toContain('Advanced Deep Dive');
-    expect(prompt).toContain('Practical Examples');
+    expect(prompt).toContain('Narrative flow');
+    expect(prompt).toContain('Real-World Applications');
     expect(prompt).toContain('Best Practices');
     expect(prompt).toContain('Conclusion');
+    expect(prompt).not.toContain('Easy:');
   });
 
-  it('system prompt defines publication-quality expert writer role', () => {
-    expect(ARTICLE_SYSTEM_PROMPT).toContain('expert writer, researcher, educator, and editor');
-    expect(ARTICLE_SYSTEM_PROMPT).toContain('publication-quality');
+  it('system prompt defines human publication writer spec', () => {
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('award-winning technical writer');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('AUTHOR VOICE');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('VISUAL CONTENT');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('PRACTITIONER INSIGHTS');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('SILENT PLANNING');
     expect(ARTICLE_SYSTEM_PROMPT).toContain("Let's dive in");
-    expect(ARTICLE_SYSTEM_PROMPT).toContain('1,500–2,500 words');
+    expect(ARTICLE_SYSTEM_PROMPT).toContain('3000–5000 words');
   });
 
   it('includes quality gate contract in user prompt', () => {
@@ -62,6 +64,8 @@ describe('buildArticlePrompt', () => {
     });
 
     expect(prompt).toContain('QUALITY GATE');
-    expect(prompt).toContain('At least 400 words');
+    expect(prompt).toContain('At least 3000 words');
+    expect(prompt).toContain('minimum three substantive paragraphs');
+    expect(prompt).toContain('Conclusion must synthesize');
   });
 });

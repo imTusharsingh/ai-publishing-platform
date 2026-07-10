@@ -9,6 +9,7 @@ import {
   AdminPageHeader,
   AdminPageShell,
   AdminScrollCard,
+  AdminModal,
   AdminStatusBadge,
 } from '@/components/admin-ui';
 import { listCategories } from '@/lib/categories-api';
@@ -18,6 +19,8 @@ import {
   updateTopic,
   updateTopicStatus,
 } from '@/lib/topics-api';
+import { createArticleIdeaFromTopic } from '@/lib/article-ideas-api';
+import { getJob } from '@/lib/jobs-api';
 import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 
@@ -31,14 +34,103 @@ function canReview(status: TopicStatus): boolean {
   return status === 'DISCOVERED' || status === 'SUGGESTED';
 }
 
+function formatRelativeTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '—';
+  }
+
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) {
+    return 'just now';
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes} min ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours} hr ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) {
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  }
+
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) {
+    return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
+  }
+
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function formatDiscoverySyncMessage(
+  result: {
+    created?: number;
+    updated?: number;
+    skipped?: number;
+    fetched?: number;
+  } | null,
+): string {
+  const created = result?.created ?? 0;
+  const updated = result?.updated ?? 0;
+  const skipped = result?.skipped ?? 0;
+  const fetched = result?.fetched ?? 0;
+
+  if (created > 0 && updated > 0) {
+    return `Sync complete — ${created} new topic${created === 1 ? '' : 's'} added, ${updated} refreshed.`;
+  }
+
+  if (created > 0) {
+    return `Sync complete — ${created} new topic${created === 1 ? '' : 's'} added.`;
+  }
+
+  if (updated > 0) {
+    const skippedNote = skipped > 0 ? ` ${skipped} skipped (rejected or already used).` : '';
+    return `Sync complete — ${updated} existing topic${updated === 1 ? '' : 's'} refreshed with latest scores.${skippedNote}`;
+  }
+
+  if (fetched === 0) {
+    return 'Sync complete — no headlines returned from trend sources. Check worker logs and TREND_DISCOVERY_PROVIDER.';
+  }
+
+  const skippedNote = skipped > 0 ? ` (${skipped} rejected or already used)` : '';
+  return `Sync complete — ${fetched} headline${fetched === 1 ? '' : 's'} fetched, all already in the database${skippedNote}. Check the All tab for existing items.`;
+}
+
+function formatExactTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export function TopicsPage() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('DISCOVERED');
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTopic, setEditingTopic] = useState<TopicSummary | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editCategoryId, setEditCategoryId] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [generatingTopicId, setGeneratingTopicId] = useState<string | null>(null);
 
   const topicsQuery = useQuery({
     queryKey: ['admin-topics', statusFilter],
@@ -52,7 +144,7 @@ export function TopicsPage() {
 
   const allTopicsQuery = useQuery({
     queryKey: ['admin-topics-stats'],
-    queryFn: () => listTopics({ limit: 1 }),
+    queryFn: () => listTopics({ limit: 1, status: 'DISCOVERED' }),
   });
 
   const categoriesQuery = useQuery({
@@ -60,11 +152,50 @@ export function TopicsPage() {
     queryFn: listCategories,
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin-topics'] });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-topics'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-topics-stats'] });
+  };
+
+  async function waitForDiscoveryJob(jobId: string) {
+    const deadline = Date.now() + 60_000;
+
+    while (Date.now() < deadline) {
+      const job = await getJob(jobId);
+      if (job.state === 'completed') {
+        return formatDiscoverySyncMessage(
+          job.returnvalue as {
+            created?: number;
+            updated?: number;
+            skipped?: number;
+            fetched?: number;
+          } | null,
+        );
+      }
+      if (job.state === 'failed') {
+        throw new Error(job.failedReason ?? 'Trend discovery job failed');
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+
+    throw new Error('Trend discovery timed out after 60s — is the worker running?');
+  }
 
   const discoverMutation = useMutation({
-    mutationFn: triggerTopicDiscovery,
-    onSuccess: () => invalidate(),
+    mutationFn: async () => {
+      setSyncMessage(null);
+      const queued = await triggerTopicDiscovery();
+      return waitForDiscoveryJob(queued.jobId);
+    },
+    onSuccess: (message) => {
+      setSyncMessage(message);
+      setError(null);
+      invalidate();
+    },
+    onError: (err) => {
+      setSyncMessage(null);
+      setError(err instanceof ApiError ? err.message : 'Discovery failed');
+    },
   });
 
   const statusMutation = useMutation({
@@ -81,25 +212,54 @@ export function TopicsPage() {
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateTopic>[1] }) =>
       updateTopic(id, data),
     onSuccess: () => {
-      setEditingId(null);
+      setEditingTopic(null);
       setError(null);
       invalidate();
     },
     onError: (err) => setError(err instanceof ApiError ? err.message : 'Update failed'),
   });
 
+  const generateIdeaMutation = useMutation({
+    mutationFn: createArticleIdeaFromTopic,
+    onMutate: (topicId) => {
+      setGeneratingTopicId(topicId);
+      setSyncMessage(null);
+      setError(null);
+    },
+    onSuccess: () => {
+      setGeneratingTopicId(null);
+      setSyncMessage('Article idea generated — review it on the Ideas page.');
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ['admin-article-ideas'] });
+    },
+    onError: (err) => {
+      setGeneratingTopicId(null);
+      setError(err instanceof ApiError ? err.message : 'Idea generation failed');
+    },
+  });
+
   const startEdit = (topic: TopicSummary) => {
-    setEditingId(topic.id);
+    setEditingTopic(topic);
     setEditTitle(topic.title);
     setEditDescription(topic.description ?? '');
     setEditCategoryId(topic.matchedCategoryId ?? '');
     setError(null);
   };
 
-  const handleSaveEdit = (event: FormEvent, topicId: string) => {
+  const closeEditModal = () => {
+    if (!updateMutation.isPending) {
+      setEditingTopic(null);
+    }
+  };
+
+  const handleSaveEdit = (event: FormEvent) => {
     event.preventDefault();
+    if (!editingTopic) {
+      return;
+    }
+
     updateMutation.mutate({
-      id: topicId,
+      id: editingTopic.id,
       data: {
         title: editTitle,
         description: editDescription,
@@ -130,10 +290,13 @@ export function TopicsPage() {
         </button>
       </AdminPageHeader>
 
-      {discoverMutation.isSuccess && (
-        <p className="mb-4 shrink-0 text-body-sm text-secondary">
-          Discovery job queued. New topics appear after the worker finishes.
+      {discoverMutation.isPending && (
+        <p className="mb-4 shrink-0 text-body-sm text-on-surface-variant">
+          Running trend discovery… waiting for worker to finish.
         </p>
+      )}
+      {syncMessage && !discoverMutation.isPending && (
+        <p className="mb-4 shrink-0 text-body-sm text-secondary">{syncMessage}</p>
       )}
       {error && <p className="mb-4 shrink-0 text-body-sm text-on-error-container">{error}</p>}
 
@@ -208,6 +371,7 @@ export function TopicsPage() {
                   <th>Source</th>
                   <th>Popularity</th>
                   <th>Category</th>
+                  <th>Added</th>
                   <th>Status</th>
                   <th className="text-right">Actions</th>
                 </tr>
@@ -216,61 +380,11 @@ export function TopicsPage() {
                 {topics.map((topic) => (
                   <tr key={topic.id}>
                     <td>
-                      {editingId === topic.id ? (
-                        <form
-                          onSubmit={(event) => handleSaveEdit(event, topic.id)}
-                          className="space-y-2 py-2"
-                        >
-                          <input
-                            value={editTitle}
-                            onChange={(e) => setEditTitle(e.target.value)}
-                            className="admin-input"
-                            required
-                            minLength={5}
-                          />
-                          <textarea
-                            value={editDescription}
-                            onChange={(e) => setEditDescription(e.target.value)}
-                            className="admin-input"
-                            rows={2}
-                          />
-                          <select
-                            value={editCategoryId}
-                            onChange={(e) => setEditCategoryId(e.target.value)}
-                            className="admin-input"
-                          >
-                            <option value="">Uncategorized</option>
-                            {categoriesQuery.data?.data.map((category) => (
-                              <option key={category.id} value={category.id}>
-                                {category.name}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="flex gap-2">
-                            <button
-                              type="submit"
-                              className="admin-btn-primary px-3 py-1.5 text-label-sm"
-                            >
-                              Save
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditingId(null)}
-                              className="admin-btn-secondary px-3 py-1.5 text-label-sm"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </form>
-                      ) : (
-                        <>
-                          <div className="font-display text-on-surface">{topic.title}</div>
-                          {topic.description && (
-                            <div className="line-clamp-2 text-body-sm text-on-surface-variant">
-                              {topic.description}
-                            </div>
-                          )}
-                        </>
+                      <div className="font-display text-on-surface">{topic.title}</div>
+                      {topic.description && (
+                        <div className="line-clamp-2 text-body-sm text-on-surface-variant">
+                          {topic.description}
+                        </div>
                       )}
                     </td>
                     <td className="text-on-surface-variant">{topic.source}</td>
@@ -283,43 +397,62 @@ export function TopicsPage() {
                       </div>
                     </td>
                     <td className="text-on-surface-variant">{topic.matchedCategoryName ?? '—'}</td>
+                    <td
+                      className="whitespace-nowrap text-body-sm text-on-surface-variant"
+                      title={formatExactTime(topic.discoveredAt)}
+                    >
+                      {formatRelativeTime(topic.discoveredAt)}
+                    </td>
                     <td>
                       <AdminStatusBadge status={topic.status} />
                     </td>
                     <td className="text-right">
-                      {editingId !== topic.id && (
-                        <div className="flex justify-end gap-2">
-                          {canReview(topic.status) && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  statusMutation.mutate({ id: topic.id, status: 'APPROVED' })
-                                }
-                                className="rounded bg-secondary px-3 py-1 text-label-sm text-on-secondary"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  statusMutation.mutate({ id: topic.id, status: 'REJECTED' })
-                                }
-                                className="admin-btn-secondary px-3 py-1 text-label-sm"
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
+                      <div className="flex justify-end gap-2">
+                        {canReview(topic.status) && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                statusMutation.mutate({ id: topic.id, status: 'APPROVED' })
+                              }
+                              className="rounded bg-secondary px-3 py-1 text-label-sm text-on-secondary"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                statusMutation.mutate({ id: topic.id, status: 'REJECTED' })
+                              }
+                              className="admin-btn-secondary px-3 py-1 text-label-sm"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {topic.status === 'APPROVED' && (
                           <button
                             type="button"
-                            onClick={() => startEdit(topic)}
-                            className="admin-btn-secondary px-3 py-1 text-label-sm"
+                            onClick={() => generateIdeaMutation.mutate(topic.id)}
+                            disabled={generatingTopicId === topic.id || !topic.matchedCategoryId}
+                            title={
+                              !topic.matchedCategoryId
+                                ? 'Assign a category before generating an idea'
+                                : undefined
+                            }
+                            className="admin-btn-primary px-3 py-1 text-label-sm disabled:opacity-60"
                           >
-                            Edit
+                            {generatingTopicId === topic.id ? 'Generating…' : 'Generate idea'}
                           </button>
-                        </div>
-                      )}
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => startEdit(topic)}
+                          className="admin-btn-secondary px-3 py-1 text-label-sm"
+                        >
+                          Edit
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -328,6 +461,74 @@ export function TopicsPage() {
           )}
         </AdminScrollCard>
       </AdminPageBody>
+
+      {editingTopic && (
+        <AdminModal
+          open
+          titleId="edit-topic-title"
+          title="Edit topic"
+          description="Update the topic details before approving it for article planning."
+          onClose={closeEditModal}
+          closeDisabled={updateMutation.isPending}
+        >
+          <form onSubmit={handleSaveEdit} className="space-y-4">
+            <label className="block">
+              <span className="mb-1 block text-label-md text-on-surface">Title</span>
+              <input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="admin-input"
+                required
+                minLength={5}
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-label-md text-on-surface">Description</span>
+              <textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                className="admin-input"
+                rows={4}
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-label-md text-on-surface">Category</span>
+              <select
+                value={editCategoryId}
+                onChange={(e) => setEditCategoryId(e.target.value)}
+                className="admin-input"
+              >
+                <option value="">Uncategorized</option>
+                {categoriesQuery.data?.data.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={closeEditModal}
+                className="admin-btn-secondary"
+                disabled={updateMutation.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="admin-btn-primary"
+                disabled={updateMutation.isPending}
+              >
+                {updateMutation.isPending ? 'Saving…' : 'Save changes'}
+              </button>
+            </div>
+          </form>
+        </AdminModal>
+      )}
     </AdminPageShell>
   );
 }

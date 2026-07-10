@@ -14,6 +14,7 @@ export interface AdminDashboardMetrics {
     total: number;
     completed: number;
     failed: number;
+    running: number;
     successRate: number;
   };
   publishingJobs: {
@@ -22,6 +23,32 @@ export interface AdminDashboardMetrics {
     published: number;
     failed: number;
   };
+  pipeline: {
+    topicsPending: number;
+    topicsApproved: number;
+    ideasDraft: number;
+    ideasApproved: number;
+    ideasGenerating: number;
+    ideasFailed: number;
+    articlesDraft: number;
+    articlesPublishedTotal: number;
+    categoriesActive: number;
+    categoriesTotal: number;
+  };
+  recentTopics: Array<{
+    id: string;
+    title: string;
+    status: string;
+    discoveredAt: string;
+    popularityScore: number;
+  }>;
+  recentArticles: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    publishedAt: string;
+    categoryName: string;
+  }>;
 }
 
 function startOfDay(date: Date): Date {
@@ -52,6 +79,18 @@ export async function getAdminDashboardMetrics(
     duplicateRejections,
     aiJobCounts,
     publishingJobCounts,
+    topicsPending,
+    topicsApproved,
+    ideasDraft,
+    ideasApproved,
+    ideasGenerating,
+    ideasFailed,
+    articlesDraft,
+    articlesPublishedTotal,
+    categoriesActive,
+    categoriesTotal,
+    recentTopics,
+    recentArticles,
   ] = await Promise.all([
     prisma.article.count({
       where: { status: 'PUBLISHED', publishedAt: { gte: todayStart } },
@@ -79,6 +118,41 @@ export async function getAdminDashboardMetrics(
       by: ['status'],
       _count: { id: true },
     }),
+    prisma.trendingTopic.count({
+      where: { status: { in: ['DISCOVERED', 'SUGGESTED'] } },
+    }),
+    prisma.trendingTopic.count({ where: { status: 'APPROVED' } }),
+    prisma.articleIdea.count({ where: { status: 'DRAFT' } }),
+    prisma.articleIdea.count({ where: { status: 'APPROVED' } }),
+    prisma.articleIdea.count({ where: { status: 'GENERATING' } }),
+    prisma.articleIdea.count({ where: { status: 'FAILED' } }),
+    prisma.article.count({ where: { status: 'DRAFT' } }),
+    prisma.article.count({ where: { status: 'PUBLISHED' } }),
+    prisma.category.count({ where: { isActive: true } }),
+    prisma.category.count(),
+    prisma.trendingTopic.findMany({
+      orderBy: { discoveredAt: 'desc' },
+      take: 6,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        discoveredAt: true,
+        popularityScore: true,
+      },
+    }),
+    prisma.article.findMany({
+      where: { status: 'PUBLISHED', publishedAt: { not: null } },
+      orderBy: { publishedAt: 'desc' },
+      take: 6,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        publishedAt: true,
+        category: { select: { name: true } },
+      },
+    }),
   ]);
 
   const categories = await prisma.category.findMany({
@@ -89,6 +163,7 @@ export async function getAdminDashboardMetrics(
   const aiTotal = aiJobCounts.reduce((sum, row) => sum + row._count.id, 0);
   const aiCompleted = aiJobCounts.find((row) => row.status === 'COMPLETED')?._count.id ?? 0;
   const aiFailed = aiJobCounts.find((row) => row.status === 'FAILED')?._count.id ?? 0;
+  const aiRunning = aiJobCounts.find((row) => row.status === 'RUNNING')?._count.id ?? 0;
 
   const publishingByStatus = Object.fromEntries(
     publishingJobCounts.map((row) => [row.status, row._count.id]),
@@ -112,6 +187,7 @@ export async function getAdminDashboardMetrics(
       total: aiTotal,
       completed: aiCompleted,
       failed: aiFailed,
+      running: aiRunning,
       successRate: aiTotal > 0 ? Math.round((aiCompleted / aiTotal) * 100) : 0,
     },
     publishingJobs: {
@@ -120,5 +196,33 @@ export async function getAdminDashboardMetrics(
       published: publishingByStatus.PUBLISHED ?? 0,
       failed: publishingByStatus.FAILED ?? 0,
     },
+    pipeline: {
+      topicsPending,
+      topicsApproved,
+      ideasDraft,
+      ideasApproved,
+      ideasGenerating,
+      ideasFailed,
+      articlesDraft,
+      articlesPublishedTotal,
+      categoriesActive,
+      categoriesTotal,
+    },
+    recentTopics: recentTopics.map((topic) => ({
+      id: topic.id,
+      title: topic.title,
+      status: topic.status,
+      discoveredAt: topic.discoveredAt.toISOString(),
+      popularityScore: Number(topic.popularityScore),
+    })),
+    recentArticles: recentArticles
+      .filter((article) => article.publishedAt)
+      .map((article) => ({
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        publishedAt: article.publishedAt!.toISOString(),
+        categoryName: article.category.name,
+      })),
   };
 }

@@ -1,3 +1,11 @@
+export { generateContentPlan } from './generate-content-plan';
+export { generateContentPlanWithMock, generateContentPlanWithOpenAI } from './content-planning';
+export {
+  generateArticleImageSuggestionsWithOpenAI,
+  type ArticleImageSuggestion,
+  type ArticleImageSuggestionsInput,
+  type ArticleImageSuggestionsResult,
+} from './article-image-suggestions';
 export { writeArticleContent } from './write-article';
 export { generateIdeaContent } from './generate-idea';
 export { writeArticleWithMock, buildMockArticleContent } from './mock-writer';
@@ -16,9 +24,16 @@ export {
   getOpenAiWriterConfig,
 } from './openai-config';
 export { ARTICLE_SYSTEM_PROMPT, buildArticlePrompt } from './openai-writer.prompt';
-export { PUBLICATION_SECTIONS } from './publication-writer.prompt';
+export {
+  PUBLICATION_SECTIONS,
+  PUBLICATION_EXPLAINER_FORMAT,
+  PUBLICATION_LISTICLE_FORMAT,
+} from './publication-writer.prompt';
+export { IDEA_SYSTEM_PROMPT, buildIdeaPrompt } from './openai-idea.prompt';
+export { TREND_DISCOVERY_SYSTEM_PROMPT, buildTrendDiscoveryPrompt } from './openai-trend.prompt';
 export { discoverTrendContent } from './discover-trends';
 export { discoverTrendsWithMock, applyCategoryMatching } from './mock-trend-discovery';
+export { discoverTopicsWithOpenAI } from './openai-trend-discovery';
 export { matchTrendToCategory } from './match-trend-category';
 export {
   fetchHackerNewsTrends,
@@ -26,13 +41,20 @@ export {
   fetchNewsApiTrends,
   fetchLiveTrendCandidates,
 } from './fetch-live-trends';
-export { resolveTrendDiscoveryProvider, getTrendDiscoveryMaxTopics } from './trend-provider';
+export {
+  resolveTrendDiscoveryProvider,
+  getTrendDiscoveryMaxTopics,
+  isOpenAiTrendDiscoveryAvailable,
+} from './trend-provider';
 export type {
   ArticleOutlineSection,
   ArticleWriteInput,
   ArticleWriteResult,
   ArticleWriterProvider,
   AiProvider,
+  ContentPlan,
+  ContentPlanningInput,
+  ContentPlanningResult,
   IdeaPlanningInput,
   IdeaPlanningResult,
   TrendSourceType,
@@ -41,6 +63,7 @@ export type {
   DiscoveredTrendCandidate,
   TrendDiscoveryInput,
   TrendDiscoveryResult,
+  TrendDiscoverySignalInput,
 } from './types';
 export { estimateOpenAiCostUsd } from './cost';
 export { embedTexts, getDefaultEmbeddingModel } from './embed-text';
@@ -63,4 +86,15 @@ export type { ArticleQualityInput, ArticleQualityResult, ArticleQualityScores } 
 export { generateArticleSeo } from './generate-article-seo';
 export { generateSeoWithMock } from './mock-seo';
 export { resolveSeoProvider, getPublicSiteBaseUrl } from './seo-provider';
+export {
+  buildMockFeaturedImageSvg,
+  generateFeaturedImage,
+  generateFeaturedImageWithMock,
+  resolveArticleImageProvider,
+} from './article-featured-image';
+export type {
+  FeaturedImageInput,
+  FeaturedImageOptions,
+  FeaturedImageResult,
+} from './article-featured-image';
 export type { ArticleSeoInput, ArticleSeoResult } from './seo-types';

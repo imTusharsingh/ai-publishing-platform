@@ -6,10 +6,10 @@ export function refineMockIdeaTitle(topicTitle: string): string {
 
 export function buildMockIdeaSummary(topicTitle: string, description?: string | null): string {
   if (description?.trim()) {
-    return `${description.trim()} Readers will move from an intuitive mental model through implementation detail, practical scenarios, and production recommendations.`;
+    return `${description.trim()} Readers will move from core concepts through mechanics, trade-offs, real-world scenarios, and production recommendations.`;
   }
 
-  return `A publication-quality explainer on ${topicTitle}: what it is, why it matters, how it works under the hood, and when to choose it over alternatives.`;
+  return `A long-form explainer on ${topicTitle}: what it is, why it matters, how it works, where it fits against alternatives, and how to apply it well in practice.`;
 }
 
 export function buildMockIdeaOutline(topicTitle: string): IdeaPlanningResult['outline'] {
@@ -23,42 +23,42 @@ export function buildMockIdeaOutline(topicTitle: string): IdeaPlanningResult['ou
       ],
     },
     {
-      heading: 'Easy',
+      heading: 'Core Concepts and Fundamentals',
       points: [
-        'Everyday analogy without jargon',
-        'Multiple concrete examples',
-        "Limitations and misconceptions (Here's the catch)",
+        'Key ideas explained in plain language',
+        'Everyday analogies and concrete examples',
+        'Common misconceptions to address',
       ],
     },
     {
-      heading: 'Moderate Understanding',
+      heading: 'How It Works',
       points: [
-        'Core concepts and workflow',
-        'Labeled characteristics: speed, memory, trade-offs',
-        'Advantages, limitations, and common use cases',
+        'Mechanics, workflow, and architecture',
+        'Labeled characteristics: speed, memory, complexity',
+        'Advantages and limitations',
       ],
     },
     {
-      heading: 'Advanced Deep Dive',
+      heading: 'Trade-offs and Comparisons',
       points: [
-        'Internal architecture and concurrency',
-        'Failure modes and edge cases',
-        'Production debugging and security considerations',
+        'When it excels vs when alternatives win',
+        'Performance and operational trade-offs',
+        'Decision framework for teams',
       ],
     },
     {
-      heading: 'Practical Examples',
+      heading: 'Real-World Applications',
       points: [
         'When to adopt vs when to avoid',
         'Common mistakes teams make',
-        'Better alternatives for mismatched workloads',
+        'Production scenarios and pitfalls',
       ],
     },
     {
       heading: 'Best Practices',
       points: [
-        'Benchmarking and key design',
-        'Observability and backup discipline',
+        'Benchmarking and design discipline',
+        'Observability and backup strategy',
         'Operational runbooks',
       ],
     },
@@ -80,7 +80,7 @@ export function generateIdeaWithMock(input: IdeaPlanningInput): IdeaPlanningResu
     intent: 'explainer',
     outline: buildMockIdeaOutline(input.topicTitle),
     provider: 'mock',
-    model: 'mock-idea-v3-publication',
+    model: 'mock-idea-v4-publication',
     promptTokens: null,
     completionTokens: null,
     costUsd: null,

@@ -18,6 +18,14 @@ import {
 } from './article-ideas.types';
 import { generateArticleIdeaFromTopic } from '@repo/database';
 
+function isDuplicateIdeaError(message: string): boolean {
+  return (
+    message.includes('Duplicate') ||
+    message.includes('matches existing') ||
+    message.includes('already exists')
+  );
+}
+
 @Injectable()
 export class ArticleIdeasService {
   constructor(private readonly prisma: PrismaService) {}
@@ -108,8 +116,12 @@ export class ArticleIdeasService {
         throw new NotFoundException(message);
       }
 
-      if (message.includes('no matched category') || message.includes('Duplicate')) {
+      if (message.includes('no matched category')) {
         throw new BadRequestException(message);
+      }
+
+      if (isDuplicateIdeaError(message)) {
+        throw new ConflictException(message);
       }
 
       throw error;
@@ -214,6 +226,7 @@ export class ArticleIdeasService {
     slugCandidate: string;
     summary: string | null;
     outline: Prisma.JsonValue;
+    contentPlan?: Prisma.JsonValue | null;
     intent: string | null;
     status: ArticleIdeaResponse['status'];
     createdAt: Date;
@@ -231,6 +244,7 @@ export class ArticleIdeasService {
       slugCandidate: idea.slugCandidate,
       summary: idea.summary,
       outline: this.parseOutline(idea.outline),
+      contentPlan: this.parseContentPlan(idea.contentPlan),
       intent: idea.intent,
       status: idea.status,
       createdAt: idea.createdAt,
@@ -245,5 +259,50 @@ export class ArticleIdeasService {
     }
 
     return value as unknown as ArticleIdeaOutlineSection[];
+  }
+
+  private parseContentPlan(
+    value: Prisma.JsonValue | null | undefined,
+  ): ArticleIdeaResponse['contentPlan'] {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return null;
+    }
+
+    const record = value as Record<string, unknown>;
+    const summary = typeof record.summary === 'string' ? record.summary : null;
+    const outline = this.parseOutline(record.outline as Prisma.JsonValue);
+    if (!summary || !outline) {
+      return null;
+    }
+
+    const imageSuggestions = Array.isArray(record.imageSuggestions)
+      ? record.imageSuggestions
+          .map((entry) => {
+            if (!entry || typeof entry !== 'object') {
+              return null;
+            }
+            const item = entry as Record<string, unknown>;
+            const title = typeof item.title === 'string' ? item.title : '';
+            const description = typeof item.description === 'string' ? item.description : '';
+            if (!title || !description) {
+              return null;
+            }
+            return {
+              position: typeof item.position === 'string' ? item.position : 'in article body',
+              type: typeof item.type === 'string' ? item.type : 'illustration',
+              title,
+              description,
+              alt: typeof item.alt === 'string' ? item.alt : title,
+            };
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null)
+      : [];
+
+    return {
+      summary,
+      outline,
+      imageSuggestions,
+      narrativeNotes: typeof record.narrativeNotes === 'string' ? record.narrativeNotes : undefined,
+    };
   }
 }

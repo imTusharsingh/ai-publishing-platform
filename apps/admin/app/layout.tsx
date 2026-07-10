@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.className} font-sans`}>
+      <body className={`${inter.className} thin-scrollbar font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>

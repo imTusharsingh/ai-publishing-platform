@@ -9,6 +9,9 @@ export async function processTrendDiscoveryJob(
 
   return {
     created: result.created,
+    updated: result.updated,
+    skipped: result.skipped,
+    fetched: result.fetched,
     runId: result.runId,
   };
 }

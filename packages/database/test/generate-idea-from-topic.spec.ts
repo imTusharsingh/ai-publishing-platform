@@ -31,6 +31,9 @@ describe('generateArticleIdeaFromTopic', () => {
     duplicateRejection: {
       create: jest.fn(),
     },
+    promptTemplate: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
   };
 
   beforeEach(() => {
@@ -80,6 +83,59 @@ describe('generateArticleIdeaFromTopic', () => {
     expect(prisma.articleIdea.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: ArticleIdeaStatus.DRAFT }),
+      }),
+    );
+  });
+
+  it('retries idea planning when the first title collides with an existing article', async () => {
+    prisma.trendingTopic.findUnique.mockResolvedValue({
+      id: 'topic-1',
+      title: 'AI content creation',
+      description: 'How teams use AI for editorial workflows',
+      matchedCategoryId: 'cat-1',
+      status: TopicStatus.APPROVED,
+      matchedCategory: { id: 'cat-1', name: 'Tech' },
+    });
+    prisma.aiJob.create.mockResolvedValue({ id: 'ai-job-1' });
+    prisma.article.findFirst
+      .mockResolvedValueOnce({
+        id: 'article-1',
+        title: 'AI and the Future of Content Creation: Navigating Opportunities and Challenges',
+      })
+      .mockResolvedValue(null);
+    (generateIdeaContent as jest.Mock)
+      .mockResolvedValueOnce({
+        title: 'AI and the Future of Content Creation: Navigating Opportunities and Challenges',
+        summary: 'First attempt',
+        intent: 'analysis',
+        outline: [{ heading: 'Overview', points: ['Point A'] }],
+        provider: 'mock',
+        model: 'mock-idea-v3-publication',
+        promptTokens: null,
+        completionTokens: null,
+        costUsd: null,
+      })
+      .mockResolvedValueOnce({
+        title: 'Editorial AI workflows beyond generic content mills',
+        summary: 'Second attempt',
+        intent: 'analysis',
+        outline: [{ heading: 'Overview', points: ['Point A'] }],
+        provider: 'mock',
+        model: 'mock-idea-v3-publication',
+        promptTokens: null,
+        completionTokens: null,
+        costUsd: null,
+      });
+    prisma.articleIdea.create.mockResolvedValue({ id: 'idea-2' });
+    prisma.aiJob.update.mockResolvedValue({});
+
+    const result = await generateArticleIdeaFromTopic(prisma as never, 'topic-1');
+
+    expect(result.ideaId).toBe('idea-2');
+    expect(generateIdeaContent).toHaveBeenCalledTimes(2);
+    expect(generateIdeaContent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        duplicateFeedback: expect.stringContaining('Title matches existing article'),
       }),
     );
   });

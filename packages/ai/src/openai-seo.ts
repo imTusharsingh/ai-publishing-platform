@@ -1,3 +1,4 @@
+import { renderPromptTemplate } from '@repo/shared';
 import { estimateOpenAiCostUsd } from './cost';
 import { createOpenAiClient } from './openai-writer';
 import { getOpenAiModel } from './provider';
@@ -23,11 +24,19 @@ export async function generateSeoWithOpenAI(input: ArticleSeoInput): Promise<Art
       {
         role: 'system',
         content:
+          input.prompts?.systemPrompt ??
           'You are an SEO editor. Return JSON: {"seoTitle":string,"seoDescription":string,"keywords":string[]}. seoTitle max 70 chars, seoDescription max 160 chars. No clickbait.',
       },
       {
         role: 'user',
-        content: `Title: ${input.title}\nCategory: ${input.categoryName}\nSummary: ${input.summary ?? ''}\n\nBody excerpt:\n${input.contentPlain.slice(0, 2000)}`,
+        content: input.prompts?.userPromptTemplate
+          ? renderPromptTemplate(input.prompts.userPromptTemplate, {
+              title: input.title,
+              categoryName: input.categoryName,
+              summary: input.summary ?? '',
+              contentPlain: input.contentPlain.slice(0, 2000),
+            })
+          : `Title: ${input.title}\nCategory: ${input.categoryName}\nSummary: ${input.summary ?? ''}\n\nBody excerpt:\n${input.contentPlain.slice(0, 2000)}`,
       },
     ],
   });

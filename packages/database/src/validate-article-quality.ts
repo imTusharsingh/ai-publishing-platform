@@ -1,5 +1,6 @@
 import { AiJobStatus, AiJobType, Prisma, PrismaClient } from '@prisma/client';
 import { validateArticleQuality, type ArticleQualityResult } from '@repo/ai';
+import { resolveQualityScoringPrompts } from './prompt-templates';
 
 export interface RunArticleQualityGateResult extends ArticleQualityResult {
   aiJobId: string;
@@ -12,6 +13,7 @@ export async function runArticleQualityGate(
     title: string;
     summary: string | null;
     contentPlain: string;
+    categoryId?: string | null;
   },
 ): Promise<RunArticleQualityGateResult> {
   const aiJob = await prisma.aiJob.create({
@@ -30,10 +32,13 @@ export async function runArticleQualityGate(
   });
 
   try {
+    const prompts = await resolveQualityScoringPrompts(prisma, params.categoryId);
+
     const quality = await validateArticleQuality({
       title: params.title,
       summary: params.summary,
       contentPlain: params.contentPlain,
+      prompts,
     });
 
     await prisma.aiJob.update({

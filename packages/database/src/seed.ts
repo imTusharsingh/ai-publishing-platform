@@ -1,6 +1,7 @@
 import { prisma } from './prisma.service';
 import { ArticleIdeaStatus, ArticleStatus, PublishFrequency, UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { ensureDefaultPromptTemplates } from './prompt-templates';
 
 const CATEGORIES = [
   {
@@ -225,4 +226,6 @@ export async function seed() {
       },
     });
   }
+
+  await ensureDefaultPromptTemplates(prisma);
 }
