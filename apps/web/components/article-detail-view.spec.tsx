@@ -11,6 +11,12 @@ jest.mock('next/link', () => ({
   ),
 }));
 
+jest.mock('./article-reader', () => ({
+  ArticleReader: ({ html }: { html: string }) => (
+    <div className="article-content" dangerouslySetInnerHTML={{ __html: html }} />
+  ),
+}));
+
 const article: ArticleDetail = {
   id: '1',
   title: 'Test Article Title',
@@ -51,5 +57,12 @@ describe('ArticleDetailView', () => {
 
     expect(container.querySelector('.article-content p')).toHaveTextContent('Rendered paragraph.');
     expect(container.textContent).not.toContain('<p>');
+  });
+
+  it('does not render a hero placeholder when featuredImageUrl is missing', () => {
+    const { container } = render(<ArticleDetailView article={article} />);
+
+    expect(container.querySelector('img')).not.toBeInTheDocument();
+    expect(container.innerHTML).not.toContain('bg-gradient-to-br');
   });
 });

@@ -1,5 +1,6 @@
 import { AiJobStatus, AiJobType, Prisma, PrismaClient } from '@prisma/client';
 import { generateArticleSeo, getPublicSiteBaseUrl } from '@repo/ai';
+import { resolveSeoGenerationPrompts } from './prompt-templates';
 
 export interface GenerateArticleSeoResult {
   articleId: string;
@@ -38,6 +39,13 @@ export async function runArticleSeoEnrichment(
   });
 
   try {
+    const prompts = await resolveSeoGenerationPrompts(prisma, article.categoryId);
+
+    const existingStructured =
+      article.structuredData && typeof article.structuredData === 'object'
+        ? (article.structuredData as Record<string, unknown>)
+        : {};
+
     const seo = await generateArticleSeo({
       title: article.title,
       summary: article.summary,
@@ -47,6 +55,7 @@ export async function runArticleSeoEnrichment(
       authorName: article.authorName,
       publishedAt: article.publishedAt?.toISOString() ?? null,
       siteBaseUrl: getPublicSiteBaseUrl(),
+      prompts,
     });
 
     const updated = await prisma.article.update({
@@ -56,7 +65,10 @@ export async function runArticleSeoEnrichment(
         seoDescription: seo.seoDescription,
         canonicalUrl: seo.canonicalUrl,
         ogImageUrl: seo.ogImageUrl ?? article.featuredImageUrl,
-        structuredData: seo.structuredData as Prisma.InputJsonValue,
+        structuredData: {
+          ...existingStructured,
+          ...(seo.structuredData as Record<string, unknown>),
+        } as Prisma.InputJsonValue,
       },
     });
 

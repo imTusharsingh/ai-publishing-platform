@@ -1,3 +1,4 @@
+import { renderPromptTemplate } from '@repo/shared';
 import { estimateOpenAiCostUsd } from './cost';
 import { createOpenAiClient } from './openai-writer';
 import { getOpenAiModel } from './provider';
@@ -25,11 +26,18 @@ export async function validateQualityWithOpenAI(
       {
         role: 'system',
         content:
+          input.prompts?.systemPrompt ??
           'You are a news editor scoring draft articles. Return JSON only: {"grammar":number,"readability":number,"spam":number,"notes":string[]}. All scores are 0-1 where higher grammar/readability is better and higher spam is worse.',
       },
       {
         role: 'user',
-        content: `Title: ${input.title}\nSummary: ${input.summary ?? ''}\n\nArticle:\n${input.contentPlain.slice(0, 6000)}`,
+        content: input.prompts?.userPromptTemplate
+          ? renderPromptTemplate(input.prompts.userPromptTemplate, {
+              title: input.title,
+              summary: input.summary ?? '',
+              contentPlain: input.contentPlain.slice(0, 10000),
+            })
+          : `Title: ${input.title}\nSummary: ${input.summary ?? ''}\n\nArticle:\n${input.contentPlain.slice(0, 10000)}`,
       },
     ],
   });

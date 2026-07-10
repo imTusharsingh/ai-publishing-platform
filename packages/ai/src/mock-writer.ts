@@ -16,26 +16,25 @@ function buildIntroductionSection(topic: string, intro: string): string {
     `<h2>${PUBLICATION_SECTIONS.introduction}</h2>`,
     `<p>${intro}</p>`,
     `<p>${topic} shows up wherever teams need reliable, fast access to structured information under real-world constraints — from embedded devices to high-traffic services. Understanding it helps you choose the right tool, avoid costly misapplications, and debug production issues with confidence.</p>`,
-    `<p>This article walks from an intuitive mental model through implementation detail, practical scenarios, and actionable recommendations. Whether you are evaluating options or operating a system in production, each section adds something the last did not cover.</p>`,
+    `<p>This article walks through core concepts, mechanics, trade-offs, practical scenarios, and actionable recommendations. Whether you are evaluating options or operating a system in production, each section adds something the last did not cover.</p>`,
   ].join('');
 }
 
-function buildEasySection(topic: string): string {
+function buildFundamentalsSection(topic: string): string {
   return [
-    `<p><strong>Easy:</strong></p>`,
-    `<p>Picture a workshop wall with transparent bins, each labeled with a code you memorize once. Instead of opening every drawer to hunt for a part, you walk straight to the right bin. That is the everyday experience ${topic} optimizes for: organized storage where retrieval stays fast because the layout matches how you look things up.</p>`,
-    `<p>A conventional database can feel like a locked filing cabinet — powerful, but each lookup pays an opening cost. ${topic} keeps the cabinet open in memory: the map of where everything lives is cheap to consult, so repeated reads stay snappy even when the dataset grows.</p>`,
-    `<p>Another example: think of a library with a fixed card catalog taped to the front desk. Patrons do not rescan every shelf; they check the catalog, walk to one aisle, and leave. The catalog is the index; the aisles are pages on disk. The design trades flexibility in rearranging shelves for predictability in finding a book.</p>`,
-    `<h3>Here's the catch</h3>`,
+    `<h2>${PUBLICATION_SECTIONS.fundamentals}</h2>`,
+    `<p>At its core, ${topic} is about organizing information so retrieval stays predictable even as data grows. Picture a workshop wall with labeled transparent bins: you memorize the codes once, then walk straight to the right bin instead of searching every drawer.</p>`,
+    `<p>A conventional database can feel like a locked filing cabinet — powerful, but each lookup pays an opening cost. ${topic} keeps the catalog close at hand so repeated reads stay snappy when access patterns are keyed and local.</p>`,
+    '<h3>Key ideas to internalize</h3>',
     '<ul>',
-    `<li><strong>Not every problem is a lookup problem.</strong> Ad-hoc analytics across many dimensions still belongs elsewhere.</li>`,
-    `<li><strong>Writes are often serialized.</strong> Burst ingestion can queue; plan batching and backpressure.</li>`,
-    `<li><strong>Schema drift hurts.</strong> Key design and migration strategy must be decided early.</li>`,
+    `<li><strong>Purpose:</strong> Durable keyed storage with ordered iteration and minimal operational overhead.</li>`,
+    `<li><strong>Predictability:</strong> Hot reads avoid extra copies when data is already mapped into the process address space.</li>`,
+    `<li><strong>Working set:</strong> Memory use tracks active data; cold pages can be reclaimed by the OS.</li>`,
     '</ul>',
   ].join('');
 }
 
-function buildModerateSection(topic: string, outline: ArticleWriteInput['outline']): string {
+function buildHowItWorksSection(topic: string, outline: ArticleWriteInput['outline']): string {
   const points = outline.flatMap((section) => section.points);
   const featureBullets = (points.length > 0 ? points.slice(0, 4) : null) ?? [
     'Predictable read latency under concurrent access',
@@ -45,41 +44,41 @@ function buildModerateSection(topic: string, outline: ArticleWriteInput['outline
   ];
 
   return [
-    `<h2>${PUBLICATION_SECTIONS.moderate}</h2>`,
+    `<h2>${PUBLICATION_SECTIONS.howItWorks}</h2>`,
     `<p>At this level, ${topic} is best understood as an embedded system component: you link it into your process, open an environment, and perform transactional reads and writes against ordered key spaces.</p>`,
-    '<h3>Core Concepts</h3>',
+    '<h3>Workflow</h3>',
     '<ul>',
-    `<li><strong>Purpose:</strong> Durable keyed storage with ordered iteration and minimal operational overhead.</li>`,
     `<li><strong>Speed:</strong> Hot reads avoid extra copies when data is already mapped into the process address space.</li>`,
     `<li><strong>Memory:</strong> Working set size tracks active data; cold pages can be reclaimed by the OS.</li>`,
     `<li><strong>Complexity:</strong> Lower than running a separate database tier for many embedded workloads.</li>`,
     `<li><strong>Scalability:</strong> Scales with CPU cores for reads; write throughput follows a single-writer model.</li>`,
-    `<li><strong>Trade-offs:</strong> Excellent locality and crash safety; less suited to ad-hoc relational queries.</li>`,
-    `<li><strong>Best For:</strong> Caches, configuration stores, indices, edge agents, and pipeline staging.</li>`,
-    `<li><strong>Avoid When:</strong> You need multi-table joins, heavy migrations, or multi-writer write scaling on one dataset.</li>`,
     '</ul>',
-    '<h3>Advantages</h3>',
+    '<h3>Implementation characteristics</h3>',
     '<ul>',
     ...featureBullets.map((point) => `<li>${point}</li>`),
     '</ul>',
-    '<h3>Common Use Cases</h3>',
-    `<p>Teams adopt ${topic} when latency budgets are tight and operational surface area must stay small — for example, a service that must restart quickly without replaying hours of logs, or an edge node that cannot depend on a remote database.</p>`,
-  ].join('');
-}
-
-function buildAdvancedSection(topic: string, title: string): string {
-  return [
-    `<h2>${PUBLICATION_SECTIONS.advanced}</h2>`,
     `<p>Internally, ${topic} relies on tree-structured indexing so point lookups and range scans share one ordered layout. Pages are allocated append-only: updates write new versions rather than mutating live pages in place, which is how readers continue without blocking writers during commits.</p>`,
-    `<p>Concurrency typically follows multiversion semantics — readers observe a consistent snapshot while a writer prepares a new root. That pattern removes reader locks on the hot path but caps write parallelism by design. Failure modes to rehearse in staging include partial writes during crash, disk full conditions, and mmap failures when file limits are misconfigured.</p>`,
-    `<p>Security implications are easy to overlook: file permissions on the data directory, backup encryption, and ensuring untrusted inputs cannot blow key or value size limits. Optimization work should start with realistic key distributions and measured p99 latency, not micro-benchmarks on synthetic keys.</p>`,
-    `<p>For ${title}, production debugging usually centers on transaction boundaries, environment handle lifetimes, and verifying that readers are not holding snapshots open long enough to block reuse of old pages. Document key-prefix conventions and provide runbooks for compaction, resize, and restore before you need them under incident pressure.</p>`,
+    '<h3>Minimal open example</h3>',
+    `<pre><code>const env = await openEnv({ path: './data/app.db' });
+const db = env.openDb({ name: 'articles' });
+await db.put('draft:42', Buffer.from('payload'));
+await env.commit();</code></pre>`,
   ].join('');
 }
 
-function buildPracticalExamplesSection(topic: string): string {
+function buildTradeoffsSection(topic: string, title: string): string {
   return [
-    `<h2>${PUBLICATION_SECTIONS.practicalExamples}</h2>`,
+    `<h2>${PUBLICATION_SECTIONS.tradeoffs}</h2>`,
+    `<p>Concurrency typically follows multiversion semantics — readers observe a consistent snapshot while a writer prepares a new root. That pattern removes reader locks on the hot path but caps write parallelism by design.</p>`,
+    `<p><strong>Best for:</strong> Caches, configuration stores, indices, edge agents, and pipeline staging when latency budgets are tight and operational surface area must stay small.</p>`,
+    `<p><strong>Avoid when:</strong> Analysts need SQL across many entities, writers must scale horizontally on one logical dataset, or schemas change weekly without a migration plan.</p>`,
+    `<p>Failure modes to rehearse in staging include partial writes during crash, disk full conditions, and mmap failures when file limits are misconfigured. For ${title}, production debugging usually centers on transaction boundaries, environment handle lifetimes, and verifying that readers are not holding snapshots open long enough to block reuse of old pages.</p>`,
+  ].join('');
+}
+
+function buildRealWorldSection(topic: string): string {
+  return [
+    `<h2>${PUBLICATION_SECTIONS.realWorld}</h2>`,
     `<p><strong>Use it when</strong> you need microsecond-scale reads colocated with application logic, can tolerate a single writer, and benefit from crash-safe commits without operating a separate database cluster.</p>`,
     `<p><strong>Avoid it when</strong> analysts need SQL across many entities, writers must scale horizontally on one logical dataset, or schemas change weekly without a migration plan.</p>`,
     `<p><strong>Common mistakes</strong> include treating it as a message queue, opening environments per request instead of pooling handles, ignoring fsync policy during benchmarks, and sharing one environment across untrusted tenants without isolation.</p>`,
@@ -117,14 +116,14 @@ export function buildMockArticleContent(
   const topic = topicLabel(title);
   const intro =
     summary?.trim() ||
-    `A publication-quality explainer on ${topic}, from first principles through production practice.`;
+    `A long-form explainer on ${topic}, from first principles through production practice.`;
 
   const body = [
     buildIntroductionSection(topic, intro),
-    buildEasySection(topic),
-    buildModerateSection(topic, outline),
-    buildAdvancedSection(topic, title),
-    buildPracticalExamplesSection(topic),
+    buildFundamentalsSection(topic),
+    buildHowItWorksSection(topic, outline),
+    buildTradeoffsSection(topic, title),
+    buildRealWorldSection(topic),
     buildBestPracticesSection(topic),
     buildConclusionSection(topic),
   ].join('');
@@ -142,6 +141,7 @@ export function buildMockArticleContent(
     `When operating ${topic} in production, treat observability as part of the schema: log commit failures, map growth, and reader lifetimes alongside application metrics.`,
     `Capacity planning for ${topic} should include headroom for copy-on-write amplification during bulk imports — steady-state size is not peak size.`,
     `On-call runbooks for ${topic} should list safe restart steps, backup locations, and how to verify integrity after an unclean shutdown.`,
+    `Security implications are often overlooked: file permissions on the data directory, backup encryption, and ensuring untrusted inputs cannot blow key or value size limits.`,
   ];
 
   while (wordCount < minWords) {
@@ -166,7 +166,7 @@ export function writeArticleWithMock(input: ArticleWriteInput): ArticleWriteResu
     content,
     contentPlain,
     provider: 'mock',
-    model: 'mock-writer-v3-publication',
+    model: 'mock-writer-v4-publication',
     promptTokens: null,
     completionTokens: null,
     costUsd: null,

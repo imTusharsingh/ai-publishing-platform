@@ -25,8 +25,10 @@ export interface ArticleAdminDetailResponse extends ArticleAdminSummaryResponse 
   content: string | null;
   contentPlain: string | null;
   authorName: string;
+  featuredImageUrl: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
+  structuredData: Record<string, unknown> | null;
 }
 
 export interface ArticleAdminListResponse {
@@ -171,6 +173,7 @@ export class ArticlesAdminService {
     content: string | null;
     contentPlain: string | null;
     authorName: string;
+    featuredImageUrl: string | null;
     status: ArticleStatus;
     articleIdeaId: string;
     categoryId: string;
@@ -178,15 +181,25 @@ export class ArticlesAdminService {
     createdAt: Date;
     seoTitle: string | null;
     seoDescription: string | null;
+    structuredData: Prisma.JsonValue | null;
     category: { id: string; name: string };
   }): ArticleAdminDetailResponse {
+    const structuredData =
+      article.structuredData &&
+      typeof article.structuredData === 'object' &&
+      !Array.isArray(article.structuredData)
+        ? (article.structuredData as Record<string, unknown>)
+        : null;
+
     return {
       ...this.toSummary(article),
       content: article.content,
       contentPlain: article.contentPlain,
       authorName: article.authorName,
+      featuredImageUrl: article.featuredImageUrl,
       seoTitle: article.seoTitle,
       seoDescription: article.seoDescription,
+      structuredData,
     };
   }
 }

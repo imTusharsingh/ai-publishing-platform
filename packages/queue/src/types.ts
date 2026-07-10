@@ -31,6 +31,9 @@ export interface TrendDiscoveryJobData {
 
 export interface TrendDiscoveryJobResult {
   created: number;
+  updated: number;
+  skipped: number;
+  fetched: number;
   runId: string;
 }
 

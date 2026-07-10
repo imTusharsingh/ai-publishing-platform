@@ -130,6 +130,16 @@ describe('ArticleIdeasService', () => {
     await expect(service.createFromTopic('topic-1')).rejects.toBeInstanceOf(NotFoundException);
   });
 
+  it('returns conflict when idea duplicates an existing article title', async () => {
+    generateArticleIdeaFromTopic.mockRejectedValue(
+      new Error(
+        'Title matches existing article "AI and the Future of Content Creation: Navigating Opportunities and Challenges"',
+      ),
+    );
+
+    await expect(service.createFromTopic('topic-1')).rejects.toBeInstanceOf(ConflictException);
+  });
+
   it('throws when idea not found', async () => {
     prisma.articleIdea.findUnique.mockResolvedValue(null);
 

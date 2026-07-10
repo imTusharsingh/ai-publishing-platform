@@ -10,11 +10,17 @@ function getAccessToken() {
   return token;
 }
 
-export function listAuditLogs(page = 1, limit = 20): Promise<AuditLogListResponse> {
-  const params = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
-  });
+export function listAuditLogs(params?: {
+  page?: number;
+  limit?: number;
+  entityType?: string;
+}): Promise<AuditLogListResponse> {
+  const search = new URLSearchParams();
+  search.set('page', String(params?.page ?? 1));
+  search.set('limit', String(params?.limit ?? 20));
+  if (params?.entityType) {
+    search.set('entityType', params.entityType);
+  }
 
-  return authFetch<AuditLogListResponse>(`/v1/audit-logs?${params}`, getAccessToken());
+  return authFetch<AuditLogListResponse>(`/v1/audit-logs?${search}`, getAccessToken());
 }

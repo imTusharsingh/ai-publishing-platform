@@ -15,6 +15,7 @@ export type {
   AuditLogListResponse,
   CategoryAdmin,
   CategoryAdminListResponse,
+  CategoryRemoveResult,
   CreateCategoryRequest,
   JobStatusEntry,
   PublishFrequency,
@@ -57,3 +58,22 @@ export type {
   CategorySummary,
   PaginatedMeta,
 } from './api.types';
+export type {
+  CreatePromptTemplateRequest,
+  DefaultPromptDefinitionResponse,
+  PromptCatalogPrompt,
+  PromptCatalogResponse,
+  PromptCatalogSection,
+  PromptTemplateEntry,
+  PromptTemplateKey,
+  PromptTemplateListResponse,
+  SavePromptTemplateRequest,
+  UpdatePromptTemplateRequest,
+} from './prompt-templates.types';
+export {
+  PROMPT_TEMPLATE_DESCRIPTIONS,
+  PROMPT_TEMPLATE_KEY_LABELS,
+  PROMPT_TEMPLATE_SECTIONS,
+  PROMPT_TEMPLATE_VARIABLE_HINTS,
+} from './prompt-templates.types';
+export { renderPromptTemplate } from './render-prompt-template';

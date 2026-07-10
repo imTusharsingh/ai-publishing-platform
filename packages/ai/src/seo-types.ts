@@ -7,6 +7,10 @@ export interface ArticleSeoInput {
   authorName?: string;
   publishedAt?: string | null;
   siteBaseUrl?: string;
+  prompts?: {
+    systemPrompt?: string;
+    userPromptTemplate?: string;
+  };
 }
 
 export interface ArticleSeoResult {

@@ -17,8 +17,10 @@ export interface ArticleAdminDetail extends ArticleAdminSummary {
   content: string | null;
   contentPlain: string | null;
   authorName: string;
+  featuredImageUrl: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
+  structuredData: Record<string, unknown> | null;
 }
 
 export interface ArticleAdminListResponse {

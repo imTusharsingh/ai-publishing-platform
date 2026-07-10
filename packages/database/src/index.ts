@@ -52,6 +52,35 @@ export {
   updateDuplicateSettings,
 } from './duplicate-engine/duplicate-settings';
 export type { DuplicateThresholdSettings } from './duplicate-engine/duplicate-settings';
+export {
+  PROMPT_TEMPLATE_KEYS,
+  DEFAULT_FEATURED_IMAGE_PROMPT,
+  DEFAULT_PROMPT_DEFINITIONS,
+  getDefaultPromptDefinition,
+  renderPromptTemplate,
+  resolvePromptTemplate,
+  listPromptTemplates,
+  getPromptTemplateById,
+  upsertPromptTemplate,
+  updatePromptTemplate,
+  deletePromptTemplate,
+  ensureDefaultPromptTemplates,
+  resetPromptTemplateToDefault,
+  getPromptCatalog,
+  savePromptByKey,
+  resetPromptByKey,
+  getResolvedPromptBodies,
+  resolveArticleWriterPrompts,
+  resolveIdeaPlanningPrompts,
+  resolveContentPlanningPrompts,
+  resolveTrendDiscoveryPrompts,
+  resolveQualityScoringPrompts,
+  resolveSeoGenerationPrompts,
+  resolveFeaturedImagePrompt,
+  resolveArticleImageSuggestionPrompts,
+} from './prompt-templates';
+export type { DefaultPromptDefinition, PromptTemplateKey } from './prompt-templates/defaults';
+export type { PromptTemplateRecord, UpsertPromptTemplateInput } from './prompt-templates';
 export { checkPrePublishDuplicates } from './duplicate-engine/check-pre-publish';
 export { registerCanonicalTopic } from './duplicate-engine/register-canonical-topic';
 export { checkLayer2Semantic } from './duplicate-engine/layer2';
@@ -60,6 +89,17 @@ export { runArticleQualityGate } from './validate-article-quality';
 export type { RunArticleQualityGateResult } from './validate-article-quality';
 export { runArticleSeoEnrichment } from './generate-article-seo';
 export type { GenerateArticleSeoResult } from './generate-article-seo';
+export { ensureContentPlanForIdea } from './generate-content-plan';
+export type { RunContentPlanningResult } from './generate-content-plan';
+export { runArticleFeaturedImageEnrichment } from './generate-article-featured-image';
+export type { GenerateArticleFeaturedImageResult } from './generate-article-featured-image';
+export { runArticleImageSuggestionEnrichment } from './generate-article-image-suggestions';
+export type { GenerateArticleImageSuggestionsResult } from './generate-article-image-suggestions';
+export {
+  getArticleMediaDirectory,
+  buildFeaturedImagePublicPath,
+  saveArticleMediaFile,
+} from './article-media';
 export { autoPublishArticle } from './publishing/auto-publish-article';
 export type { AutoPublishArticleResult } from './publishing/auto-publish-article';
 export { runDailyPublishingPipeline } from './publishing/run-daily-pipeline';

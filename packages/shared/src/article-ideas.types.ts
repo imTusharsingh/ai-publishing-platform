@@ -10,6 +10,21 @@ export interface ArticleIdeaOutlineSection {
   points: string[];
 }
 
+export interface ArticleImageSuggestion {
+  position: string;
+  type: string;
+  title: string;
+  description: string;
+  alt: string;
+}
+
+export interface ArticleIdeaContentPlan {
+  summary: string;
+  outline: ArticleIdeaOutlineSection[];
+  imageSuggestions: ArticleImageSuggestion[];
+  narrativeNotes?: string;
+}
+
 export interface ArticleIdeaSummary {
   id: string;
   categoryId: string;
@@ -20,6 +35,7 @@ export interface ArticleIdeaSummary {
   slugCandidate: string;
   summary: string | null;
   outline: ArticleIdeaOutlineSection[] | null;
+  contentPlan: ArticleIdeaContentPlan | null;
   intent: string | null;
   status: ArticleIdeaStatus;
   createdAt: string;

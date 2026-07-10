@@ -84,6 +84,7 @@ export interface AdminDashboardMetrics {
     total: number;
     completed: number;
     failed: number;
+    running: number;
     successRate: number;
   };
   publishingJobs: {
@@ -92,6 +93,32 @@ export interface AdminDashboardMetrics {
     published: number;
     failed: number;
   };
+  pipeline: {
+    topicsPending: number;
+    topicsApproved: number;
+    ideasDraft: number;
+    ideasApproved: number;
+    ideasGenerating: number;
+    ideasFailed: number;
+    articlesDraft: number;
+    articlesPublishedTotal: number;
+    categoriesActive: number;
+    categoriesTotal: number;
+  };
+  recentTopics: Array<{
+    id: string;
+    title: string;
+    status: string;
+    discoveredAt: string;
+    popularityScore: number;
+  }>;
+  recentArticles: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    publishedAt: string;
+    categoryName: string;
+  }>;
 }
 
 export interface PaginatedMeta {

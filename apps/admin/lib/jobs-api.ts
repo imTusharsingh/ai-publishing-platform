@@ -21,6 +21,12 @@ export function enqueuePingJob(message: string): Promise<JobStatusEntry> {
   });
 }
 
+export function retryJob(id: string): Promise<JobStatusEntry> {
+  return authFetch<JobStatusEntry>(`/v1/jobs/${id}/retry`, getAccessToken(), {
+    method: 'POST',
+  });
+}
+
 export function getJob(id: string): Promise<JobStatusEntry> {
   return authFetch<JobStatusEntry>(`/v1/jobs/${id}`, getAccessToken());
 }

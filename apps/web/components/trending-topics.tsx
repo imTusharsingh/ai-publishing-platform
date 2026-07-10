@@ -2,29 +2,38 @@ import Link from 'next/link';
 import type { CategorySummary } from '@repo/shared';
 
 export function TrendingTopics({ categories }: { categories: CategorySummary[] }) {
-  const trendingTags = categories.slice(0, 7).map((c) => ({
-    label: `#${c.name.replace(/\s+/g, '')}`,
-    slug: c.slug,
-  }));
-
   return (
-    <aside className="lg:col-span-4">
-      <div className="space-y-6">
-        <h3 className="border-b border-outline-variant pb-2 font-display text-headline-sm text-on-surface">
-          Trending Topics
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {trendingTags.map((tag) => (
-            <Link
-              key={tag.slug}
-              href={`/category/${tag.slug}`}
-              className="rounded-full bg-surface-container px-4 py-2 text-label-sm text-on-surface-variant transition-colors hover:bg-surface-container-high"
-            >
-              {tag.label}
-            </Link>
-          ))}
-        </div>
+    <aside className="space-y-6 lg:sticky lg:top-24">
+      <div>
+        <p className="text-label-sm font-semibold uppercase tracking-wider text-primary">
+          Browse beats
+        </p>
+        <h3 className="mt-1 font-display text-headline-sm text-on-surface">Categories</h3>
       </div>
+      <ul className="space-y-3">
+        {categories.slice(0, 6).map((category) => (
+          <li key={category.id}>
+            <Link
+              href={`/category/${category.slug}`}
+              className="group flex items-start justify-between gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 transition-all hover:border-primary/30 hover:shadow-card"
+            >
+              <div className="min-w-0">
+                <p className="font-display text-label-md text-on-surface group-hover:text-primary">
+                  {category.name}
+                </p>
+                {category.description && (
+                  <p className="mt-1 line-clamp-2 text-body-sm text-on-surface-variant">
+                    {category.description}
+                  </p>
+                )}
+              </div>
+              <span className="material-symbols-outlined shrink-0 text-[18px] text-on-surface-variant transition-transform group-hover:translate-x-0.5 group-hover:text-primary">
+                arrow_forward
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </aside>
   );
 }
