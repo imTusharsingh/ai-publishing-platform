@@ -11,6 +11,12 @@ export {
   generateArticleEmbeddings,
 } from './embedding/generate-article-embeddings';
 export type { GenerateArticleEmbeddingsResult } from './embedding/generate-article-embeddings';
+export { findSimilarArticles } from './embedding/embedding-similarity';
+export {
+  checkIdeaDuplicates,
+  duplicateCheckResultToJson,
+} from './duplicate-engine/check-idea-duplicates';
+export { logDuplicateRejection } from './duplicate-engine/layer1';
 export {
   DEFAULT_DUPLICATE_THRESHOLDS,
   getDuplicateSettings,
@@ -35,7 +41,9 @@ export {
 export type { PromptTemplateRecord, UpsertPromptTemplateInput } from './prompt-templates';
 export { checkPrePublishDuplicates } from './duplicate-engine/check-pre-publish';
 export { registerCanonicalTopic } from './duplicate-engine/register-canonical-topic';
+export { runArticleQualityGate } from './validate-article-quality';
 export { runArticleSeoEnrichment } from './generate-article-seo';
+export { autoPublishArticle } from './publishing/auto-publish-article';
 export { runDailyPublishingPipeline } from './publishing/run-daily-pipeline';
 export type { DailyPipelineResult } from './publishing/run-daily-pipeline';
 export { searchArticles } from './search-articles';
