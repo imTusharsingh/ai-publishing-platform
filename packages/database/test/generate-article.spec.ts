@@ -1,5 +1,5 @@
 import { ArticleIdeaStatus, ArticleStatus } from '@prisma/client';
-import { buildMockArticleContent, generateMockArticle } from '../src/generate-mock-article';
+import { buildMockArticleContent, generateArticle } from '../src/generate-article';
 
 jest.mock('@repo/ai', () => {
   const actual = jest.requireActual('@repo/ai');
@@ -52,7 +52,7 @@ jest.mock('../src/generate-article-inline-images', () => ({
   runArticleInlineImageEnrichment: jest.fn().mockResolvedValue(null),
 }));
 
-describe('generateMockArticle', () => {
+describe('generateArticle', () => {
   const prisma = {
     articleIdea: {
       findUnique: jest.fn(),
@@ -106,7 +106,7 @@ describe('generateMockArticle', () => {
     prisma.aiJob.update.mockResolvedValue({});
     prisma.articleIdea.update.mockResolvedValue({});
 
-    const result = await generateMockArticle(prisma as never, 'idea-1');
+    const result = await generateArticle(prisma as never, 'idea-1');
 
     expect(result).toEqual({
       articleId: 'article-1',

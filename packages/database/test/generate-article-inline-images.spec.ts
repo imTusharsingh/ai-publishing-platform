@@ -2,7 +2,7 @@ import {
   buildInlineImageFigure,
   countArticleImagePlaceholders,
   materializeInlineImagesInHtml,
-} from '../src/generate-article-inline-images';
+} from '../src/article-inline-images.util';
 
 describe('generate-article-inline-images', () => {
   it('counts image placeholders in html', () => {

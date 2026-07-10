@@ -1,16 +1,10 @@
+import type { ArticleImageSuggestion } from '@repo/shared';
 import { renderPromptTemplate } from '@repo/shared';
 import { estimateOpenAiCostUsd } from './cost';
 import { createOpenAiClient } from './openai-writer';
 import { getOpenAiModel } from './provider';
 
-export interface ArticleImageSuggestion {
-  position: string;
-  type: string;
-  title: string;
-  description: string;
-  alt: string;
-  url?: string;
-}
+export type { ArticleImageSuggestion };
 
 export interface ArticleImageSuggestionsInput {
   title: string;

@@ -30,8 +30,7 @@ export interface GenerateArticleResult {
   provider: 'mock' | 'openai';
 }
 
-/** @deprecated Use GenerateArticleResult */
-export type GenerateMockArticleResult = GenerateArticleResult;
+export { buildMockArticleContent } from '@repo/ai';
 
 function parseOutline(value: Prisma.JsonValue): ArticleOutlineSection[] {
   if (!Array.isArray(value)) {
@@ -258,6 +257,3 @@ export async function generateArticle(
     throw error;
   }
 }
-
-/** @deprecated Use generateArticle */
-export const generateMockArticle = generateArticle;

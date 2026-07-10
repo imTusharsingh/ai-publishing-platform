@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { APP_NAME, formatApiVersion } from '@repo/shared';
+import { PUBLIC_APP_NAME, formatApiVersion } from '@repo/shared';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class HealthService {
 
     return {
       status: dbHealthy ? 'ok' : 'degraded',
-      app: APP_NAME,
+      app: PUBLIC_APP_NAME,
       version: formatApiVersion('1'),
       timestamp: new Date().toISOString(),
       checks: { database: dbHealthy ? 'up' : 'down' },
