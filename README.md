@@ -105,6 +105,21 @@ AI_WRITER_PROVIDER=openai         # optional; auto-detected when key is set
 
 Restart the worker after changing env vars. Token usage and estimated cost are stored on each `AiJob` row.
 
+### Generated article media
+
+Featured and inline article images are saved through `packages/database/src/article-media.ts`.
+By default, files are written to `apps/web/public/media/articles` and served as
+`/media/articles/{filename}`.
+
+For production, set `ARTICLE_MEDIA_S3_BUCKET` to upload generated media to S3 instead of local disk.
+Optional settings:
+
+```bash
+ARTICLE_MEDIA_S3_BUCKET=ai-publishing-assets-staging
+ARTICLE_MEDIA_S3_PREFIX=media/articles
+ARTICLE_MEDIA_PUBLIC_BASE_URL=https://cdn.example.com # optional CloudFront/CDN base URL
+```
+
 **Idea planning (Sprint 14+):** generating an idea from a topic uses the same `OPENAI_API_KEY` and provider settings. Rich topic descriptions produce better briefs and outlines.
 
 ### Live trend discovery (Sprint 15+)
