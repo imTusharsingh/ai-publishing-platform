@@ -3,6 +3,152 @@ export function prepareArticleHtml(html: string): string {
   return html.replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>\s*/i, '').trim();
 }
 
+export interface ArticleImageSuggestion {
+  position?: string;
+  type?: string;
+  title?: string;
+  description?: string;
+  alt?: string;
+}
+
+const JSON_LD_KEYS = new Set([
+  '@context',
+  '@type',
+  'headline',
+  'description',
+  'author',
+  'publisher',
+  'mainEntityOfPage',
+  'articleSection',
+  'keywords',
+  'datePublished',
+  'image',
+]);
+
+/** SEO JSON-LD only — excludes pipeline metadata like imageSuggestions. */
+export function extractArticleJsonLd(
+  structuredData: Record<string, unknown> | null | undefined,
+): Record<string, unknown> | null {
+  if (!structuredData) {
+    return null;
+  }
+
+  const jsonLd = Object.fromEntries(
+    Object.entries(structuredData).filter(([key]) => JSON_LD_KEYS.has(key)),
+  );
+
+  return Object.keys(jsonLd).length > 0 ? jsonLd : null;
+}
+
+export function parseImageSuggestionsFromStructuredData(
+  structuredData: Record<string, unknown> | null | undefined,
+): ArticleImageSuggestion[] {
+  if (!structuredData || !Array.isArray(structuredData.imageSuggestions)) {
+    return [];
+  }
+
+  return structuredData.imageSuggestions
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') {
+        return null;
+      }
+      const record = entry as Record<string, unknown>;
+      const description =
+        typeof record.description === 'string'
+          ? record.description.trim()
+          : typeof record.alt === 'string'
+            ? record.alt.trim()
+            : '';
+      if (!description) {
+        return null;
+      }
+      return {
+        position: typeof record.position === 'string' ? record.position : undefined,
+        type: typeof record.type === 'string' ? record.type : undefined,
+        title: typeof record.title === 'string' ? record.title : undefined,
+        description,
+        alt: typeof record.alt === 'string' ? record.alt : description,
+      };
+    })
+    .filter((item): item is ArticleImageSuggestion => item !== null);
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function buildIllustrationPlaceholder(
+  description: string,
+  suggestion?: ArticleImageSuggestion,
+  index = 0,
+): string {
+  const label = suggestion?.type?.trim() || 'illustration';
+  const title = suggestion?.title?.trim() || `Figure ${index + 1}`;
+  const caption = suggestion?.description?.trim() || description;
+  const ariaLabel = suggestion?.alt?.trim() || caption;
+
+  return `<figure class="article-illustration" data-type="${escapeHtml(label)}">
+<div class="article-illustration-frame" role="img" aria-label="${escapeHtml(ariaLabel)}">
+<span class="article-illustration-badge">${escapeHtml(label)}</span>
+<p class="article-illustration-description">${escapeHtml(caption)}</p>
+</div>
+<figcaption>${escapeHtml(title)}</figcaption>
+</figure>`;
+}
+
+/**
+ * Turn writer placeholders into styled editorial illustration blocks.
+ * Uses imageSuggestions from content planning when available (by order).
+ */
+export function enrichArticleHtmlWithImages(
+  html: string,
+  suggestions: ArticleImageSuggestion[] = [],
+): string {
+  let suggestionIndex = 0;
+
+  const takeSuggestion = (fallbackDescription: string): ArticleImageSuggestion | undefined => {
+    const suggestion = suggestions[suggestionIndex];
+    suggestionIndex += 1;
+    if (suggestion) {
+      return suggestion;
+    }
+    return fallbackDescription
+      ? { description: fallbackDescription, alt: fallbackDescription }
+      : undefined;
+  };
+
+  let enriched = html.replace(/\[IMAGE:\s*([^\]]+)\]/gi, (_match, rawDescription: string) => {
+    const description = rawDescription.trim();
+    const suggestion = takeSuggestion(description);
+    return buildIllustrationPlaceholder(description, suggestion, suggestionIndex - 1);
+  });
+
+  enriched = enriched.replace(
+    /<figure([^>]*)>\s*<img([^>]*)\/?>\s*(?:<figcaption[^>]*>([\s\S]*?)<\/figcaption>)?\s*<\/figure>/gi,
+    (match, figureAttrs, imgAttrs, figcaption) => {
+      const hasSrc = /src\s*=\s*["'][^"']+["']/i.test(imgAttrs);
+      if (hasSrc) {
+        return match;
+      }
+
+      const altMatch = imgAttrs.match(/alt\s*=\s*["']([^"']*)["']/i);
+      const description = (altMatch?.[1] || figcaption || '').replace(/<[^>]+>/g, '').trim();
+      if (!description) {
+        return match;
+      }
+
+      const suggestion = takeSuggestion(description);
+      return buildIllustrationPlaceholder(description, suggestion, suggestionIndex - 1);
+    },
+  );
+
+  return enriched;
+}
+
 export function isHtmlContent(content: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(content);
 }

@@ -83,6 +83,28 @@
     @apply mt-3 text-center text-label-sm text-on-surface-variant italic;
   }
 
+  .article-content .article-illustration {
+    @apply overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-low shadow-card;
+  }
+
+  .article-content .article-illustration-frame {
+    @apply relative flex min-h-[12rem] flex-col items-center justify-center gap-3 bg-gradient-to-br from-primary-container/40 via-surface-container to-secondary-container/30 px-stack-md py-stack-lg text-center;
+    background-image: radial-gradient(circle at 20% 20%, rgb(21 21 125 / 0.08), transparent 45%),
+      radial-gradient(circle at 80% 70%, rgb(0 102 102 / 0.08), transparent 40%);
+  }
+
+  .article-content .article-illustration-badge {
+    @apply rounded-full border border-outline-variant bg-surface px-3 py-1 text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant;
+  }
+
+  .article-content .article-illustration-description {
+    @apply max-w-prose font-sans text-body-sm leading-relaxed text-on-surface;
+  }
+
+  .article-content .article-illustration figcaption {
+    @apply border-t border-outline-variant bg-surface-container px-stack-md py-3 text-center text-label-sm not-italic text-on-surface-variant;
+  }
+
   .grain-overlay {
     background-image: radial-gradient(circle at 1px 1px, rgb(21 21 125 / 0.04) 1px, transparent 0);
     background-size: 24px 24px;

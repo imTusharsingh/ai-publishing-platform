@@ -8,7 +8,11 @@ import { cn } from '@/lib/cn';
 import {
   countWords,
   estimateReadingMinutes,
+  enrichArticleHtmlWithImages,
+  extractArticleJsonLd,
+  injectHeadingIds,
   isHtmlContent,
+  parseImageSuggestionsFromStructuredData,
   prepareArticleHtml,
 } from '@/lib/article-content';
 import { formatDate } from '@/lib/format';
@@ -23,17 +27,22 @@ export function ArticleDetailView({
   categories?: CategoryLink[];
 }) {
   const htmlBody =
-    article.content && isHtmlContent(article.content) ? prepareArticleHtml(article.content) : null;
+    article.content && isHtmlContent(article.content)
+      ? enrichArticleHtmlWithImages(
+          prepareArticleHtml(article.content),
+          parseImageSuggestionsFromStructuredData(article.seo.structuredData),
+        )
+      : null;
   const wordCount = article.content ? countWords(article.content) : 0;
   const readingMinutes = estimateReadingMinutes(wordCount);
-  const structuredData = article.seo.structuredData;
+  const jsonLd = extractArticleJsonLd(article.seo.structuredData);
 
   return (
     <PageShell categories={categories}>
-      {structuredData ? (
+      {jsonLd ? (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       ) : null}
       <article className="page-container py-stack-lg">
