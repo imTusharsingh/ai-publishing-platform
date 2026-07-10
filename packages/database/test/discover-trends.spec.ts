@@ -20,6 +20,9 @@ describe('discoverTrends (unit)', () => {
     article: {
       findMany: jest.fn().mockResolvedValue([]),
     },
+    promptTemplate: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
   };
 
   beforeEach(() => {

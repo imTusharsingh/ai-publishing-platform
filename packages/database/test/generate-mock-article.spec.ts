@@ -40,6 +40,14 @@ jest.mock('../src/validate-article-quality', () => ({
   }),
 }));
 
+jest.mock('../src/generate-content-plan', () => ({
+  ensureContentPlanForIdea: jest.fn().mockResolvedValue({
+    summary: 'Summary',
+    outline: [{ heading: 'Intro', points: ['Point'] }],
+    imageSuggestions: [],
+  }),
+}));
+
 describe('generateMockArticle', () => {
   const prisma = {
     articleIdea: {
@@ -54,6 +62,9 @@ describe('generateMockArticle', () => {
       findFirst: jest.fn().mockResolvedValue(null),
       create: jest.fn(),
     },
+    promptTemplate: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
   };
 
   beforeEach(() => {
@@ -66,7 +77,7 @@ describe('generateMockArticle', () => {
     ]);
 
     expect(result.content).toContain('<h1>Test title</h1>');
-    expect(result.content).toContain('<h2>Section</h2>');
+    expect(result.content).toContain('<h2>Introduction</h2>');
     expect(result.contentPlain).toContain('Point A');
   });
 
