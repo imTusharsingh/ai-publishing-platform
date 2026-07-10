@@ -40,9 +40,8 @@ describe('runArticleQualityGate', () => {
     }
 
     const contentPlain = [
-      Array.from({ length: 80 }, (_, index) => `Word${index}`).join(' '),
       Array.from(
-        { length: 8 },
+        { length: 3100 },
         (_, index) => `Sentence ${index} explains the topic clearly for readers.`,
       ).join(' '),
     ].join('\n\n');
