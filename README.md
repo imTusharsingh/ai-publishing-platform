@@ -1,37 +1,112 @@
 # AI Publishing Platform
 
-Automated AI-powered news and article publishing platform.
+Automated AI-powered news and article publishing platform. Discovers trends, plans ideas, writes long-form articles, validates quality, generates images, and publishes to a public website — with a full admin portal for editorial control.
 
-## Tech Stack
+## System overview
 
-- **Frontend:** Next.js 15 (App Router), React, TypeScript, Tailwind CSS, TanStack Query
-- **Backend:** NestJS, TypeScript
-- **Database:** PostgreSQL + pgvector (Sprint 1+)
-- **Queue:** BullMQ + Redis (Sprint 9+)
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Admin Portal (3007)                           │
+│   Topics · Ideas · Articles · Prompts · Jobs · Categories · Audit     │
+└───────────────────────────────┬─────────────────────────────────────────┘
+                                │ REST + JWT
+┌───────────────────────────────▼─────────────────────────────────────────┐
+│                           NestJS API (3008)                             │
+│              Auth · CRUD · Search · Job enqueue · Bull Board            │
+└───────┬─────────────────────────────────────────────┬─────────────────────┘
+        │ Prisma                                      │ BullMQ enqueue
+        ▼                                             ▼
+┌───────────────┐                              ┌──────────────┐
+│  PostgreSQL   │◄─────────────────────────────│    Redis     │
+│  + pgvector   │         Worker consumes       │   (BullMQ)   │
+└───────────────┘                              └──────┬───────┘
+        ▲                                             │
+        │              ┌──────────────────────────────┘
+        │              ▼
+        │     ┌─────────────────┐
+        └─────│  Worker Service  │
+              │  Job processors  │
+              └────────┬─────────┘
+                       │ @repo/ai (OpenAI / mock)
+                       ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Public Web (3006)                             │
+│              Home · Categories · Articles · Search · SEO                │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## Publishing pipeline
+
+The core workflow runs automatically (daily cron) or can be triggered step-by-step from the admin UI.
+
+```
+1. Trend Discovery
+   Fetch headlines (HN, Reddit, NewsAPI) or synthesize via OpenAI
+   → match to categories → TrendingTopic rows
+
+2. Idea Planning
+   Approved topic → title, summary, outline, slug, intent
+   → ArticleIdea (DRAFT)
+
+3. Content Planning
+   Detailed plan with image suggestions before writing
+
+4. Article Writing
+   LLM generates 3,000+ word HTML article
+   → quality gate (grammar, readability, spam, word count)
+   → retry with feedback on failure (up to 3 attempts)
+
+5. Image Enrichment
+   Image suggestions → inline [IMAGE:] placeholders → DALL-E or SVG
+   → featured hero image
+
+6. SEO
+   Meta title, description, OG tags, canonical URL, JSON-LD
+
+7. Embeddings
+   pgvector embeddings for similarity search and related articles
+
+8. Publish
+   Pre-publish duplicate check (title, slug, embedding, intent)
+   → PUBLISHED status → visible on public web
+```
+
+Each AI step creates an `AiJob` row with provider, model, token usage, and cost tracking.
+
+## Monorepo structure
+
+| Path                                             | Package          | Port      | Description                    |
+| ------------------------------------------------ | ---------------- | --------- | ------------------------------ |
+| [apps/web](apps/web/README.md)                   | `@repo/web`      | 3006      | Public Next.js site            |
+| [apps/admin](apps/admin/README.md)               | `@repo/admin`    | 3007      | Admin Next.js portal           |
+| [services/api](services/api/README.md)           | `@repo/api`      | 3008      | NestJS REST API                |
+| [services/worker](services/worker/README.md)     | `@repo/worker`   | —         | BullMQ job processors          |
+| [packages/ai](packages/ai/README.md)             | `@repo/ai`       | —         | OpenAI + mock AI providers     |
+| [packages/database](packages/database/README.md) | `@repo/database` | —         | Prisma, pipeline orchestration |
+| [packages/queue](packages/queue/README.md)       | `@repo/queue`    | —         | BullMQ queue definitions       |
+| [packages/shared](packages/shared/README.md)     | `@repo/shared`   | —         | Shared types and utilities     |
+| [infrastructure](infrastructure/README.md)       | —                | 3009/3010 | Docker + Terraform             |
+
+Config-only packages (`typescript-config`, `eslint-config`) are omitted — they hold shared compiler and lint settings.
+
+## Tech stack
+
+- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS, TanStack Query
+- **Backend:** NestJS, TypeScript, class-validator
+- **Database:** PostgreSQL 16 + pgvector, Prisma
+- **Queue:** BullMQ + Redis
+- **AI:** OpenAI (GPT-4o, DALL-E 3, embeddings) with mock fallbacks
+- **Infra:** Docker Compose (local), Terraform + ECS (AWS)
 - **Monorepo:** Turborepo + npm workspaces
 
-## Project Structure
+## Getting started
 
-```
-apps/
-  web/          Public website (port 3006)
-  admin/        Admin portal (port 3007)
-services/
-  api/          NestJS REST API (port 3008)
-packages/
-  shared/       Shared utilities and types
-  typescript-config/
-  eslint-config/
-infrastructure/
-  docker/       Docker Compose for local dev
-```
-
-## Prerequisites
+### Prerequisites
 
 - Node.js >= 20
-- Docker & Docker Compose (for PostgreSQL and Redis)
+- Docker & Docker Compose
 
-## Getting Started
+### Setup
 
 ```bash
 # Install dependencies
@@ -40,195 +115,168 @@ npm install
 # Start PostgreSQL and Redis
 npm run docker:up
 
-# Copy environment variables
+# Copy and configure environment
 cp .env.example .env
 
-# Run all apps in dev mode
+# Run database migrations and seed
+npm run db:migrate
+npm run db:seed
+
+# Start all apps (web, admin, api, worker)
 npm run dev
 ```
 
-### Individual services
+### Default URLs
 
-```bash
-# API only
-npm run dev --workspace=@repo/api
+| Service       | URL                                |
+| ------------- | ---------------------------------- |
+| Public web    | http://localhost:3006              |
+| Admin portal  | http://localhost:3007              |
+| API           | http://localhost:3008/v1           |
+| Bull Board    | http://localhost:3008/admin/queues |
+| Prisma Studio | `npm run db:studio`                |
 
-# Public web
-npm run dev --workspace=@repo/web
+### Seed credentials
 
-# Admin portal
-npm run dev --workspace=@repo/admin
-```
-
-## Scripts
-
-| Command               | Description                   |
-| --------------------- | ----------------------------- |
-| `npm run dev`         | Start all apps in development |
-| `npm run build`       | Build all packages            |
-| `npm run test`        | Run all tests                 |
-| `npm run lint`        | Lint all packages             |
-| `npm run typecheck`   | TypeScript check              |
-| `npm run docker:up`   | Start PostgreSQL + Redis      |
-| `npm run docker:down` | Stop Docker services          |
-
-## Database Setup (Sprint 1+)
-
-```bash
-# Ensure PostgreSQL is running
-npm run docker:up
-
-# Run migrations
-npm run db:migrate
-
-# Seed admin user + categories
-npm run db:seed
-```
-
-Default seed credentials (override via `.env`):
+Override via `.env`:
 
 - Email: `admin@example.com`
 - Password: `Admin123!`
 
-### OpenAI article writing (Sprint 13+)
+## Environment configuration
 
-By default, article generation uses the **mock writer** (no API key required). To enable real OpenAI writing:
+Copy `.env.example` to `.env`. Key groups:
 
-```bash
-# In .env
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini          # cost-efficient; use gpt-4o for highest quality
-OPENAI_TEMPERATURE=0.45           # lower = more focused, less fluff (default 0.45)
-OPENAI_MAX_COMPLETION_TOKENS=3200 # caps output cost; ~1000-1800 words (default 3200)
-AI_WRITER_PROVIDER=openai         # optional; auto-detected when key is set
-```
+### Core
 
-Restart the worker after changing env vars. Token usage and estimated cost are stored on each `AiJob` row.
+| Variable              | Description             |
+| --------------------- | ----------------------- |
+| `DATABASE_URL`        | PostgreSQL connection   |
+| `REDIS_URL`           | Redis for BullMQ        |
+| `JWT_SECRET`          | Auth token signing      |
+| `NEXT_PUBLIC_API_URL` | API URL for frontends   |
+| `CORS_ORIGIN`         | Allowed browser origins |
 
-### Generated article media
+### OpenAI (optional — mock mode works without a key)
 
-Featured and inline article images are saved through `packages/database/src/article-media.ts`.
-By default, files are written to `apps/web/public/media/articles` and served as
-`/media/articles/{filename}`.
+| Variable                | Description                        |
+| ----------------------- | ---------------------------------- |
+| `OPENAI_API_KEY`        | Enables real OpenAI calls          |
+| `OPENAI_MODEL`          | Chat model (default `gpt-4o-mini`) |
+| `AI_WRITER_PROVIDER`    | `mock` or `openai`                 |
+| `AI_QUALITY_PROVIDER`   | Quality gate provider              |
+| `AI_IMAGE_PROVIDER`     | Featured/inline image provider     |
+| `AI_SEO_PROVIDER`       | SEO metadata provider              |
+| `AI_EMBEDDING_PROVIDER` | Embedding provider                 |
 
-For production, set `ARTICLE_MEDIA_S3_BUCKET` to upload generated media to S3 instead of local disk.
-Optional settings:
+### Quality thresholds
 
-```bash
-ARTICLE_MEDIA_S3_BUCKET=ai-publishing-assets-staging
-ARTICLE_MEDIA_S3_PREFIX=media/articles
-ARTICLE_MEDIA_PUBLIC_BASE_URL=https://cdn.example.com # optional CloudFront/CDN base URL
-```
+| Variable                  | Default | Description            |
+| ------------------------- | ------- | ---------------------- |
+| `QUALITY_MIN_WORDS`       | 3000    | Minimum article length |
+| `QUALITY_MIN_GRAMMAR`     | 0.7     | Grammar score floor    |
+| `QUALITY_MIN_READABILITY` | 0.55    | Readability floor      |
+| `QUALITY_MAX_SPAM`        | 0.4     | Spam score ceiling     |
 
-**Idea planning (Sprint 14+):** generating an idea from a topic uses the same `OPENAI_API_KEY` and provider settings. Rich topic descriptions produce better briefs and outlines.
+### Trend discovery
 
-### Live trend discovery (Sprint 15+)
+| Variable                     | Description                         |
+| ---------------------------- | ----------------------------------- |
+| `TREND_DISCOVERY_PROVIDER`   | `auto`, `live`, `mock`, or `openai` |
+| `TREND_DISCOVERY_MAX_TOPICS` | Max topics per run                  |
+| `NEWS_API_KEY`               | Optional NewsAPI key                |
 
-Trend discovery fetches real headlines from **Hacker News**, **Reddit**, and optionally **NewsAPI**, then matches them to your categories by keyword. Falls back to mock trends when live sources return nothing.
+### Article media
 
-```bash
-TREND_DISCOVERY_PROVIDER=auto   # auto | live | mock (default auto)
-TREND_DISCOVERY_MAX_TOPICS=12
-NEWS_API_KEY=                   # optional — https://newsapi.org
-```
+| Variable                        | Description                                                  |
+| ------------------------------- | ------------------------------------------------------------ |
+| `ARTICLE_MEDIA_DIR`             | Local output dir (default: `apps/web/public/media/articles`) |
+| `ARTICLE_MEDIA_S3_BUCKET`       | S3 bucket for production                                     |
+| `ARTICLE_MEDIA_S3_PREFIX`       | S3 key prefix                                                |
+| `ARTICLE_MEDIA_PUBLIC_BASE_URL` | CDN base URL                                                 |
 
-Trigger from admin **Topics → Discover trends** or `POST /v1/topics/discover`. Each run creates a `TREND_DISCOVERY` `AiJob` row.
+### Worker cron
 
-**Tips for production-grade output:** put a detailed brief in the idea **Summary** (audience, angle, items to cover, tone). The writer uses title + summary + outline as input — richer briefs yield deeper articles without extra API calls.
+| Variable                       | Description                            |
+| ------------------------------ | -------------------------------------- |
+| `DAILY_PUBLISHING_CRON`        | Cron pattern (default `0 6 * * *`)     |
+| `ENABLE_DAILY_PUBLISHING_CRON` | Set `false` to disable auto-scheduling |
 
-| Script                   | Description                |
-| ------------------------ | -------------------------- |
-| `npm run db:migrate`     | Apply migrations           |
-| `npm run db:migrate:dev` | Create new migration (dev) |
-| `npm run db:seed`        | Seed admin + 7 categories  |
-| `npm run db:studio`      | Open Prisma Studio         |
+## Scripts
 
-## API Endpoints
+| Command                  | Description                         |
+| ------------------------ | ----------------------------------- |
+| `npm run dev`            | Start all workspaces in development |
+| `npm run build`          | Build all packages                  |
+| `npm run test`           | Run all tests                       |
+| `npm run lint`           | Lint all packages                   |
+| `npm run typecheck`      | TypeScript check                    |
+| `npm run docker:up`      | Start PostgreSQL + Redis            |
+| `npm run docker:down`    | Stop Docker services                |
+| `npm run db:migrate`     | Apply database migrations           |
+| `npm run db:migrate:dev` | Create new migration                |
+| `npm run db:seed`        | Seed admin user + categories        |
+| `npm run db:studio`      | Open Prisma Studio                  |
 
-- `GET /v1/health` — Health check
-- `POST /v1/auth/login` — Login (email/password)
-- `POST /v1/auth/refresh` — Refresh access token
-- `POST /v1/auth/logout` — Revoke refresh token
-- `GET /v1/auth/me` — Current user (Bearer token)
-- `GET /v1/categories` — List categories (`?activeOnly=true`)
-- `GET /v1/categories/:slug` — Category detail with article count
-- `GET /v1/articles` — List published articles (`?category=slug&page=1&limit=12`)
-- `POST /v1/categories` — Create category (admin)
-- `PUT /v1/categories/:id` — Update category (admin)
-- `DELETE /v1/categories/:id` — Soft/hard delete category (admin)
-- `GET /v1/audit-logs` — List audit logs (admin)
-- `GET /v1/jobs` — List background jobs (admin)
-- `POST /v1/jobs/ping` — Enqueue ping job (admin)
-- `GET /v1/topics` — List trending topics (admin)
-- `POST /v1/topics/discover` — Enqueue trend discovery (admin)
-- `PATCH /v1/topics/:id/status` — Approve/reject/suggest topic (admin)
-- `PATCH /v1/topics/:id` — Edit topic title, description, category (admin)
-- `GET /v1/article-ideas` — List article ideas (`?status=DRAFT&categoryId=uuid`, admin)
-- `POST /v1/article-ideas` — Create article idea (admin)
-- `POST /v1/article-ideas/from-topic/:topicId` — Generate idea from topic (admin)
-- `PATCH /v1/article-ideas/:id/status` — Update idea status (admin)
-- `POST /v1/article-ideas/:id/generate` — Enqueue article writing job (admin)
-- `GET /v1/admin/articles` — List all articles (`?status=DRAFT`, admin)
-- `GET /v1/admin/articles/:id` — Article detail preview (admin)
-- `PATCH /v1/admin/articles/:id/status` — Publish or archive article (admin)
+Run a single workspace: `npm run dev --workspace=@repo/api`
 
-## Branching & CI
+## API reference
 
-| Branch        | Purpose             | Merge policy                | CI      |
-| ------------- | ------------------- | --------------------------- | ------- |
-| `production`  | Live default branch | Only repo admin can push    | On push |
-| `staging`     | Pre-production      | Only repo admin can push    | On push |
-| `development` | Integration         | PR with at least 1 approval | On push |
-| `sprint-*`    | Feature work        | Open PR into `development`  | No CI   |
+All endpoints are prefixed with `/v1`.
 
-Flow: `sprint-*` → PR → `development` → `staging` → `production`
+### Public
 
-After cloning, apply GitHub branch protection (one-time, requires admin):
+- `GET /health` — Health check
+- `GET /categories` — List categories
+- `GET /categories/:slug` — Category detail
+- `GET /articles` — List published articles
+- `GET /articles/:slug` — Article detail
+- `GET /articles/search?q=` — Full-text search
 
-```bash
-gh auth login
-chmod +x .github/scripts/setup-github-governance.sh
-./.github/scripts/setup-github-governance.sh
-```
+### Auth
 
-## Sprint Progress
+- `POST /auth/login` — Login
+- `POST /auth/refresh` — Refresh token
+- `POST /auth/logout` — Revoke refresh token
+- `GET /auth/me` — Current user
 
-- [x] Sprint 0: DevEx & CI baseline
-- [x] Sprint 1: Database foundation
-- [x] Sprint 2: Authentication API
-- [x] Sprint 3: Categories CRUD API
-- [x] Sprint 4: Public home + article listing (web)
-- [x] Sprint 5: Article detail + category pages + SEO metadata
-- [x] Sprint 6: Admin login UI + protected routes
-- [x] Sprint 7: Admin category management UI
-- [x] Sprint 8: Audit logging + admin audit viewer
-- [x] Sprint 9: BullMQ infrastructure + job monitoring
-- [x] Sprint 10: Trend discovery worker + topics API
-- [x] Sprint 11: Article ideas API + mock generation + admin UI
-- [x] Sprint 12: Mock article writing pipeline + admin articles UI
-- [x] Sprint 13: OpenAI article writer with mock fallback + token/cost tracking
-- [x] Sprint 14: OpenAI idea planning with mock fallback + PLANNING AiJob tracking
-- [x] Sprint 15: Live trend discovery (HN, Reddit, NewsAPI) — completes **Plan Sprint 10** live fetchers
-- [x] Plan Sprint 11: Topics admin UI — approve/reject/suggest, edit, status filter
+### Admin (requires JWT)
 
-## Plan alignment
+- Categories, topics, article ideas, articles — full CRUD
+- `POST /topics/discover` — Enqueue trend discovery
+- `POST /article-ideas/:id/generate` — Enqueue article writing
+- `POST /admin/publishing/trigger` — Enqueue daily pipeline
+- `GET /jobs` — List background jobs
+- `GET /audit-logs` — Admin audit trail
+- Prompt templates, duplicate settings, dashboard metrics
 
-We follow the [product plan](.cursor/plans/ai_publishing_platform_9e04d5dd.plan.md) (26 sprints, 1 feature per sprint). **New work uses plan sprint numbers** in PR titles: `[Plan Sprint N] feat: …`.
+See [API README](services/api/README.md) for the full module breakdown.
 
-| Plan sprint | Plan feature                               | Status                                                |
-| ----------- | ------------------------------------------ | ----------------------------------------------------- |
-| 0–9         | Foundation, public web, admin core, BullMQ | ✅ Shipped (repo Sprints 0–9)                         |
-| **10**      | Trend discovery (queue + live fetchers)    | ✅ Repo Sprint 10 (mock) + **15** (HN/Reddit/NewsAPI) |
-| **11**      | Topics admin UI (approve/reject/edit)      | ✅ Shipped (`sprint-plan-11`)                         |
-| 12–13       | Content planning + writing                 | ✅ Early (repo Sprints 11–14)                         |
-| **14**      | Embeddings (pgvector)                      | ✅ Shipped (`sprint-plan-14`)                         |
-| **15**      | Duplicate detection L1+L4                  | ✅ Shipped (`sprint-plan-15`)                         |
-| **16**      | Duplicate detection L2+L3 + settings UI    | ✅ Shipped (`sprint-plan-16`)                         |
-| **17**      | Quality validation agent                   | ✅ Shipped (`sprint-plan-17`)                         |
-| **18**      | SEO agent + sitemaps                       | ✅ Shipped (`sprint-plan-18`)                         |
-| **19**      | Automated publishing                       | ✅ Shipped (`sprint-plan-19`)                         |
-| **20**      | Full-text search                           | ✅ Shipped (`sprint-plan-20`)                         |
-| **21**      | Related articles + ISR                     | ✅ Shipped (`sprint-plan-21`)                         |
-| **22**      | Admin analytics dashboard                  | ✅ Shipped (`sprint-plan-22`)                         |
-| **23**      | AWS staging (Terraform + deploy)           | ✅ Shipped (`sprint-plan-23`)                         |
-| 24–25       | Production hardening, scale                | 🔲 Pending                                            |
+## AI prompts
+
+All pipeline prompts are editable in **Admin → Prompts** and documented in [docs/ai-prompts.md](docs/ai-prompts.md).
+
+## Branching and CI
+
+| Branch        | Purpose        | CI                    |
+| ------------- | -------------- | --------------------- |
+| `production`  | Live           | On push               |
+| `staging`     | Pre-production | On push               |
+| `development` | Integration    | On push (PR required) |
+
+Flow: feature branch → PR → `development` → `staging` → `production`
+
+## Documentation index
+
+| Document                                         | Contents                                  |
+| ------------------------------------------------ | ----------------------------------------- |
+| [apps/web](apps/web/README.md)                   | Public site pages, ISR, article rendering |
+| [apps/admin](apps/admin/README.md)               | Admin workflows and pages                 |
+| [services/api](services/api/README.md)           | NestJS modules and endpoints              |
+| [services/worker](services/worker/README.md)     | Job processors and cron                   |
+| [packages/ai](packages/ai/README.md)             | AI providers and prompts                  |
+| [packages/database](packages/database/README.md) | Schema, pipeline, duplicates, media       |
+| [packages/queue](packages/queue/README.md)       | BullMQ jobs and enqueue                   |
+| [packages/shared](packages/shared/README.md)     | Shared types and utilities                |
+| [infrastructure](infrastructure/README.md)       | Docker Compose and Terraform              |
+| [docs/ai-prompts.md](docs/ai-prompts.md)         | Full prompt catalog                       |
