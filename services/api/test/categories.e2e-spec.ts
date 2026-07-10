@@ -114,10 +114,12 @@ describe('CategoriesController (e2e)', () => {
       .send({ name })
       .expect(201);
 
-    await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .delete(`/v1/categories/${created.body.id}`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .expect(204);
+      .expect(200);
+
+    expect(response.body).toEqual({ action: 'deleted', articleCount: 0 });
 
     await request(app.getHttpServer()).get(`/v1/categories/${created.body.slug}`).expect(404);
   });

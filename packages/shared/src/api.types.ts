@@ -2,6 +2,7 @@ export interface CategorySummary {
   id: string;
   name: string;
   slug: string;
+  description?: string | null;
 }
 
 export interface CategoryDetail {
@@ -46,6 +47,79 @@ export interface ArticleDetail {
   viewCount: string;
   category: CategorySummary;
   seo: ArticleSeo;
+  relatedArticles?: ArticleSummary[];
+}
+
+export interface ArticleSearchHit {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string | null;
+  publishedAt: string;
+  rank: number;
+  category: CategorySummary;
+}
+
+export interface ArticleSearchResponse {
+  data: ArticleSearchHit[];
+  meta: {
+    query: string;
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface AdminDashboardMetrics {
+  articlesPublishedToday: number;
+  articlesPublishedThisWeek: number;
+  articlesPublishedThisMonth: number;
+  categoryPerformance: Array<{
+    categoryId: string;
+    categoryName: string;
+    publishedCount: number;
+  }>;
+  duplicateRejectionsByLayer: Record<string, number>;
+  aiJobs: {
+    total: number;
+    completed: number;
+    failed: number;
+    running: number;
+    successRate: number;
+  };
+  publishingJobs: {
+    queued: number;
+    processing: number;
+    published: number;
+    failed: number;
+  };
+  pipeline: {
+    topicsPending: number;
+    topicsApproved: number;
+    ideasDraft: number;
+    ideasApproved: number;
+    ideasGenerating: number;
+    ideasFailed: number;
+    articlesDraft: number;
+    articlesPublishedTotal: number;
+    categoriesActive: number;
+    categoriesTotal: number;
+  };
+  recentTopics: Array<{
+    id: string;
+    title: string;
+    status: string;
+    discoveredAt: string;
+    popularityScore: number;
+  }>;
+  recentArticles: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    publishedAt: string;
+    categoryName: string;
+  }>;
 }
 
 export interface PaginatedMeta {

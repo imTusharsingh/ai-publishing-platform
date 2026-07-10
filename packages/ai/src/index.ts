@@ -1,44 +1,28 @@
+export { generateContentPlan } from './generate-content-plan';
+export {
+  generateArticleImageSuggestionsWithOpenAI,
+  type ArticleImageSuggestionsInput,
+  type ArticleImageSuggestionsResult,
+} from './article-image-suggestions';
+export type { ArticleImageSuggestion } from '@repo/shared';
 export { writeArticleContent } from './write-article';
 export { generateIdeaContent } from './generate-idea';
-export { writeArticleWithMock, buildMockArticleContent } from './mock-writer';
-export {
-  generateIdeaWithMock,
-  buildMockIdeaOutline,
-  buildMockIdeaSummary,
-  refineMockIdeaTitle,
-} from './mock-idea-generator';
-export { writeArticleWithOpenAI, createOpenAiClient } from './openai-writer';
-export { generateIdeaWithOpenAI } from './openai-idea-generator';
-export { resolveAiProvider, resolveArticleWriterProvider, getOpenAiModel } from './provider';
-export {
-  getOpenAiTemperature,
-  getOpenAiMaxCompletionTokens,
-  getOpenAiWriterConfig,
-} from './openai-config';
-export { ARTICLE_SYSTEM_PROMPT, buildArticlePrompt } from './openai-writer.prompt';
+export { buildMockArticleContent } from './mock-writer';
+export { resolveAiProvider, getOpenAiModel } from './provider';
+export { PUBLICATION_SECTIONS } from './publication-writer.prompt';
 export { discoverTrendContent } from './discover-trends';
-export { discoverTrendsWithMock, applyCategoryMatching } from './mock-trend-discovery';
-export { matchTrendToCategory } from './match-trend-category';
-export {
-  fetchHackerNewsTrends,
-  fetchRedditTrends,
-  fetchNewsApiTrends,
-  fetchLiveTrendCandidates,
-} from './fetch-live-trends';
-export { resolveTrendDiscoveryProvider, getTrendDiscoveryMaxTopics } from './trend-provider';
 export type {
   ArticleOutlineSection,
-  ArticleWriteInput,
-  ArticleWriteResult,
-  ArticleWriterProvider,
-  AiProvider,
-  IdeaPlanningInput,
-  IdeaPlanningResult,
-  TrendSourceType,
-  TrendDiscoveryProvider,
-  TrendDiscoveryCategoryInput,
-  DiscoveredTrendCandidate,
-  TrendDiscoveryInput,
-  TrendDiscoveryResult,
+  ContentPlan,
+  ArticleQualityInput,
+  ArticleQualityResult,
 } from './types';
-export { estimateOpenAiCostUsd } from './cost';
+export { embedTexts } from './embed-text';
+export { vectorToPgLiteral } from './vector.util';
+export { validateArticleQuality } from './validate-quality';
+export { resolveQualityThresholds } from './quality-thresholds';
+export { generateArticleSeo } from './generate-article-seo';
+export { resolveSeoProvider, getPublicSiteBaseUrl } from './seo-provider';
+export { generateFeaturedImage, resolveArticleImageProvider } from './article-featured-image';
+export { generateInlineImage } from './article-inline-image';
+export type { InlineImageInput, InlineImageResult } from './article-inline-image';

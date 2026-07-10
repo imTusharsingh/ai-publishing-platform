@@ -1,0 +1,36 @@
+name: Deploy Staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - development
+
+jobs:
+  validate-terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure/terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false
+      - run: terraform validate
+
+  build-images:
+    runs-on: ubuntu-latest
+    needs: validate-terraform
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API image
+        run: docker build -f services/api/Dockerfile -t ai-publishing-api:staging .
+      - name: Build worker image
+        run: docker build -f services/worker/Dockerfile -t ai-publishing-worker:staging .
+
+  smoke-check:
+    runs-on: ubuntu-latest
+    needs: build-images
+    steps:
+      - run: echo "Staging deploy pipeline ready — push images to ECR and run terraform apply in AWS account."

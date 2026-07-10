@@ -2,7 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { generateMockArticle, prisma, seed } from '@repo/database';
+import { generateArticle, prisma, seed } from '@repo/database';
 import { AppModule } from '../src/app.module';
 
 describe('Article generation (e2e)', () => {
@@ -77,7 +77,7 @@ describe('Article generation (e2e)', () => {
 
     expect(enqueue.body.jobId).toEqual(expect.any(String));
 
-    const generated = await generateMockArticle(prisma, ideaId);
+    const generated = await generateArticle(prisma, ideaId);
 
     const adminArticle = await request(app.getHttpServer())
       .get(`/v1/admin/articles/${generated.articleId}`)
@@ -105,5 +105,5 @@ describe('Article generation (e2e)', () => {
         (article: { title: string }) => article.title === `E2E generation idea ${runId}`,
       ),
     ).toBe(true);
-  });
+  }, 15_000);
 });

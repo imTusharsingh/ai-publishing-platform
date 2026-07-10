@@ -1,5 +1,5 @@
 import { ArticleIdeaStatus, ArticleStatus } from '@prisma/client';
-import { buildMockArticleContent, generateMockArticle } from '../src/generate-mock-article';
+import { buildMockArticleContent, generateArticle } from '../src/generate-article';
 
 jest.mock('@repo/ai', () => {
   const actual = jest.requireActual('@repo/ai');
@@ -9,7 +9,7 @@ jest.mock('@repo/ai', () => {
       content: '<h1>Generated article</h1><p>Summary</p>',
       contentPlain: 'Generated article\n\nSummary',
       provider: 'mock',
-      model: 'mock-writer-v1',
+      model: 'mock-writer-v3-publication',
       promptTokens: null,
       completionTokens: null,
       costUsd: null,
@@ -17,7 +17,42 @@ jest.mock('@repo/ai', () => {
   };
 });
 
-describe('generateMockArticle', () => {
+jest.mock('../src/generate-article-seo', () => ({
+  runArticleSeoEnrichment: jest.fn().mockResolvedValue({
+    articleId: 'article-1',
+    aiJobId: 'seo-job-1',
+    seoTitle: 'Generated article',
+    seoDescription: 'Summary',
+  }),
+}));
+
+jest.mock('../src/validate-article-quality', () => ({
+  runArticleQualityGate: jest.fn().mockResolvedValue({
+    passed: true,
+    aiJobId: 'quality-job-1',
+    provider: 'mock',
+    model: 'mock-quality-v1',
+    scores: { grammar: 1, readability: 1, spam: 0 },
+    issues: [],
+    promptTokens: null,
+    completionTokens: null,
+    costUsd: null,
+  }),
+}));
+
+jest.mock('../src/generate-content-plan', () => ({
+  ensureContentPlanForIdea: jest.fn().mockResolvedValue({
+    summary: 'Summary',
+    outline: [{ heading: 'Intro', points: ['Point'] }],
+    imageSuggestions: [],
+  }),
+}));
+
+jest.mock('../src/generate-article-inline-images', () => ({
+  runArticleInlineImageEnrichment: jest.fn().mockResolvedValue(null),
+}));
+
+describe('generateArticle', () => {
   const prisma = {
     articleIdea: {
       findUnique: jest.fn(),
@@ -31,6 +66,9 @@ describe('generateMockArticle', () => {
       findFirst: jest.fn().mockResolvedValue(null),
       create: jest.fn(),
     },
+    promptTemplate: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
   };
 
   beforeEach(() => {
@@ -43,7 +81,7 @@ describe('generateMockArticle', () => {
     ]);
 
     expect(result.content).toContain('<h1>Test title</h1>');
-    expect(result.content).toContain('<h2>Section</h2>');
+    expect(result.content).toContain('<h2>Introduction</h2>');
     expect(result.contentPlain).toContain('Point A');
   });
 
@@ -68,7 +106,7 @@ describe('generateMockArticle', () => {
     prisma.aiJob.update.mockResolvedValue({});
     prisma.articleIdea.update.mockResolvedValue({});
 
-    const result = await generateMockArticle(prisma as never, 'idea-1');
+    const result = await generateArticle(prisma as never, 'idea-1');
 
     expect(result).toEqual({
       articleId: 'article-1',

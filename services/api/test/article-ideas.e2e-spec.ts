@@ -2,7 +2,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { discoverMockTrends, prisma, seed } from '@repo/database';
+import { TopicStatus } from '@prisma/client';
+import { discoverTrends, prisma, seed } from '@repo/database';
 import { AppModule } from '../src/app.module';
 
 describe('ArticleIdeasController (e2e)', () => {
@@ -17,7 +18,7 @@ describe('ArticleIdeasController (e2e)', () => {
 
   beforeAll(async () => {
     await seed();
-    await discoverMockTrends(prisma, runId);
+    await discoverTrends(prisma, runId);
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -48,14 +49,18 @@ describe('ArticleIdeasController (e2e)', () => {
 
     categoryId = categories.body.data[0].id;
 
-    const topics = await request(app.getHttpServer())
-      .get('/v1/topics')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .expect(200);
-
-    topicId = topics.body.data.find(
-      (topic: { matchedCategoryId: string | null }) => topic.matchedCategoryId,
-    ).id;
+    const topic = await prisma.trendingTopic.create({
+      data: {
+        title: `E2E idea topic ${runId}`,
+        description: 'Unique topic for idea generation e2e',
+        source: 'BLOG_RSS',
+        popularityScore: 88,
+        status: TopicStatus.APPROVED,
+        matchedCategoryId: categoryId,
+        normalizedTitle: `e2e-idea-topic-${runId}`,
+      },
+    });
+    topicId = topic.id;
   });
 
   afterAll(async () => {

@@ -90,8 +90,8 @@ describe('ArticleIdeasService', () => {
       id: 'idea-2',
       categoryId: 'cat-1',
       trendingTopicId: 'topic-1',
-      title: 'How AI chips surge is reshaping the industry',
-      slugCandidate: 'how-ai-chips-surge-is-reshaping-the-industry',
+      title: 'AI chips surge',
+      slugCandidate: 'ai-chips-surge',
       summary: 'Semiconductor demand rises',
       outline: [
         { heading: 'Introduction', points: ['Context for AI chips surge', 'Why this matters now'] },
@@ -128,6 +128,16 @@ describe('ArticleIdeasService', () => {
     generateArticleIdeaFromTopic.mockRejectedValue(new Error('Topic with id "topic-1" not found'));
 
     await expect(service.createFromTopic('topic-1')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('returns conflict when idea duplicates an existing article title', async () => {
+    generateArticleIdeaFromTopic.mockRejectedValue(
+      new Error(
+        'Title matches existing article "AI and the Future of Content Creation: Navigating Opportunities and Challenges"',
+      ),
+    );
+
+    await expect(service.createFromTopic('topic-1')).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('throws when idea not found', async () => {

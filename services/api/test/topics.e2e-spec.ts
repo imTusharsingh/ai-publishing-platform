@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { discoverMockTrends, seed } from '@repo/database';
+import { discoverTrends, seed } from '@repo/database';
 import { prisma } from '@repo/database';
 import { AppModule } from '../src/app.module';
 
@@ -17,7 +17,7 @@ describe('TopicsController (e2e)', () => {
 
   beforeAll(async () => {
     await seed();
-    await discoverMockTrends(prisma, runId);
+    await discoverTrends(prisma, runId);
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],

@@ -77,6 +77,7 @@ describe('ArticlesService', () => {
       canonicalUrl: null,
       ogImageUrl: null,
       structuredData: null,
+      relatedFrom: [],
     });
 
     const result = await service.findBySlug('sample-article');

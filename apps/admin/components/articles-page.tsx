@@ -1,9 +1,13 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import type { ArticleAdminDetail, ArticleAdminStatus, ArticleAdminSummary } from '@repo/shared';
 import {
+  AdminInsightCard,
+  AdminModal,
   AdminPageBody,
   AdminPageHeader,
   AdminPageShell,
@@ -12,15 +16,55 @@ import {
 } from '@/components/admin-ui';
 import { getAdminArticle, listAdminArticles, updateArticleStatus } from '@/lib/articles-api';
 import { ApiError } from '@/lib/api';
+import { formatRelativeTime } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
 const STATUS_OPTIONS: ArticleAdminStatus[] = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
 
+const STATUS_FILTERS = [
+  { id: '', label: 'All' },
+  { id: 'DRAFT', label: 'Draft' },
+  { id: 'PUBLISHED', label: 'Published' },
+  { id: 'ARCHIVED', label: 'Archived' },
+] as const;
+
+const COUNT_STATUSES = ['', 'DRAFT', 'PUBLISHED', 'ARCHIVED'] as const;
+
+const PUBLIC_SITE_URL =
+  process.env.NEXT_PUBLIC_PUBLIC_SITE_URL ??
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  'http://localhost:3006';
+
+function parseStatusFilter(value: string | null): string {
+  if (!value) {
+    return '';
+  }
+  return STATUS_OPTIONS.includes(value as ArticleAdminStatus) ? value : '';
+}
+
+function statusLabel(status: string): string {
+  return STATUS_FILTERS.find((filter) => filter.id === status)?.label ?? status;
+}
+
+function resolveFeaturedImageSrc(url: string | null | undefined): string | null {
+  if (!url) {
+    return null;
+  }
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  return `${PUBLIC_SITE_URL}${url.startsWith('/') ? url : `/${url}`}`;
+}
+
 export function ArticlesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const statusFilter = parseStatusFilter(searchParams.get('status'));
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
   const articlesQuery = useQuery({
     queryKey: ['admin-articles', statusFilter],
@@ -32,163 +76,344 @@ export function ArticlesPage() {
     refetchInterval: 10000,
   });
 
-  const detailQuery = useQuery({
-    queryKey: ['admin-article', selectedId],
-    queryFn: () => getAdminArticle(selectedId!),
-    enabled: Boolean(selectedId),
+  const countQueries = useQueries({
+    queries: COUNT_STATUSES.map((status) => ({
+      queryKey: ['admin-articles-count', status || 'all'],
+      queryFn: () =>
+        listAdminArticles({
+          limit: 1,
+          status: status || undefined,
+        }),
+    })),
   });
 
-  const publishMutation = useMutation({
-    mutationFn: (id: string) => updateArticleStatus(id, { status: 'PUBLISHED' }),
+  const previewQuery = useQuery({
+    queryKey: ['admin-article', previewId],
+    queryFn: () => getAdminArticle(previewId!),
+    enabled: Boolean(previewId),
+  });
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-articles-count'] });
+    if (previewId) {
+      queryClient.invalidateQueries({ queryKey: ['admin-article', previewId] });
+    }
+  };
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: ArticleAdminStatus }) =>
+      updateArticleStatus(id, { status }),
+    onMutate: ({ id }) => setStatusUpdatingId(id),
     onSuccess: () => {
       setError(null);
-      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-article', selectedId] });
+      invalidate();
     },
-    onError: (err) => setError(err instanceof ApiError ? err.message : 'Publish failed'),
+    onError: (err) => setError(err instanceof ApiError ? err.message : 'Status update failed'),
+    onSettled: () => setStatusUpdatingId(null),
   });
 
+  const setStatusFilter = (status: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (status) {
+      params.set('status', status);
+    } else {
+      params.delete('status');
+    }
+    const query = params.toString();
+    router.replace(query ? `/articles?${query}` : '/articles', { scroll: false });
+  };
+
   const articles = articlesQuery.data?.data ?? [];
-  const draftCount = articles.filter((a) => a.status === 'DRAFT').length;
-  const publishedCount = articles.filter((a) => a.status === 'PUBLISHED').length;
+  const totalCount = countQueries[0]?.data?.meta.total ?? 0;
+  const draftCount = countQueries[1]?.data?.meta.total ?? 0;
+  const publishedCount = countQueries[2]?.data?.meta.total ?? 0;
+  const archivedCount = countQueries[3]?.data?.meta.total ?? 0;
+
+  const openPreview = (id: string) => {
+    setError(null);
+    setPreviewId(id);
+  };
+
+  const closePreview = () => {
+    if (!statusMutation.isPending) {
+      setPreviewId(null);
+    }
+  };
 
   return (
-    <AdminPageShell>
+    <AdminPageShell fillHeight={false}>
       <AdminPageHeader
         breadcrumb="Articles"
         title="Article Management"
-        description="Review and manage AI-generated editorial content pipeline."
+        description="Review drafts, publish to the public site, and manage your editorial library."
         className="mb-stack-md shrink-0"
       >
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="admin-input w-auto"
-          aria-label="Filter by status"
-        >
-          <option value="">All statuses</option>
-          {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+        <Link href="/ideas?status=APPROVED" className="admin-btn-secondary">
+          <span className="material-symbols-outlined text-[18px]">lightbulb</span>
+          Ready ideas
+        </Link>
       </AdminPageHeader>
 
       {error && <p className="mb-4 shrink-0 text-body-sm text-on-error-container">{error}</p>}
 
-      <div className="mb-stack-md grid shrink-0 grid-cols-1 gap-gutter md:grid-cols-3">
-        <StatCard label="Draft queue" value={String(draftCount)} />
-        <StatCard label="Published" value={String(publishedCount)} />
-        <StatCard label="Loaded" value={String(articles.length)} />
+      <div className="bento-grid mb-stack-md shrink-0">
+        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+          <AdminInsightCard
+            label="Total articles"
+            value={String(totalCount)}
+            icon="library_books"
+            meta="All statuses"
+            accent="primary"
+          />
+        </div>
+        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+          <AdminInsightCard
+            label="Draft queue"
+            value={String(draftCount)}
+            icon="edit_note"
+            meta="Awaiting publish"
+            accent="tertiary"
+          />
+        </div>
+        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+          <AdminInsightCard
+            label="Published"
+            value={String(publishedCount)}
+            icon="public"
+            meta="Live on site"
+            accent="secondary"
+          />
+        </div>
+        <div className="col-span-12 sm:col-span-6 xl:col-span-3">
+          <AdminInsightCard
+            label="Archived"
+            value={String(archivedCount)}
+            icon="inventory_2"
+            meta="Removed from site"
+            accent="primary"
+          />
+        </div>
       </div>
 
-      <AdminPageBody className="min-h-0">
-        <div className="grid min-h-0 flex-1 gap-gutter lg:grid-cols-[1.2fr_1fr]">
-          <AdminScrollCard>
-            <ArticleListContent
-              articles={articles}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              isLoading={articlesQuery.isLoading}
-              isError={articlesQuery.isError}
-            />
-          </AdminScrollCard>
-
-          <AdminScrollCard bodyClassName="p-stack-md">
-            <ArticlePreviewContent
-              selectedId={selectedId}
-              detail={detailQuery.data}
-              isLoading={detailQuery.isLoading}
-              onPublish={(id) => publishMutation.mutate(id)}
-              isPublishing={publishMutation.isPending}
-            />
-          </AdminScrollCard>
-        </div>
+      <AdminPageBody className="pb-stack-lg">
+        <AdminScrollCard
+          header={
+            <div className="flex flex-col gap-4 border-b border-outline-variant bg-surface-container-low px-stack-md py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-display text-headline-sm text-on-surface">
+                  {statusFilter ? `${statusLabel(statusFilter)} articles` : 'All articles'}
+                </h2>
+                <p className="mt-1 text-body-sm text-on-surface-variant">
+                  {articlesQuery.data?.meta.total ?? 0} matching this filter
+                </p>
+              </div>
+              <div className="admin-filter-tabs min-w-0">
+                {STATUS_FILTERS.map((filter) => (
+                  <button
+                    key={filter.id || 'all'}
+                    type="button"
+                    onClick={() => setStatusFilter(filter.id)}
+                    className={cn(
+                      'admin-filter-tab',
+                      statusFilter === filter.id && 'admin-filter-tab-active',
+                    )}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          }
+        >
+          {articlesQuery.isLoading && (
+            <p className="p-stack-md text-body-sm text-on-surface-variant">Loading articles…</p>
+          )}
+          {articlesQuery.isError && (
+            <p className="p-stack-md text-body-sm text-on-error-container">
+              Failed to load articles.
+            </p>
+          )}
+          {!articlesQuery.isLoading && articles.length === 0 && (
+            <div className="p-stack-lg text-center">
+              <p className="text-body-md text-on-surface">No articles in this queue</p>
+              <p className="mt-2 text-body-sm text-on-surface-variant">
+                {statusFilter === 'DRAFT'
+                  ? 'Generate articles from approved ideas to fill the draft queue.'
+                  : statusFilter === 'PUBLISHED'
+                    ? 'Publish draft articles to make them live on the public site.'
+                    : 'Generate content from the ideas pipeline to get started.'}
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-3">
+                <Link href="/ideas?status=APPROVED" className="admin-btn-primary">
+                  View ready ideas
+                </Link>
+                <Link href="/ideas" className="admin-btn-secondary">
+                  Idea pipeline
+                </Link>
+              </div>
+            </div>
+          )}
+          {articles.length > 0 && (
+            <table className="admin-table admin-table-sticky">
+              <thead>
+                <tr>
+                  <th>Article</th>
+                  <th>Category</th>
+                  <th>Created</th>
+                  <th>Status</th>
+                  <th className="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {articles.map((article) => (
+                  <ArticleRow
+                    key={article.id}
+                    article={article}
+                    statusUpdatingId={statusUpdatingId}
+                    onPreview={openPreview}
+                    onPublish={(id) => statusMutation.mutate({ id, status: 'PUBLISHED' })}
+                    onArchive={(id) => statusMutation.mutate({ id, status: 'ARCHIVED' })}
+                    statusPending={statusMutation.isPending}
+                  />
+                ))}
+              </tbody>
+            </table>
+          )}
+        </AdminScrollCard>
       </AdminPageBody>
+
+      <AdminModal
+        open={Boolean(previewId)}
+        titleId="article-preview-title"
+        title={previewQuery.data?.title ?? 'Article preview'}
+        description={
+          previewQuery.data ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <AdminStatusBadge status={previewQuery.data.status} />
+              <span className="font-mono text-label-sm text-on-surface-variant">
+                {previewQuery.data.slug}
+              </span>
+            </div>
+          ) : undefined
+        }
+        onClose={closePreview}
+        closeDisabled={statusMutation.isPending}
+        className="max-h-[90vh] max-w-4xl overflow-y-auto"
+      >
+        <ArticlePreviewBody
+          detail={previewQuery.data}
+          isLoading={previewQuery.isLoading}
+          statusUpdatingId={statusUpdatingId}
+          onPublish={(id) => statusMutation.mutate({ id, status: 'PUBLISHED' })}
+          onArchive={(id) => statusMutation.mutate({ id, status: 'ARCHIVED' })}
+          statusPending={statusMutation.isPending}
+        />
+      </AdminModal>
     </AdminPageShell>
   );
 }
 
-function ArticleListContent({
-  articles,
-  selectedId,
-  onSelect,
-  isLoading,
-  isError,
+function ArticleRow({
+  article,
+  statusUpdatingId,
+  onPreview,
+  onPublish,
+  onArchive,
+  statusPending,
 }: {
-  articles: ArticleAdminSummary[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  isLoading: boolean;
-  isError: boolean;
+  article: ArticleAdminSummary;
+  statusUpdatingId: string | null;
+  onPreview: (id: string) => void;
+  onPublish: (id: string) => void;
+  onArchive: (id: string) => void;
+  statusPending: boolean;
 }) {
-  if (isLoading) {
-    return <p className="p-6 text-body-sm text-on-surface-variant">Loading articles…</p>;
-  }
-  if (isError) {
-    return <p className="p-6 text-body-sm text-on-error-container">Failed to load articles.</p>;
-  }
-  if (articles.length === 0) {
-    return null;
-  }
+  const isUpdating = statusPending && statusUpdatingId === article.id;
 
   return (
-    <table className="admin-table admin-table-sticky">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Slug</th>
-        </tr>
-      </thead>
-      <tbody>
-        {articles.map((article) => (
-          <tr
-            key={article.id}
-            className={cn(
-              'cursor-pointer',
-              selectedId === article.id && 'bg-surface-container-low',
-            )}
-            onClick={() => onSelect(article.id)}
+    <tr>
+      <td className="max-w-md">
+        <div className="font-display text-on-surface">{article.title}</div>
+        {article.summary && (
+          <p className="mt-1 line-clamp-2 text-body-sm text-on-surface-variant">
+            {article.summary}
+          </p>
+        )}
+        <p className="mt-2 font-mono text-label-sm text-on-surface-variant">{article.slug}</p>
+      </td>
+      <td className="whitespace-nowrap text-on-surface-variant">{article.categoryName}</td>
+      <td className="whitespace-nowrap text-body-sm text-on-surface-variant">
+        <div>{formatRelativeTime(article.createdAt)}</div>
+        {article.publishedAt && (
+          <div className="text-label-sm text-on-surface-variant/80">
+            Published {formatRelativeTime(article.publishedAt)}
+          </div>
+        )}
+      </td>
+      <td>
+        <AdminStatusBadge status={article.status} />
+      </td>
+      <td className="text-right">
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => onPreview(article.id)}
+            className="admin-btn-secondary shrink-0 px-3 py-1 text-label-sm"
           >
-            <td>
-              <div className="font-display text-on-surface">{article.title}</div>
-              {article.summary && (
-                <div className="line-clamp-1 text-body-sm text-on-surface-variant">
-                  {article.summary}
-                </div>
-              )}
-            </td>
-            <td className="text-on-surface-variant">{article.categoryName}</td>
-            <td>
-              <AdminStatusBadge status={article.status} />
-            </td>
-            <td className="font-mono text-body-sm text-on-surface-variant">{article.slug}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+            Preview
+          </button>
+          {article.status === 'DRAFT' && (
+            <button
+              type="button"
+              onClick={() => onPublish(article.id)}
+              disabled={isUpdating}
+              className="admin-btn-accent shrink-0 px-3 py-1 text-label-sm disabled:opacity-60"
+            >
+              {isUpdating ? 'Publishing…' : 'Publish'}
+            </button>
+          )}
+          {article.status === 'PUBLISHED' && (
+            <>
+              <a
+                href={`${PUBLIC_SITE_URL}/articles/${article.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="admin-btn-secondary shrink-0 px-3 py-1 text-label-sm"
+              >
+                View live
+              </a>
+              <button
+                type="button"
+                onClick={() => onArchive(article.id)}
+                disabled={isUpdating}
+                className="admin-btn-secondary shrink-0 px-3 py-1 text-label-sm disabled:opacity-60"
+              >
+                {isUpdating ? 'Archiving…' : 'Archive'}
+              </button>
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
   );
 }
 
-function ArticlePreviewContent({
-  selectedId,
+function ArticlePreviewBody({
   detail,
   isLoading,
+  statusUpdatingId,
   onPublish,
-  isPublishing,
+  onArchive,
+  statusPending,
 }: {
-  selectedId: string | null;
   detail: ArticleAdminDetail | undefined;
   isLoading: boolean;
+  statusUpdatingId: string | null;
   onPublish: (id: string) => void;
-  isPublishing: boolean;
+  onArchive: (id: string) => void;
+  statusPending: boolean;
 }) {
-  if (!selectedId) {
-    return <p className="text-body-sm text-on-surface-variant">Select an article to preview.</p>;
-  }
   if (isLoading) {
     return <p className="text-body-sm text-on-surface-variant">Loading preview…</p>;
   }
@@ -196,40 +421,107 @@ function ArticlePreviewContent({
     return null;
   }
 
+  const isUpdating = statusPending && statusUpdatingId === detail.id;
+  const featuredImageSrc = resolveFeaturedImageSrc(detail.featuredImageUrl);
+
   return (
     <div>
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h3 className="font-display text-headline-sm text-on-surface">{detail.title}</h3>
-          <AdminStatusBadge status={detail.status} className="mt-2" />
-        </div>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         {detail.status === 'DRAFT' && (
           <button
             type="button"
             onClick={() => onPublish(detail.id)}
-            disabled={isPublishing}
-            className="admin-btn-accent shrink-0 px-3 py-1.5 text-label-sm"
+            disabled={isUpdating}
+            className="admin-btn-accent shrink-0 px-3 py-1.5 text-label-sm disabled:opacity-60"
           >
-            Publish
+            {isUpdating ? 'Publishing…' : 'Publish'}
           </button>
         )}
+        {detail.status === 'PUBLISHED' && (
+          <>
+            <a
+              href={`${PUBLIC_SITE_URL}/articles/${detail.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="admin-btn-primary shrink-0 px-3 py-1.5 text-label-sm"
+            >
+              View live
+            </a>
+            <button
+              type="button"
+              onClick={() => onArchive(detail.id)}
+              disabled={isUpdating}
+              className="admin-btn-secondary shrink-0 px-3 py-1.5 text-label-sm disabled:opacity-60"
+            >
+              {isUpdating ? 'Archiving…' : 'Archive'}
+            </button>
+          </>
+        )}
       </div>
-      {detail.summary && <p className="text-body-sm text-on-surface-variant">{detail.summary}</p>}
-      {detail.content && (
+
+      {detail.summary && (
+        <p className="mb-4 text-body-sm text-on-surface-variant">{detail.summary}</p>
+      )}
+
+      {featuredImageSrc && (
+        <div className="mb-4 overflow-hidden rounded-xl border border-outline-variant">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={featuredImageSrc} alt="" className="aspect-[16/9] w-full object-cover" />
+        </div>
+      )}
+
+      {(detail.seoTitle || detail.seoDescription) && (
+        <div className="mb-4 rounded-xl border border-outline-variant bg-surface-container-low p-4">
+          <p className="text-label-sm uppercase tracking-wider text-on-surface-variant">SEO</p>
+          {detail.seoTitle && (
+            <p className="mt-2 text-body-sm text-on-surface">
+              <span className="text-on-surface-variant">Title: </span>
+              {detail.seoTitle}
+            </p>
+          )}
+          {detail.seoDescription && (
+            <p className="mt-1 text-body-sm text-on-surface">
+              <span className="text-on-surface-variant">Description: </span>
+              {detail.seoDescription}
+            </p>
+          )}
+        </div>
+      )}
+
+      {Array.isArray(detail.structuredData?.imageSuggestions) &&
+        detail.structuredData.imageSuggestions.length > 0 && (
+          <div className="mb-4 rounded-xl border border-outline-variant bg-surface-container-low p-4">
+            <p className="text-label-sm uppercase tracking-wider text-on-surface-variant">
+              Image suggestions · {detail.structuredData.imageSuggestions.length}
+            </p>
+            <ul className="mt-3 space-y-3">
+              {(detail.structuredData.imageSuggestions as Array<Record<string, string>>).map(
+                (item, index) => (
+                  <li key={`${item.title ?? 'image'}-${index}`} className="text-body-sm">
+                    <p className="font-medium text-on-surface">{item.title}</p>
+                    <p className="text-on-surface-variant">
+                      {item.type} · {item.position}
+                    </p>
+                    <p className="mt-1 text-on-surface-variant">{item.description}</p>
+                  </li>
+                ),
+              )}
+            </ul>
+          </div>
+        )}
+
+      <p className="mb-2 text-label-sm text-on-surface-variant">
+        By {detail.authorName} · {formatRelativeTime(detail.createdAt)}
+      </p>
+
+      {detail.content ? (
         <div
-          className="article-content mt-6 text-body-sm"
+          className="article-content border-t border-outline-variant pt-4 text-body-sm"
           dangerouslySetInnerHTML={{ __html: detail.content }}
         />
+      ) : (
+        <p className="text-body-sm text-on-surface-variant">No content available.</p>
       )}
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="admin-card p-stack-md">
-      <p className="text-label-sm uppercase tracking-wider text-on-surface-variant">{label}</p>
-      <p className="mt-3 font-display text-headline-lg text-primary">{value}</p>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ArticleStatus, Prisma } from '@prisma/client';
+import { searchArticles as searchArticlesDb } from '@repo/database';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListArticlesQueryDto } from './dto/list-articles-query.dto';
+import { SearchArticlesQueryDto } from './dto/search-articles-query.dto';
 
 export interface ArticleSummaryResponse {
   id: string;
@@ -40,6 +42,7 @@ export interface ArticleDetailResponse {
     ogImageUrl: string | null;
     structuredData: Record<string, unknown> | null;
   };
+  relatedArticles?: ArticleSummaryResponse[];
 }
 
 export interface ArticleListResponse {
@@ -110,6 +113,15 @@ export class ArticlesService {
     };
   }
 
+  async search(query: SearchArticlesQueryDto) {
+    return searchArticlesDb(this.prisma, {
+      query: query.q,
+      page: query.page,
+      limit: query.limit,
+      categorySlug: query.category,
+    });
+  }
+
   async findBySlug(slug: string): Promise<ArticleDetailResponse> {
     const article = await this.prisma.article.findFirst({
       where: {
@@ -121,6 +133,17 @@ export class ArticlesService {
         category: {
           select: { id: true, name: true, slug: true },
         },
+        relatedFrom: {
+          take: 6,
+          orderBy: { similarityScore: 'desc' },
+          include: {
+            relatedArticle: {
+              include: {
+                category: { select: { id: true, name: true, slug: true } },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -128,7 +151,12 @@ export class ArticlesService {
       throw new NotFoundException(`Article with slug "${slug}" not found`);
     }
 
-    return this.toDetail(article);
+    const detail = this.toDetail(article);
+    const relatedArticles = article.relatedFrom
+      .filter((row) => row.relatedArticle.status === ArticleStatus.PUBLISHED)
+      .map((row) => this.toSummary(row.relatedArticle));
+
+    return { ...detail, relatedArticles };
   }
 
   private toDetail(article: {

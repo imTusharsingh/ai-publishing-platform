@@ -1,6 +1,6 @@
-import { resolveArticleWriterProvider } from '../src/provider';
+import { resolveAiProvider } from '../src/provider';
 
-describe('resolveArticleWriterProvider', () => {
+describe('resolveAiProvider', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -14,22 +14,22 @@ describe('resolveArticleWriterProvider', () => {
   });
 
   it('defaults to mock when no OpenAI key is set', () => {
-    expect(resolveArticleWriterProvider()).toBe('mock');
+    expect(resolveAiProvider()).toBe('mock');
   });
 
   it('uses openai when OPENAI_API_KEY is set', () => {
     process.env.OPENAI_API_KEY = 'sk-test';
-    expect(resolveArticleWriterProvider()).toBe('openai');
+    expect(resolveAiProvider()).toBe('openai');
   });
 
   it('forces mock when AI_WRITER_PROVIDER=mock', () => {
     process.env.OPENAI_API_KEY = 'sk-test';
     process.env.AI_WRITER_PROVIDER = 'mock';
-    expect(resolveArticleWriterProvider()).toBe('mock');
+    expect(resolveAiProvider()).toBe('mock');
   });
 
   it('throws when openai provider is forced without API key', () => {
     process.env.AI_WRITER_PROVIDER = 'openai';
-    expect(() => resolveArticleWriterProvider()).toThrow('OPENAI_API_KEY');
+    expect(() => resolveAiProvider()).toThrow('OPENAI_API_KEY');
   });
 });

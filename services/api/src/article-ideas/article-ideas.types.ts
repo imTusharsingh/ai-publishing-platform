@@ -1,9 +1,11 @@
 import { ArticleIdeaStatus } from '@prisma/client';
+import type {
+  ArticleIdeaContentPlan,
+  ArticleIdeaOutlineSection,
+  ArticleImageSuggestion,
+} from '@repo/shared';
 
-export interface ArticleIdeaOutlineSection {
-  heading: string;
-  points: string[];
-}
+export type { ArticleIdeaContentPlan, ArticleIdeaOutlineSection, ArticleImageSuggestion };
 
 export interface ArticleIdeaResponse {
   id: string;
@@ -15,6 +17,7 @@ export interface ArticleIdeaResponse {
   slugCandidate: string;
   summary: string | null;
   outline: ArticleIdeaOutlineSection[] | null;
+  contentPlan: ArticleIdeaContentPlan | null;
   intent: string | null;
   status: ArticleIdeaStatus;
   createdAt: Date;
@@ -22,7 +25,7 @@ export interface ArticleIdeaResponse {
   hasArticle: boolean;
 }
 
-export interface GenerateArticleResult {
+export interface EnqueueArticleGenerationResult {
   jobId: string;
   ideaId: string;
   state: string;

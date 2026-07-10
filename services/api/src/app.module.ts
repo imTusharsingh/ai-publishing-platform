@@ -9,6 +9,11 @@ import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { ArticlesModule } from './articles/articles.module';
 import { CategoriesModule } from './categories/categories.module';
+import { SettingsModule } from './settings/settings.module';
+import { PromptTemplatesModule } from './prompt-templates/prompt-templates.module';
+import { DuplicateRejectionsModule } from './duplicate-rejections/duplicate-rejections.module';
+import { PublishingModule } from './publishing/publishing.module';
+import { AdminDashboardModule } from './admin-dashboard/admin-dashboard.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -25,6 +30,11 @@ import { PrismaModule } from './prisma/prisma.module';
     ArticleIdeasModule,
     CategoriesModule,
     ArticlesModule,
+    DuplicateRejectionsModule,
+    PublishingModule,
+    AdminDashboardModule,
+    SettingsModule,
+    PromptTemplatesModule,
   ],
   providers: [
     {
