@@ -92,9 +92,16 @@ export {
   generateFeaturedImageWithMock,
   resolveArticleImageProvider,
 } from './article-featured-image';
+export {
+  buildInlineImagePrompt,
+  buildMockInlineImageSvg,
+  generateInlineImage,
+  generateInlineImageWithMock,
+} from './article-inline-image';
 export type {
   FeaturedImageInput,
   FeaturedImageOptions,
   FeaturedImageResult,
 } from './article-featured-image';
+export type { InlineImageInput, InlineImageResult } from './article-inline-image';
 export type { ArticleSeoInput, ArticleSeoResult } from './seo-types';

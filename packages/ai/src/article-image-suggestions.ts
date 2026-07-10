@@ -9,6 +9,7 @@ export interface ArticleImageSuggestion {
   title: string;
   description: string;
   alt: string;
+  url?: string;
 }
 
 export interface ArticleImageSuggestionsInput {

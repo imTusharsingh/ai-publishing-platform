@@ -48,6 +48,10 @@ jest.mock('../src/generate-content-plan', () => ({
   }),
 }));
 
+jest.mock('../src/generate-article-inline-images', () => ({
+  runArticleInlineImageEnrichment: jest.fn().mockResolvedValue(null),
+}));
+
 describe('generateMockArticle', () => {
   const prisma = {
     articleIdea: {

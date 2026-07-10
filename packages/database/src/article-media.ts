@@ -19,6 +19,14 @@ export function buildFeaturedImagePublicPath(
   return `/media/articles/${slug}.${extension}`;
 }
 
+export function buildInlineImagePublicPath(
+  slug: string,
+  index: number,
+  extension: ArticleMediaExtension,
+): string {
+  return `/media/articles/${slug}-inline-${index}.${extension}`;
+}
+
 export async function saveArticleMediaFile(
   slug: string,
   data: Buffer | string,
@@ -31,4 +39,19 @@ export async function saveArticleMediaFile(
   await writeFile(path.join(directory, filename), data);
 
   return buildFeaturedImagePublicPath(slug, extension);
+}
+
+export async function saveInlineArticleMediaFile(
+  slug: string,
+  index: number,
+  data: Buffer | string,
+  extension: ArticleMediaExtension,
+): Promise<string> {
+  const directory = getArticleMediaDirectory();
+  await mkdir(directory, { recursive: true });
+
+  const filename = `${slug}-inline-${index}.${extension}`;
+  await writeFile(path.join(directory, filename), data);
+
+  return buildInlineImagePublicPath(slug, index, extension);
 }

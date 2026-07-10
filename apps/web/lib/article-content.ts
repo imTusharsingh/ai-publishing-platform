@@ -9,6 +9,7 @@ export interface ArticleImageSuggestion {
   title?: string;
   description?: string;
   alt?: string;
+  url?: string;
 }
 
 const JSON_LD_KEYS = new Set([
@@ -68,6 +69,7 @@ export function parseImageSuggestionsFromStructuredData(
         title: typeof record.title === 'string' ? record.title : undefined,
         description,
         alt: typeof record.alt === 'string' ? record.alt : description,
+        url: typeof record.url === 'string' ? record.url : undefined,
       };
     })
     .filter((item): item is ArticleImageSuggestion => item !== null);
@@ -86,6 +88,17 @@ function buildIllustrationPlaceholder(
   suggestion?: ArticleImageSuggestion,
   index = 0,
 ): string {
+  if (suggestion?.url) {
+    const type = suggestion.type?.trim() || 'illustration';
+    const alt = suggestion.alt?.trim() || suggestion.description?.trim() || description;
+    const title = suggestion.title?.trim() || `Figure ${index + 1}`;
+
+    return `<figure class="article-inline-image" data-type="${escapeHtml(type)}">
+<img src="${escapeHtml(suggestion.url)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" />
+<figcaption>${escapeHtml(title)}</figcaption>
+</figure>`;
+  }
+
   const label = suggestion?.type?.trim() || 'illustration';
   const title = suggestion?.title?.trim() || `Figure ${index + 1}`;
   const caption = suggestion?.description?.trim() || description;

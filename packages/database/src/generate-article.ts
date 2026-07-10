@@ -16,6 +16,7 @@ import { runArticleQualityGate } from './validate-article-quality';
 import { ensureContentPlanForIdea } from './generate-content-plan';
 import { runArticleFeaturedImageEnrichment } from './generate-article-featured-image';
 import { runArticleImageSuggestionEnrichment } from './generate-article-image-suggestions';
+import { runArticleInlineImageEnrichment } from './generate-article-inline-images';
 import { runArticleSeoEnrichment } from './generate-article-seo';
 import { resolveArticleWriterPrompts } from './prompt-templates';
 
@@ -182,6 +183,12 @@ export async function generateArticle(
       await runArticleImageSuggestionEnrichment(prisma, article.id);
     } catch {
       // Inline image suggestions are optional — article generation should still succeed.
+    }
+
+    try {
+      await runArticleInlineImageEnrichment(prisma, article.id);
+    } catch {
+      // Inline image generation is optional — article generation should still succeed.
     }
 
     await runArticleSeoEnrichment(prisma, article.id);

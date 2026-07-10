@@ -30,10 +30,12 @@ export type {
   UpdateArticleStatusRequest,
 } from './articles-admin.types';
 export type {
+  ArticleIdeaContentPlan,
   ArticleIdeaListResponse,
   ArticleIdeaOutlineSection,
   ArticleIdeaStatus,
   ArticleIdeaSummary,
+  ArticleImageSuggestion,
   CreateArticleIdeaRequest,
   UpdateArticleIdeaStatusRequest,
 } from './article-ideas.types';

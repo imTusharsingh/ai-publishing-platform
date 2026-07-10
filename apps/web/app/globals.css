@@ -105,6 +105,18 @@
     @apply border-t border-outline-variant bg-surface-container px-stack-md py-3 text-center text-label-sm not-italic text-on-surface-variant;
   }
 
+  .article-content .article-inline-image {
+    @apply overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-low shadow-card;
+  }
+
+  .article-content .article-inline-image img {
+    @apply block h-auto w-full bg-surface-container;
+  }
+
+  .article-content .article-inline-image figcaption {
+    @apply border-t border-outline-variant bg-surface-container px-stack-md py-3 text-center text-label-sm not-italic text-on-surface-variant;
+  }
+
   .grain-overlay {
     background-image: radial-gradient(circle at 1px 1px, rgb(21 21 125 / 0.04) 1px, transparent 0);
     background-size: 24px 24px;

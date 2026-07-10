@@ -95,10 +95,14 @@ export { runArticleFeaturedImageEnrichment } from './generate-article-featured-i
 export type { GenerateArticleFeaturedImageResult } from './generate-article-featured-image';
 export { runArticleImageSuggestionEnrichment } from './generate-article-image-suggestions';
 export type { GenerateArticleImageSuggestionsResult } from './generate-article-image-suggestions';
+export { runArticleInlineImageEnrichment } from './generate-article-inline-images';
+export type { GenerateArticleInlineImagesResult } from './generate-article-inline-images';
 export {
   getArticleMediaDirectory,
   buildFeaturedImagePublicPath,
+  buildInlineImagePublicPath,
   saveArticleMediaFile,
+  saveInlineArticleMediaFile,
 } from './article-media';
 export { autoPublishArticle } from './publishing/auto-publish-article';
 export type { AutoPublishArticleResult } from './publishing/auto-publish-article';

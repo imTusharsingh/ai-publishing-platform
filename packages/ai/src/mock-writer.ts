@@ -58,6 +58,7 @@ function buildHowItWorksSection(topic: string, outline: ArticleWriteInput['outli
     ...featureBullets.map((point) => `<li>${point}</li>`),
     '</ul>',
     `<p>Internally, ${topic} relies on tree-structured indexing so point lookups and range scans share one ordered layout. Pages are allocated append-only: updates write new versions rather than mutating live pages in place, which is how readers continue without blocking writers during commits.</p>`,
+    `[IMAGE: Architecture diagram showing how ${topic} handles reads, writes, and transactional commits]`,
     '<h3>Minimal open example</h3>',
     `<pre><code>const env = await openEnv({ path: './data/app.db' });
 const db = env.openDb({ name: 'articles' });
@@ -72,6 +73,7 @@ function buildTradeoffsSection(topic: string, title: string): string {
     `<p>Concurrency typically follows multiversion semantics — readers observe a consistent snapshot while a writer prepares a new root. That pattern removes reader locks on the hot path but caps write parallelism by design.</p>`,
     `<p><strong>Best for:</strong> Caches, configuration stores, indices, edge agents, and pipeline staging when latency budgets are tight and operational surface area must stay small.</p>`,
     `<p><strong>Avoid when:</strong> Analysts need SQL across many entities, writers must scale horizontally on one logical dataset, or schemas change weekly without a migration plan.</p>`,
+    `[IMAGE: Comparison graphic illustrating when ${topic} excels versus relational databases and in-memory caches]`,
     `<p>Failure modes to rehearse in staging include partial writes during crash, disk full conditions, and mmap failures when file limits are misconfigured. For ${title}, production debugging usually centers on transaction boundaries, environment handle lifetimes, and verifying that readers are not holding snapshots open long enough to block reuse of old pages.</p>`,
   ].join('');
 }

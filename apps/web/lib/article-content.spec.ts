@@ -71,4 +71,21 @@ describe('article-content', () => {
     expect(enriched).toContain('article-illustration');
     expect(enriched).toContain('Comparison of approaches');
   });
+
+  it('renders generated inline images when suggestion urls are present', () => {
+    const html = '<p>Intro</p>[IMAGE: Request lifecycle diagram]<p>More</p>';
+    const enriched = enrichArticleHtmlWithImages(html, [
+      {
+        title: 'Request lifecycle',
+        description: 'Request lifecycle diagram',
+        type: 'diagram',
+        alt: 'Request lifecycle diagram',
+        url: '/media/articles/demo-inline-0.svg',
+      },
+    ]);
+
+    expect(enriched).toContain('article-inline-image');
+    expect(enriched).toContain('/media/articles/demo-inline-0.svg');
+    expect(enriched).not.toContain('article-illustration-frame');
+  });
 });
